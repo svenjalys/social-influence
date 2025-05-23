@@ -18,27 +18,59 @@ categories = ['politics', 'sports', 'technology', 'entertainment']
 articles_per_category = 15
 
 # Fetch articles from NewsCatcher API
-def fetch_news_articles(category):
-    params = {
-        'q': category,
-        'lang': 'en',
-        'sources': 'nytimes.com, reuters.com, foxnews.com, cbsnews.com, washingtonpost.com, cnn.com',
-        'sort_by': 'relevancy',
-        'page_size': articles_per_category,  # Fetch 15 articles per category
-        'include_nlp_data': True
-    }
+def fetch_news_articles(category, required=15):
+    seen_keys = set()
+    unique_articles = []
+    page = 1
+    max_pages = 5  # safety limit
 
-    headers = {
-        'x-api-token': NEWS_API_KEY
-    }
+    while len(unique_articles) < required and page <= max_pages:
+        params = {
+            'q': category,
+            'lang': 'en',
+            'sources': 'nytimes.com, reuters.com, foxnews.com, cbsnews.com, washingtonpost.com, cnn.com',
+            'sort_by': 'relevancy',
+            'page_size': 100,
+            'page': page,
+            'include_nlp_data': True
+        }
 
-    response = requests.get(API_URL, headers=headers, params=params)
+        headers = {
+            'x-api-token': NEWS_API_KEY
+        }
 
-    if response.status_code == 200:
-        return response.json().get('articles', [])
-    else:
-        print(f"Error fetching data for {category}: {response.status_code}")
-        return []
+        response = requests.get(API_URL, headers=headers, params=params)
+        page += 1
+        time.sleep(1)  # avoid rate limits
+
+        if response.status_code != 200:
+            print(f"Error fetching page {page-1} for {category}: {response.status_code}")
+            continue
+
+        articles = response.json().get('articles', [])
+        if not articles:
+            break
+
+        for article in articles:
+            title = article.get('title', '').strip()
+            provider = article.get('clean_url', '').strip().lower()
+            unique_key = f"{title.lower()}::{provider}"
+
+            if unique_key not in seen_keys and title:
+                seen_keys.add(unique_key)
+                image_url = article.get('media', '').strip()
+                article_url = article.get('link', '').strip()
+                content = article.get('content', 'No Content').strip()
+                unique_articles.append([category, title, image_url, article_url, content, provider])
+
+            if len(unique_articles) >= required:
+                break
+
+    if len(unique_articles) < required:
+        print(f"Warning: Only {len(unique_articles)} unique articles found for category '{category}'")
+
+    return unique_articles
+
 
 # Write the articles to a CSV file
 def write_articles_to_csv(articles, filename='articles.csv'):
@@ -82,23 +114,17 @@ def write_articles_to_csv(articles, filename='articles.csv'):
 # Main function
 def main():
     all_articles = []
-
     for category in categories:
-        articles = fetch_news_articles(category)
-        time.sleep(1)  # Add delay to avoid rate limits
-        for article in articles:
-            title = article.get('title', 'N/A')
-            image_url = article.get('media', 'N/A')
-            article_url = article.get('link', 'N/A')
-            content = article.get('content', 'No Content')
-            provider = article.get('clean_url', 'N/A').lower()
-            all_articles.append([category, title, image_url, article_url, content, provider])
+        articles = fetch_news_articles(category, required=articles_per_category)
+        all_articles.extend(articles)
 
     if all_articles:
         write_articles_to_csv(all_articles)
-        # extract_random_articles()
     else:
-        print("No articles found.")
+        print("No unique articles found.")
+
+
+
 
 if __name__ == "__main__":
     main()

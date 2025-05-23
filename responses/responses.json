@@ -266,5 +266,78 @@
                 }
             }
         ]
+    },
+    "participant_20250523_103932": {
+        "participant_id": "participant_20250523_103932",
+        "demographics": {
+            "gender": "Female",
+            "age_group": "16\u201324",
+            "country": "United Kingdom",
+            "occupation": "Manual worker"
+        },
+        "pre_questionnaire": {
+            "news_frequency": "Less than once a month",
+            "device": "Computer/Laptop",
+            "device_other": null,
+            "platform": "News apps",
+            "platform_other": null,
+            "news_sources": "BBC",
+            "attention_check": "BBC",
+            "trust_level": "2"
+        },
+        "rounds": [
+            {
+                "round": 1,
+                "selected_article_id": 18,
+                "selected_article_title": "President Donald Trump plans to create commission on college athletics: Sources"
+            },
+            {
+                "round": 1,
+                "article_id": 18,
+                "mid_questionnaire": {
+                    "selected_elements": [
+                        "Paragraph"
+                    ],
+                    "trust_article": "3",
+                    "trust_image": "4"
+                }
+            },
+            {
+                "round": 2,
+                "selected_article_id": 16,
+                "selected_article_title": "Portuguese title on the line as Benfica host rivals Sporting"
+            },
+            {
+                "round": 1,
+                "selected_article_id": 16,
+                "selected_article_title": "Portuguese title on the line as Benfica host rivals Sporting"
+            }
+        ]
+    },
+    "participant_20250523_143823": {
+        "participant_id": "participant_20250523_143823",
+        "demographics": {
+            "gender": "Prefer not to say",
+            "age_group": "25\u201334",
+            "country": "United Kingdom",
+            "occupation": "Administrative or junior management/professional"
+        },
+        "pre_questionnaire": {
+            "news_frequency": "Never",
+            "device": "Other",
+            "device_other": "gdhdht",
+            "platform": "News websites",
+            "platform_other": null,
+            "news_sources": "grrgfsde",
+            "attention_check": "CBS",
+            "trust_level": "4"
+        },
+        "rounds": [
+            {
+                "round": 1,
+                "selected_article_id": 44,
+                "selected_article_title": "Fox News Entertainment Newsletter: Diddy trial sees Cassie testify, Honey Boo Boo claims mother kept TV pay"
+            }
+        ]
     }
 }
