@@ -1,137 +1,141 @@
 <!DOCTYPE html>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>{{ article['Title'] }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .recommendation-card {
-            display: flex;
-            align-items: center;
-            border-bottom: 1px solid #ddd;
-            padding: 10px 0;
-        }
-        
-        .recommendation-card img {
-            width: 300px;
-            height: 180px;
-            object-fit: cover;
-            margin-left: auto;
-        }
-
         .article_label {
             width: auto;
             height: 4.5em;
             object-fit: cover;
-            flex-shrink: 0;
             margin-bottom: 1em;
-            /* margin-top: -75px; */
         }
 
-        .article_label img{
+        .article_label img {
             height: 100%;
             width: auto;
             object-fit: contain;
-        } 
+        }
 
         .article_content {
             font-size: medium;
         }
 
-        button.card:hover {
-            background-color: #f8f9fa;
-        }
-
-        /* Optional: adjust padding and spacing */
         #scoreExplanation .card-body {
-        padding: 1.25rem;
-        background-color: #f8f9fa;
-        border-left: 5px solid #198754; /* Bootstrap green */
+            padding: 1.25rem;
+            background-color: #f8f9fa;
+            border-left: 5px solid #198754;
         }
 
+        .recommendation-card {
+            cursor: pointer;
+        }
+
+        .transp-label {
+            height: 30px;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body class="container mt-5">
-    <div class="d-flex justify-content-center mb-4">
-        <div class="alert alert-primary text-center h4 mb-0 px-4 py-3" role="alert" style="display: inline-block;">
-          <strong>Task:</strong> Please read the article carefully, then choose one of the recommended related articles below.
-        </div>
-    </div>      
+<div class="d-flex justify-content-center mb-4">
+    <div class="alert alert-primary text-center h4 mb-0 px-4 py-3" role="alert" style="display: inline-block;">
+        <strong>Task:</strong> Please read the article carefully, then choose one of the recommended related articles below.
+    </div>
+</div>
+
 <div class="mx-auto" style="max-width: 800px;">
+    <!-- Main Article -->
     <div class="mb-5">
         <h1 class="mb-3">{{ article['Title'] }}</h1>
         <img src="{{ article['Image URL'] or 'https://placehold.co/600x400?text=No+Image' }}" class="img-fluid mb-3">
+
         <div class="mb-3 article_label">
             <img src="{{ url_for('static', filename='images/transp_score_colour_expanded.png') }}"
-                 alt="Transparency Score Label" style="cursor: pointer;"
-                 data-bs-toggle="collapse" data-bs-target="#scoreExplanation" aria-expanded="false" aria-controls="scoreExplanation">
-          </div>
-          
-          <div class="collapse" id="scoreExplanation">
-            <div class="card card-body border border-success rounded position-relative bg-light mb-3 py-3">
-              <strong>What is the Image Transparency Score?</strong><br>
-              This score rates how transparent and trustworthy the image is — based on 7 criteria, such as author identity, media asset verification, and edit history.
-              <br>
-              <ul class="mb-0">
-                <li><strong>A</strong>: High transparency and verified information</li>
-                <li><strong>B–C</strong>: Some elements missing or unclear</li>
-                <li><strong>D–E</strong>: Poor or no transparency indicators</li>
-              </ul>
+                 alt="Transparency Score Label"
+                 style="cursor: pointer;"
+                 data-bs-toggle="collapse"
+                 data-bs-target="#scoreExplanation"
+                 aria-expanded="false"
+                 aria-controls="scoreExplanation">
+        </div>
+
+        <div class="collapse" id="scoreExplanation">
+            <div class="card card-body border border-success rounded bg-light mb-3 py-3">
+                <strong>What is the Image Transparency Score?</strong><br>
+                This score rates how transparent and trustworthy the image is — based on 7 criteria, such as author identity, media asset verification, and edit history.
+                <br>
+                <ul class="mb-0">
+                    <li><strong>A</strong>: High transparency and verified information</li>
+                    <li><strong>B–C</strong>: Some elements missing or unclear</li>
+                    <li><strong>D–E</strong>: Poor or no transparency indicators</li>
+                </ul>
             </div>
-          </div>
+        </div>
+
         <p class="article_content">{{ article['Content'] }}</p>
     </div>
+
+    <!-- Recommended Articles -->
     <h3>Recommended</h3>
-    <div class="list-group mb-5">
-        <!-- <form method="POST">
+    <form method="POST">
+        <!-- Hidden inputs -->
+        <input type="hidden" name="label_explained" id="label_explained" value="false">
+        <input type="hidden" name="selected_article_had_label" id="selected_article_had_label" value="false">
+
+        <div class="vstack gap-3">
             {% for rec in recommendations %}
-            <button type="submit" name="selected_article_id" value="{{ rec['index'] }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-top py-3">
-                <div>
-                    <h5 class="mb-1">{{ rec['Title'] }}</h5>
-                    <p class="mb-1 text-muted small">{{ rec['Content'][:300] }}...</p>
+            <button type="submit"
+                    name="selected_article_id"
+                    value="{{ rec['index'] }}"
+                    class="card text-start py-3 px-3 border-0 shadow-sm text-decoration-none text-body recommendation-card"
+                    onclick="document.getElementById('selected_article_had_label').value = '{{ 'true' if rec['index'] in label_shown_ids else 'false' }}'">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="card-title mb-2">{{ rec['Title'] }}</h5>
+                        <p class="card-text text-muted small mb-0">{{ rec['Content'][:300] }}...</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        {% if rec['index'] in label_shown_ids %}
+                            <img src="{{ url_for('static', filename='images/transp_score_colour_collapsed.png') }}"
+                                 alt="Transparency Label"
+                                 class="transp-label">
+                        {% endif %}
+                        <img src="{{ rec['Image URL'] or 'https://placehold.co/300x180?text=No+Image' }}"
+                             alt="{{ rec['Title'] }}"
+                             class="img-fluid rounded"
+                             style="max-height: 180px; object-fit: cover;">
+                    </div>
                 </div>
-                <img src="{{ rec['Image URL'] or 'https://placehold.co/300x180?text=No+Image' }}" alt="{{ rec['Title'] }}" class="img-thumbnail" style="width: 300px; height: 180px; object-fit: cover;">
             </button>
             {% endfor %}
-        </form> -->
-        <form method="POST">
-            <div class="vstack gap-3">
-              {% for rec in recommendations %}
-              <button type="submit" name="selected_article_id" value="{{ rec['index'] }}" class="card text-start py-3 pr-3 border-0 shadow-sm text-decoration-none text-body" style="cursor: pointer;">
-                <div class="row g-3 align-items-center">
-                  <div class="col-md-8">
-                    <h5 class="card-title mb-2">{{ rec['Title'] }}</h5>
-                    <p class="card-text text-muted small mb-0">{{ rec['Content'][:300] }}...</p>
-                  </div>
-                  <div class="col-md-4 text-end">
-                    <img src="{{ rec['Image URL'] or 'https://placehold.co/300x180?text=No+Image' }}"
-                         alt="{{ rec['Title'] }}"
-                         class="img-fluid rounded"
-                         style="max-height: 180px; object-fit: cover;">
-                  </div>
-                </div>
-              </button>
-              {% endfor %}
-            </div>
-        </form>
-    </div>
- 
-      
+        </div>
+    </form>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    document.addEventListener('click', function (event) {
-      const labelImage = document.querySelector('.article_label img');
-      const explanation = document.getElementById('scoreExplanation');
-  
-      // Check if click was outside the explanation and label
-      if (!explanation.contains(event.target) && !labelImage.contains(event.target)) {
-        const bsCollapse = bootstrap.Collapse.getInstance(explanation);
-        if (bsCollapse && explanation.classList.contains('show')) {
-          bsCollapse.hide();
+    document.addEventListener('DOMContentLoaded', function () {
+        const collapseEl = document.getElementById('scoreExplanation');
+        const labelExplainedInput = document.getElementById('label_explained');
+
+        if (collapseEl && labelExplainedInput) {
+            collapseEl.addEventListener('shown.bs.collapse', () => {
+                labelExplainedInput.value = 'true';
+            });
         }
-      }
+
+        const labelImage = document.querySelector('.article_label img');
+        document.addEventListener('click', function (event) {
+            if (!collapseEl.contains(event.target) && !labelImage.contains(event.target)) {
+                const bsCollapse = bootstrap.Collapse.getInstance(collapseEl);
+                if (bsCollapse && collapseEl.classList.contains('show')) {
+                    bsCollapse.hide();
+                }
+            }
+        });
     });
-  </script>
+</script>
 </body>
 </html>
