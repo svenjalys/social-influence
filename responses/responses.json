@@ -108,10 +108,202 @@
         "participant_id": "participant_20250603_094151",
         "condition": "no_color",
         "theme_selection": {
-            "selected_article_id": 16,
-            "selected_article_title": "Former Sporting KC M Gadi Kinda dies at 31",
+            "selected_article_id": 18,
+            "selected_article_title": "Minnesota AG sued for letting biological males play in girls sports amid trans softball player dominance",
             "selected_article_category": "sports",
-            "condition": "no_color"
-        }
+            "condition": "c2pa"
+        },
+        "rounds": [
+            {
+                "round": 1,
+                "selected_article_id": 25,
+                "selected_article_title": "YouTube hires former Disney veteran to oversee sports and media",
+                "selected_article_category": "sports",
+                "selected_article_had_label": true,
+                "label_explained": true
+            },
+            {
+                "round": 1,
+                "article_id": 25,
+                "mid_questionnaire": {
+                    "selected_elements": [
+                        "Picture",
+                        "Paragraph",
+                        "Topic"
+                    ],
+                    "trust_article": "4",
+                    "trust_image": "4"
+                }
+            },
+            {
+                "round": 1,
+                "selected_article_id": 35,
+                "selected_article_title": "SolarMax Technology: Q1 Earnings Snapshot",
+                "selected_article_category": "technology",
+                "selected_article_had_label": true,
+                "label_explained": false
+            },
+            {
+                "round": 1,
+                "article_id": 35,
+                "mid_questionnaire": {
+                    "selected_elements": [
+                        "Headline",
+                        "Paragraph"
+                    ],
+                    "trust_article": "3",
+                    "trust_image": "4"
+                }
+            },
+            {
+                "round": 1,
+                "article_id": 35,
+                "mid_questionnaire": {
+                    "selected_elements": [
+                        "Headline",
+                        "Paragraph"
+                    ],
+                    "trust_article": "3",
+                    "trust_image": "4"
+                }
+            },
+            {
+                "round": 1,
+                "article_id": 35,
+                "mid_questionnaire": {
+                    "selected_elements": [
+                        "Headline",
+                        "Paragraph"
+                    ],
+                    "trust_article": "3",
+                    "trust_image": "4"
+                }
+            },
+            {
+                "round": 1,
+                "selected_article_id": 25,
+                "selected_article_title": "YouTube hires former Disney veteran to oversee sports and media",
+                "selected_article_category": "sports",
+                "selected_article_had_label": true,
+                "label_explained": false
+            },
+            {
+                "round": 1,
+                "article_id": 25,
+                "mid_questionnaire": {
+                    "selected_elements": [
+                        "Headline",
+                        "Paragraph",
+                        "Topic"
+                    ],
+                    "trust_article": "3",
+                    "trust_image": "3"
+                }
+            },
+            {
+                "round": 1,
+                "article_id": 25,
+                "mid_questionnaire": {
+                    "selected_elements": [
+                        "Headline",
+                        "Paragraph",
+                        "Topic"
+                    ],
+                    "trust_article": "3",
+                    "trust_image": "3"
+                }
+            },
+            {
+                "round": 2,
+                "selected_article_id": 16,
+                "selected_article_title": "Former Sporting KC M Gadi Kinda dies at 31",
+                "selected_article_category": "sports",
+                "selected_article_had_label": true,
+                "label_explained": false
+            },
+            {
+                "round": 2,
+                "article_id": 16,
+                "mid_questionnaire": {
+                    "selected_elements": [
+                        "Picture",
+                        "Headline",
+                        "Paragraph"
+                    ],
+                    "trust_article": "3",
+                    "trust_image": "4"
+                }
+            },
+            {
+                "round": 3,
+                "selected_article_id": 15,
+                "selected_article_title": "Denver hosts professional sports leaders, major platforms at Gondola Sports Summit",
+                "selected_article_category": "sports",
+                "selected_article_had_label": false,
+                "label_explained": false
+            },
+            {
+                "round": 3,
+                "selected_article_id": 15,
+                "selected_article_title": "Denver hosts professional sports leaders, major platforms at Gondola Sports Summit",
+                "selected_article_category": "sports",
+                "selected_article_had_label": false,
+                "label_explained": false
+            },
+            {
+                "round": 3,
+                "article_id": 15,
+                "mid_questionnaire": {
+                    "selected_elements": [
+                        "Picture",
+                        "Headline",
+                        "Paragraph",
+                        "Topic"
+                    ],
+                    "trust_article": "2",
+                    "trust_image": "5"
+                }
+            },
+            {
+                "round": 3,
+                "selected_article_id": 29,
+                "selected_article_title": "\u2018He failed and we won,' \u2013 Watching Ruben Amorim's Europa League final in the city he left for Man Utd",
+                "selected_article_category": "sports",
+                "selected_article_had_label": true,
+                "label_explained": false
+            },
+            {
+                "round": 3,
+                "article_id": 29,
+                "mid_questionnaire": {
+                    "selected_elements": [
+                        "Headline",
+                        "Topic"
+                    ],
+                    "trust_article": "1",
+                    "trust_image": "4"
+                }
+            },
+            {
+                "round": 3,
+                "selected_article_id": 15,
+                "selected_article_title": "Denver hosts professional sports leaders, major platforms at Gondola Sports Summit",
+                "selected_article_category": "sports",
+                "selected_article_had_label": true,
+                "label_explained": false
+            },
+            {
+                "round": 3,
+                "article_id": 15,
+                "mid_questionnaire": {
+                    "selected_elements": [
+                        "Headline",
+                        "Paragraph"
+                    ],
+                    "trust_article": "4",
+                    "trust_image": "3"
+                }
+            }
+        ]
     }
 }

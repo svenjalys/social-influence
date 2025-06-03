@@ -12,16 +12,24 @@ app.secret_key = 'your_secret_key'
 def assign_condition():
     if 'condition' not in session:
         os.makedirs('responses', exist_ok=True)
+
+        # Ensure the responses file exists and is readable
         try:
             with open(RESPONSES_FILE, 'r') as f:
                 all_data = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             all_data = {}
 
-        existing_participants = list(all_data.keys())
-        idx = len(existing_participants) % 3
-        conditions = ['color', 'no_color', 'c2pa']
-        session['condition'] = conditions[idx]
+        # Count how many participants already have each condition
+        condition_counts = {'color': 0, 'no_color': 0, 'c2pa': 0}
+        for pdata in all_data.values():
+            cond = pdata.get('condition')
+            if cond in condition_counts:
+                condition_counts[cond] += 1
+
+        # Choose the condition with the fewest participants
+        session['condition'] = min(condition_counts, key=condition_counts.get)
+
 
 @app.route('/set-condition/<cond>')
 def set_condition(cond):
@@ -252,7 +260,8 @@ def mid_questionnaire():
         })
 
         if session.get('round', 1) < 3:
-            session['round'] += 1
+            session['round'] = session.get('round', 1) + 1
+
             return redirect(url_for('article', article_id=session.get('next_article')))
         else:
             return redirect(url_for('post_questionnaire'))

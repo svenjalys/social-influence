@@ -30,7 +30,13 @@
 
         .recommendation-card {
             cursor: pointer;
+            transition: transform 0.2s ease-in-out;
         }
+
+        .recommendation-card:hover {
+            transform: translateY(-5px);
+        }
+
 
         .transp-label {
             height: 30px;
@@ -40,7 +46,7 @@
 </head>
 <body class="container mt-5">
 <div class="d-flex justify-content-center mb-4">
-    <div class="alert alert-primary text-center h4 mb-0 px-4 py-3" role="alert" style="display: inline-block;">
+    <div class="alert alert-primary text-center h4 mb-0 px-4 py-3" role="alert">
         <strong>Task:</strong> Please read the article carefully, then choose one of the recommended related articles below.
     </div>
 </div>
@@ -54,39 +60,34 @@
         <div class="mb-3 article_label">
             {% if condition == 'color' %}
                 <img src="{{ url_for('static', filename='images/transp_score_colour_expanded.png') }}"
-                     alt="Transparency Score Label"
-                     style="cursor: pointer;"
-                     data-bs-toggle="collapse"
-                     data-bs-target="#scoreExplanation"
-                     aria-expanded="false"
-                     aria-controls="scoreExplanation">
+                     alt="Transparency Score Label" style="cursor: pointer;"
+                     data-bs-toggle="collapse" data-bs-target="#scoreExplanation"
+                     aria-expanded="false" aria-controls="scoreExplanation">
             {% elif condition == 'no_color' %}
                 <img src="{{ url_for('static', filename='images/transp_score_nocolor_expanded.png') }}"
-                     alt="Transparency Score Label"
-                     style="cursor: pointer;"
-                     data-bs-toggle="collapse"
-                     data-bs-target="#scoreExplanation"
-                     aria-expanded="false"
-                     aria-controls="scoreExplanation">
+                     alt="Transparency Score Label" style="cursor: pointer;"
+                     data-bs-toggle="collapse" data-bs-target="#scoreExplanation"
+                     aria-expanded="false" aria-controls="scoreExplanation">
             {% elif condition == 'c2pa' %}
                 <img src="{{ url_for('static', filename='images/c2pa-icon.png') }}"
-                     alt="C2PA Label"
-                     style="height: 50px;">
+                     alt="C2PA Label" style="height: 50px;">
             {% endif %}
         </div>
 
+        {% if condition != 'c2pa' %}
         <div class="collapse" id="scoreExplanation">
             <div class="card card-body border border-success rounded bg-light mb-3 py-3">
                 <strong>What is the Image Transparency Score?</strong><br>
-                This score rates how transparent and trustworthy the image is — based on 7 criteria, such as author identity, media asset verification, and edit history.
-                <br>
-                <ul class="mb-0">
+                This score rates how transparent and trustworthy the image is — based on 7 criteria,
+                such as author identity, media asset verification, and edit history.
+                <ul class="mb-0 mt-2">
                     <li><strong>A</strong>: High transparency and verified information</li>
                     <li><strong>B–C</strong>: Some elements missing or unclear</li>
                     <li><strong>D–E</strong>: Poor or no transparency indicators</li>
                 </ul>
             </div>
         </div>
+        {% endif %}
 
         <p class="article_content">{{ article['Content'] }}</p>
     </div>
@@ -94,7 +95,6 @@
     <!-- Recommended Articles -->
     <h3>Recommended</h3>
     <form method="POST">
-        <!-- Hidden inputs -->
         <input type="hidden" name="label_explained" id="label_explained" value="false">
         <input type="hidden" name="selected_article_had_label" id="selected_article_had_label" value="false">
 
@@ -115,7 +115,7 @@
                             {% if condition == 'color' %}
                                 <img src="{{ url_for('static', filename='images/transp_score_colour_collapsed.png') }}" class="transp-label" alt="Label: Color">
                             {% elif condition == 'no_color' %}
-                                <img src="{{ url_for('static', filename='images/transp_score_nocolor_collapsed.png.png') }}" class="transp-label" alt="Label: No Color">
+                                <img src="{{ url_for('static', filename='images/transp_score_nocolor_collapsed.png') }}" class="transp-label" alt="Label: No Color">
                             {% elif condition == 'c2pa' %}
                                 <img src="{{ url_for('static', filename='images/c2pa-icon.png') }}" class="transp-label" alt="Label: C2PA">
                             {% endif %}
