@@ -1,0 +1,101 @@
+{
+  "prolific_id": "test123",
+  "condition": "c2pa",
+  "timestamp_start": "2025-06-03T13:43:49.908012",
+  "demographics": {
+    "gender": "Male",
+    "gender_self_describe": "",
+    "age_group": "25\u201334",
+    "country": "United Kingdom",
+    "other_country": "",
+    "occupation": "Casual worker or unemployed <6 months",
+    "other_occupation": ""
+  },
+  "pre_questionnaire": {
+    "news_frequency": "About once a week",
+    "device": "Computer/Laptop",
+    "device_other": null,
+    "platform": "News aggregators",
+    "platform_other": null,
+    "news_sources": "hghgh",
+    "attention_check": "BBC",
+    "trust_level": "3"
+  },
+  "theme_selection": {
+    "selected_article_id": 46,
+    "selected_article_title": "Entertainment attorney: Cassie Ventura's graphic testimony \u2018is just the tip of the iceberg'",
+    "selected_article_category": "entertainment",
+    "condition": "c2pa"
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "selected_article_id": 52,
+      "selected_article_title": "Tom Brady, Jim Gray opening sports, entertainment museum",
+      "selected_article_had_label": false,
+      "label_explained": false
+    },
+    {
+      "round": 1,
+      "article_id": 52,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Picture",
+          "Headline"
+        ],
+        "trust_article": "3",
+        "trust_image": "4"
+      }
+    },
+    {
+      "round": 2,
+      "selected_article_id": 58,
+      "selected_article_title": "Miss Manners: No need to keep inviting no-show couple",
+      "selected_article_had_label": false,
+      "label_explained": false
+    },
+    {
+      "round": 2,
+      "article_id": 58,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Paragraph",
+          "Topic"
+        ],
+        "trust_article": "3",
+        "trust_image": "3"
+      }
+    },
+    {
+      "round": 3,
+      "selected_article_id": 52,
+      "selected_article_title": "Tom Brady, Jim Gray opening sports, entertainment museum",
+      "selected_article_had_label": true,
+      "label_explained": false
+    },
+    {
+      "round": 3,
+      "article_id": 52,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Headline",
+          "Paragraph"
+        ],
+        "trust_article": "4",
+        "trust_image": "4"
+      }
+    }
+  ],
+  "post_questionnaire": {
+    "confidence": "Neutral",
+    "feedback": "",
+    "score_meaning": "How correct the article is",
+    "label_expectation": [
+      "If AI was used to create it"
+    ],
+    "grade_basis": "How trustworthy the news site is",
+    "label_opinion": "Maybe, if it\u2019s easy to understand and always looks the same",
+    "attention_check": "Maybe",
+    "label_present": false
+  }
+}

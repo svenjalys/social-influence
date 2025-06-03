@@ -8,28 +8,48 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
+RESPONSES_DIR = "responses"
+os.makedirs(RESPONSES_DIR, exist_ok=True)
+
+# Hent Prolific PID fra URL ved hver forespørsel
+@app.before_request
+def capture_prolific_id():
+    pid = request.args.get('PROLIFIC_PID')
+    if pid:
+        session['prolific_id'] = pid
+
+# Tildel condition basert på balanse
 @app.before_request
 def assign_condition():
     if 'condition' not in session:
-        os.makedirs('responses', exist_ok=True)
-
-        # Ensure the responses file exists and is readable
-        try:
-            with open(RESPONSES_FILE, 'r') as f:
-                all_data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            all_data = {}
-
-        # Count how many participants already have each condition
         condition_counts = {'color': 0, 'no_color': 0, 'c2pa': 0}
-        for pdata in all_data.values():
-            cond = pdata.get('condition')
-            if cond in condition_counts:
-                condition_counts[cond] += 1
-
-        # Choose the condition with the fewest participants
+        for filename in os.listdir(RESPONSES_DIR):
+            if filename.endswith('.json'):
+                with open(os.path.join(RESPONSES_DIR, filename), 'r') as f:
+                    try:
+                        data = json.load(f)
+                        cond = data.get('condition')
+                        if cond in condition_counts:
+                            condition_counts[cond] += 1
+                    except Exception:
+                        continue
         session['condition'] = min(condition_counts, key=condition_counts.get)
 
+@app.before_request
+def require_participant():
+    allowed_routes = {'landing', 'static'}
+    if not session.get('prolific_id') and request.endpoint not in allowed_routes:
+        return redirect(url_for('landing'))
+
+def require_previous_step(step_name):
+    def wrapper(f):
+        def decorated_function(*args, **kwargs):
+            if not session.get(f'{step_name}_completed', False):
+                return redirect(url_for(step_name))
+            return f(*args, **kwargs)
+        decorated_function.__name__ = f.__name__
+        return decorated_function
+    return wrapper
 
 @app.route('/set-condition/<cond>')
 def set_condition(cond):
@@ -38,44 +58,47 @@ def set_condition(cond):
         return f"Condition set to {cond}. <a href='/select-article'>Continue</a>"
     return "Invalid condition", 400
 
-
-RESPONSES_FILE = "responses/responses.json"
 df = pd.read_csv("articles.csv")
 df.reset_index(inplace=True)
 
 def get_participant_id():
-    if 'participant_id' not in session:
-        session['participant_id'] = f"participant_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    return session['participant_id']
+    return session.get('prolific_id')
 
 def update_participant_data(section, data):
-    os.makedirs('responses', exist_ok=True)
     pid = get_participant_id()
-    if os.path.exists(RESPONSES_FILE):
-        with open(RESPONSES_FILE, 'r') as f:
-            all_data = json.load(f)
-    else:
-        all_data = {}
+    print("Prolific ID:", pid)
 
-    if pid not in all_data:
-        all_data[pid] = {
-            'participant_id': pid,
-            'condition': session.get('condition', 'unknown')
+    if not pid:
+        print("Ingen PID – avbryter lagring")
+        return
+
+    filepath = os.path.join(RESPONSES_DIR, f"{pid}.json")
+    print("Skal lagres til:", filepath)
+
+    if os.path.exists(filepath):
+        with open(filepath, 'r') as f:
+            pdata = json.load(f)
+    else:
+        pdata = {
+            'prolific_id': pid,
+            'condition': session.get('condition', 'unknown'),
+            'timestamp_start': datetime.utcnow().isoformat()
         }
 
     if section == 'round':
-        all_data[pid].setdefault('rounds', []).append(data)
+        pdata.setdefault('rounds', []).append(data)
     else:
-        all_data[pid][section] = data
+        pdata[section] = data
 
-    with open(RESPONSES_FILE, 'w') as f:
-        json.dump(all_data, f, indent=4)
+    with open(filepath, 'w') as f:
+        json.dump(pdata, f, indent=2)
+    print("Lagring fullført.")
+
 
 
 @app.route('/')
 def landing():
     return render_template('landing.html')
-
 
 @app.route('/demographics', methods=['GET', 'POST'])
 def demographics():
@@ -88,23 +111,10 @@ def demographics():
         occupation = request.form.get('occupation')
         other_occupation = request.form.get('other_occupation', '').strip()
 
-        # Replace default values if 'Other' or 'Self-describe' is selected
-        if gender == 'Self-describe':
-            gender_final = gender_self if gender_self else 'Self-describe'
-        else:
-            gender_final = gender
+        gender_final = gender_self if gender == 'Self-describe' else gender
+        country_final = other_country if country == 'Other' else country
+        occupation_final = other_occupation if occupation == 'Other' else occupation
 
-        if country == 'Other':
-            country_final = other_country if other_country else 'Other'
-        else:
-            country_final = country
-
-        if occupation == 'Other':
-            occupation_final = other_occupation if other_occupation else 'Other'
-        else:
-            occupation_final = occupation
-
-        # Age check
         if age_group == '15 or younger':
             return render_template('thank_you.html', message="Sorry, you do not meet the age criteria for this study.")
 
@@ -117,15 +127,14 @@ def demographics():
             'occupation': occupation_final,
             'other_occupation': other_occupation
         })
-
+        session['demographics_completed'] = True
         session['round'] = 1
         return redirect(url_for('pre_questionnaire'))
 
     return render_template('demographics.html')
 
-
-
 @app.route('/pre-questionnaire', methods=['GET', 'POST'])
+@require_previous_step('demographics')
 def pre_questionnaire():
     if request.method == 'POST':
         data = {
@@ -138,19 +147,18 @@ def pre_questionnaire():
             'attention_check': request.form.get('attention_check'),
             'trust_level': request.form.get('trust_level')
         }
-
         update_participant_data('pre_questionnaire', data)
+        session['pre_questionnaire_completed'] = True
         session['round'] = 1
         return redirect(url_for('select_article'))
     return render_template('pre_questionnaire.html')
 
 @app.route('/select-article', methods=['GET', 'POST'])
+@require_previous_step('pre_questionnaire')
 def select_article():
     if request.method == 'POST':
         selected_article_id = int(request.form['selected_article_id'])
         session['next_article'] = selected_article_id
-
-        # Use DataFrame directly to ensure valid fields
         article_row = df[df['index'] == selected_article_id]
         if not article_row.empty:
             article = article_row.iloc[0]
@@ -160,67 +168,34 @@ def select_article():
                 'selected_article_category': article['Category'],
                 'condition': session.get('condition', 'unknown')
             })
-        else:
-            update_participant_data('theme_selection', {
-                'selected_article_id': selected_article_id,
-                'selected_article_title': None,
-                'selected_article_category': None,
-            })
-
+        session['select_article_completed'] = True
         return redirect(url_for('article', article_id=selected_article_id))
 
-    # GET: select 4 articles from different categories
     grouped = df.groupby(df['Category'].str.title())
     selected_categories = random.sample(list(grouped.groups), k=min(4, len(grouped)))
-
-    selected_articles = []
-    for cat in selected_categories:
-        selected_article = grouped.get_group(cat).sample(1).iloc[0]
-        selected_articles.append(selected_article)
-
-    article_dicts = []
-    for a in selected_articles:
-        article_dict = a.to_dict()
-        article_dict['index'] = int(a['index'])  # ensure index is included
-        article_dicts.append(article_dict)
-
-    # Show label for all
+    selected_articles = [grouped.get_group(cat).sample(1).iloc[0] for cat in selected_categories]
+    article_dicts = [a.to_dict() | {'index': int(a['index'])} for a in selected_articles]
     label_ids = [a['index'] for a in article_dicts]
     session['theme_articles'] = article_dicts
     session['theme_label_ids'] = label_ids
-
     return render_template('select_article.html', articles=article_dicts, label_ids=label_ids, condition=session['condition'])
 
-
-
-
-
-
-
-
 @app.route('/article/<int:article_id>', methods=['GET', 'POST'])
+@require_previous_step('select_article')
 def article(article_id):
     if article_id >= len(df):
         return redirect(url_for('select_article'))
-
     article_data = df.iloc[article_id].to_dict()
-
-    # Recommended articles (4) from the same category
     recommendations_df = df[(df['Category'] == article_data['Category']) & (df['index'] != article_id)]
     recommendations = recommendations_df.sample(min(4, len(recommendations_df))).to_dict(orient='records')
-
-    # Randomly assign 2 labels
     label_shown_ids = set(random.sample([rec['index'] for rec in recommendations], min(2, len(recommendations))))
-    session['label_shown_ids'] = [int(i) for i in label_shown_ids]
+    session['label_shown_ids'] = list(label_shown_ids)
 
     if request.method == 'POST':
         selected_article_id = int(request.form['selected_article_id'])
         session['next_article'] = selected_article_id
-
-        # Retrieve from form instead of inferring
         label_explained = request.form.get('label_explained') == 'true'
         selected_article_had_label = request.form.get('selected_article_had_label') == 'true'
-
         update_participant_data('round', {
             'round': session.get('round', 1),
             'selected_article_id': selected_article_id,
@@ -228,43 +203,27 @@ def article(article_id):
             'selected_article_had_label': selected_article_had_label,
             'label_explained': label_explained
         })
-
+        session['article_completed'] = True
         return redirect(url_for('mid_questionnaire'))
 
-    return render_template('article.html',
-                           article=article_data,
-                           recommendations=recommendations,
-                           label_shown_ids=label_shown_ids,
-                           condition=session['condition'])
-
-
-
-
-
-
+    return render_template('article.html', article=article_data, recommendations=recommendations, label_shown_ids=label_shown_ids, condition=session['condition'])
 
 @app.route('/mid-questionnaire', methods=['GET', 'POST'])
+@require_previous_step('article')
 def mid_questionnaire():
     if request.method == 'POST':
         selected_elements = request.form.getlist('choice_elements')
         other_text = request.form.get('other_element')
-
         if not selected_elements:
             return render_template('mid_questionnaire.html', error="Please select at least one element that influenced your choice.")
-
-        other_selected = 'Other (please specify)' in selected_elements
-        none_selected = "Don't know / None of these" in selected_elements
-
-        if other_selected and not other_text:
+        if 'Other (please specify)' in selected_elements and not other_text:
             return render_template('mid_questionnaire.html', error="Please specify what 'Other' means.")
-        if none_selected and len(selected_elements) > 1:
+        if "Don't know / None of these" in selected_elements and len(selected_elements) > 1:
             return render_template('mid_questionnaire.html', error="'Don't know' cannot be selected with other options.")
-        if other_selected and len(selected_elements) == 1:
+        if selected_elements == ['Other (please specify)']:
             selected_elements = [f"Other: {other_text}"]
-
         trust_article = request.form.get('trust_article')
         trust_image = request.form.get('trust_image')
-
         update_participant_data('round', {
             'round': session.get('round', 1),
             'article_id': session.get('next_article'),
@@ -274,20 +233,16 @@ def mid_questionnaire():
                 'trust_image': trust_image
             }
         })
-
+        session['mid_questionnaire_completed'] = True
         if session.get('round', 1) < 3:
-            session['round'] = session.get('round', 1) + 1
-
+            session['round'] += 1
             return redirect(url_for('article', article_id=session.get('next_article')))
         else:
             return redirect(url_for('post_questionnaire'))
-
     return render_template('mid_questionnaire.html')
 
-
-
-
 @app.route('/post-questionnaire', methods=['GET', 'POST'])
+@require_previous_step('mid_questionnaire')
 def post_questionnaire():
     if request.method == 'POST':
         confidence = request.form.get('confidence')
@@ -300,14 +255,10 @@ def post_questionnaire():
         label_opinion = request.form.get('label_opinion')
         attention_check = request.form.get('attention_check')
         feedback = request.form.get('feedback')
-
-        # Validation
         if not all([confidence, score_meaning, grade_basis, label_opinion, attention_check]):
             return render_template('post_questionnaire.html', error="Please answer all required questions.")
-        if len(label_expectation) == 0:
+        if not label_expectation:
             return render_template('post_questionnaire.html', error="Please select at least one option for question 2.")
-
-        # Normalize answers
         if score_meaning == "Something else (please say what)":
             score_meaning = f"Other: {score_meaning_other}"
         if grade_basis == "Something else (please say what)":
@@ -317,7 +268,6 @@ def post_questionnaire():
                 f"Other: {label_expectation_other}" if v == "Something else (please say what)" else v
                 for v in label_expectation
             ]
-
         update_participant_data('post_questionnaire', {
             'confidence': confidence,
             'feedback': feedback,
@@ -328,14 +278,12 @@ def post_questionnaire():
             'attention_check': attention_check,
             'label_present': session.get('last_article_had_label', False)
         })
-
+        session['post_questionnaire_completed'] = True
         return redirect(url_for('thank_you'))
-
     return render_template('post_questionnaire.html')
 
-
-
 @app.route('/thank-you')
+@require_previous_step('post_questionnaire')
 def thank_you():
     return render_template('thank_you.html')
 
