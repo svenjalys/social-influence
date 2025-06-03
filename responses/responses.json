@@ -108,10 +108,10 @@
         "participant_id": "participant_20250603_094151",
         "condition": "no_color",
         "theme_selection": {
-            "selected_article_id": 18,
-            "selected_article_title": "Minnesota AG sued for letting biological males play in girls sports amid trans softball player dominance",
+            "selected_article_id": 24,
+            "selected_article_title": "Hall of Famer Brian Urlacher reiterates stance on transgender athletes in sports: 'Common sense'",
             "selected_article_category": "sports",
-            "condition": "c2pa"
+            "condition": "color"
         },
         "rounds": [
             {
@@ -303,6 +303,14 @@
                     "trust_article": "4",
                     "trust_image": "3"
                 }
+            },
+            {
+                "round": 3,
+                "selected_article_id": 38,
+                "selected_article_title": "China plans regulation to aid tech firms listing overseas, official says",
+                "selected_article_category": "technology",
+                "selected_article_had_label": true,
+                "label_explained": true
             }
         ]
     }
