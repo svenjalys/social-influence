@@ -1,101 +1,117 @@
 {
     "participant_20250602_091610": {
         "participant_id": "participant_20250602_091610",
+        "condition": "color",
         "demographics": {
-            "gender": "Prefer not to say",
-            "age_group": "25\u201334",
+            "gender": "Male",
+            "age_group": "35\u201344",
             "country": "United States",
-            "occupation": "Administrative or junior management/professional"
+            "occupation": "Skilled manual worker"
         },
         "pre_questionnaire": {
-            "news_frequency": "Never",
+            "news_frequency": "About once a week",
             "device": "Tablet",
             "device_other": null,
             "platform": "News aggregators",
             "platform_other": null,
             "news_sources": "bbc",
-            "attention_check": "New York Times",
-            "trust_level": "3"
+            "attention_check": "BBC",
+            "trust_level": "1"
         },
         "theme_selection": {
-            "selected_article_id": 43,
-            "selected_article_title": "Ballistics technology used by Colorado sheriffs helps solve years-old cases",
-            "selected_article_category": "technology"
+            "selected_article_id": 18,
+            "selected_article_title": "Minnesota AG sued for letting biological males play in girls sports amid trans softball player dominance",
+            "selected_article_category": "sports",
+            "condition": "color"
         },
         "rounds": [
             {
                 "round": 1,
-                "selected_article_id": 40,
-                "selected_article_title": "Airbus appoints Remi Maillard as head of technology,\u00a0sources\u00a0say",
-                "selected_article_category": "technology",
+                "selected_article_id": 29,
+                "selected_article_title": "\u2018He failed and we won,' \u2013 Watching Ruben Amorim's Europa League final in the city he left for Man Utd",
+                "selected_article_category": "sports",
                 "selected_article_had_label": true,
                 "label_explained": true
             },
             {
                 "round": 1,
-                "article_id": 40,
-                "mid_questionnaire": {
-                    "selected_elements": [
-                        "Paragraph",
-                        "Topic"
-                    ],
-                    "trust_article": "5",
-                    "trust_image": "4"
-                }
-            },
-            {
-                "round": 2,
-                "selected_article_id": 30,
-                "selected_article_title": "Firsthand Technology Value Fund: Q1 Earnings Snapshot",
-                "selected_article_category": "technology",
-                "selected_article_had_label": false,
-                "label_explained": false
-            },
-            {
-                "round": 2,
-                "article_id": 30,
+                "article_id": 29,
                 "mid_questionnaire": {
                     "selected_elements": [
                         "Headline",
-                        "Paragraph"
+                        "Paragraph",
+                        "Topic"
                     ],
                     "trust_article": "4",
                     "trust_image": "4"
                 }
             },
             {
-                "round": 3,
-                "selected_article_id": 33,
-                "selected_article_title": "Proposed bills would help protect social workers across New York state",
-                "selected_article_category": "technology",
+                "round": 2,
+                "selected_article_id": 15,
+                "selected_article_title": "Denver hosts professional sports leaders, major platforms at Gondola Sports Summit",
+                "selected_article_category": "sports",
                 "selected_article_had_label": false,
-                "label_explained": true
+                "label_explained": false
             },
             {
-                "round": 3,
-                "article_id": 33,
+                "round": 2,
+                "article_id": 15,
                 "mid_questionnaire": {
                     "selected_elements": [
+                        "Image label",
+                        "Picture",
+                        "Headline",
                         "Paragraph",
                         "Topic"
                     ],
                     "trust_article": "1",
                     "trust_image": "1"
                 }
+            },
+            {
+                "round": 3,
+                "selected_article_id": 17,
+                "selected_article_title": "Ex-Vikings player rips Minnesota AG as state sues Trump to keep trans athletes in girls sports",
+                "selected_article_category": "sports",
+                "selected_article_had_label": false,
+                "label_explained": true
+            },
+            {
+                "round": 3,
+                "article_id": 17,
+                "mid_questionnaire": {
+                    "selected_elements": [
+                        "Paragraph",
+                        "Topic"
+                    ],
+                    "trust_article": "6",
+                    "trust_image": "6"
+                }
             }
         ],
         "post_questionnaire": {
-            "confidence": "Somewhat Unconfident",
+            "confidence": "Somewhat Confident",
             "feedback": "",
-            "score_meaning": "How trustworthy the author is",
+            "score_meaning": "How clearly picture information is shared",
             "label_expectation": [
-                "Where the pictures or text came from",
+                "If AI was used to create it",
                 "When it was made or changed"
             ],
-            "grade_basis": "How clearly picture information is shared",
+            "grade_basis": "How trustworthy the news site is",
             "label_opinion": "Not really, I wouldn\u2019t pay attention to it",
-            "attention_check": "Yes, for sure",
+            "attention_check": "Not really",
             "label_present": false
+        }
+    },
+    "participant_20250603_094151": {
+        "participant_id": "participant_20250603_094151",
+        "condition": "no_color",
+        "theme_selection": {
+            "selected_article_id": 16,
+            "selected_article_title": "Former Sporting KC M Gadi Kinda dies at 31",
+            "selected_article_category": "sports",
+            "condition": "no_color"
         }
     }
 }

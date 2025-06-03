@@ -52,13 +52,27 @@
         <img src="{{ article['Image URL'] or 'https://placehold.co/600x400?text=No+Image' }}" class="img-fluid mb-3">
 
         <div class="mb-3 article_label">
-            <img src="{{ url_for('static', filename='images/transp_score_colour_expanded.png') }}"
-                 alt="Transparency Score Label"
-                 style="cursor: pointer;"
-                 data-bs-toggle="collapse"
-                 data-bs-target="#scoreExplanation"
-                 aria-expanded="false"
-                 aria-controls="scoreExplanation">
+            {% if condition == 'color' %}
+                <img src="{{ url_for('static', filename='images/transp_score_colour_expanded.png') }}"
+                     alt="Transparency Score Label"
+                     style="cursor: pointer;"
+                     data-bs-toggle="collapse"
+                     data-bs-target="#scoreExplanation"
+                     aria-expanded="false"
+                     aria-controls="scoreExplanation">
+            {% elif condition == 'no_color' %}
+                <img src="{{ url_for('static', filename='images/transp_score_nocolor_expanded.png') }}"
+                     alt="Transparency Score Label"
+                     style="cursor: pointer;"
+                     data-bs-toggle="collapse"
+                     data-bs-target="#scoreExplanation"
+                     aria-expanded="false"
+                     aria-controls="scoreExplanation">
+            {% elif condition == 'c2pa' %}
+                <img src="{{ url_for('static', filename='images/c2pa-icon.png') }}"
+                     alt="C2PA Label"
+                     style="height: 50px;">
+            {% endif %}
         </div>
 
         <div class="collapse" id="scoreExplanation">
@@ -98,9 +112,13 @@
                     </div>
                     <div class="col-md-4 text-end">
                         {% if rec['index'] in label_shown_ids %}
-                            <img src="{{ url_for('static', filename='images/transp_score_colour_collapsed.png') }}"
-                                 alt="Transparency Label"
-                                 class="transp-label">
+                            {% if condition == 'color' %}
+                                <img src="{{ url_for('static', filename='images/transp_score_colour_collapsed.png') }}" class="transp-label" alt="Label: Color">
+                            {% elif condition == 'no_color' %}
+                                <img src="{{ url_for('static', filename='images/transp_score_nocolor_collapsed.png.png') }}" class="transp-label" alt="Label: No Color">
+                            {% elif condition == 'c2pa' %}
+                                <img src="{{ url_for('static', filename='images/c2pa-icon.png') }}" class="transp-label" alt="Label: C2PA">
+                            {% endif %}
                         {% endif %}
                         <img src="{{ rec['Image URL'] or 'https://placehold.co/300x180?text=No+Image' }}"
                              alt="{{ rec['Title'] }}"

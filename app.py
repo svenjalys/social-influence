@@ -8,6 +8,29 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
+@app.before_request
+def assign_condition():
+    if 'condition' not in session:
+        os.makedirs('responses', exist_ok=True)
+        try:
+            with open(RESPONSES_FILE, 'r') as f:
+                all_data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            all_data = {}
+
+        existing_participants = list(all_data.keys())
+        idx = len(existing_participants) % 3
+        conditions = ['color', 'no_color', 'c2pa']
+        session['condition'] = conditions[idx]
+
+@app.route('/set-condition/<cond>')
+def set_condition(cond):
+    if cond in ['color', 'no_color', 'c2pa']:
+        session['condition'] = cond
+        return f"Condition set to {cond}. <a href='/select-article'>Continue</a>"
+    return "Invalid condition", 400
+
+
 RESPONSES_FILE = "responses/responses.json"
 df = pd.read_csv("articles.csv")
 df.reset_index(inplace=True)
@@ -27,7 +50,10 @@ def update_participant_data(section, data):
         all_data = {}
 
     if pid not in all_data:
-        all_data[pid] = {'participant_id': pid}
+        all_data[pid] = {
+            'participant_id': pid,
+            'condition': session.get('condition', 'unknown')
+        }
 
     if section == 'round':
         all_data[pid].setdefault('rounds', []).append(data)
@@ -36,6 +62,7 @@ def update_participant_data(section, data):
 
     with open(RESPONSES_FILE, 'w') as f:
         json.dump(all_data, f, indent=4)
+
 
 @app.route('/')
 def landing():
@@ -97,20 +124,22 @@ def select_article():
         selected_article_id = int(request.form['selected_article_id'])
         session['next_article'] = selected_article_id
 
-        #Use DataFrame directly to ensure valid fields
+        # Use DataFrame directly to ensure valid fields
         article_row = df[df['index'] == selected_article_id]
         if not article_row.empty:
             article = article_row.iloc[0]
             update_participant_data('theme_selection', {
                 'selected_article_id': selected_article_id,
                 'selected_article_title': article['Title'],
-                'selected_article_category': article['Category']
+                'selected_article_category': article['Category'],
+                'condition': session.get('condition', 'unknown')
             })
         else:
             update_participant_data('theme_selection', {
                 'selected_article_id': selected_article_id,
                 'selected_article_title': None,
-                'selected_article_category': None
+                'selected_article_category': None,
+                'condition': session.get('condition', 'unknown')
             })
 
         return redirect(url_for('article', article_id=selected_article_id))
@@ -135,7 +164,9 @@ def select_article():
     session['theme_articles'] = article_dicts
     session['theme_label_ids'] = label_ids
 
-    return render_template('select_article.html', articles=article_dicts, label_ids=label_ids)
+    return render_template('select_article.html', articles=article_dicts, label_ids=label_ids, condition=session['condition'])
+
+
 
 
 
@@ -179,7 +210,8 @@ def article(article_id):
     return render_template('article.html',
                            article=article_data,
                            recommendations=recommendations,
-                           label_shown_ids=label_shown_ids)
+                           label_shown_ids=label_shown_ids,
+                           condition=session['condition'])
 
 
 
