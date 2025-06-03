@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <title>Post-Questionnaire</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
+  <style>
+    .hidden { display: none; }
+  </style>
   <script>
     function handleOtherCheckbox(source, textboxId) {
       const textbox = document.getElementById(textboxId);
@@ -21,6 +23,7 @@
       } else {
         textbox.style.display = 'none';
         textbox.querySelector('input').required = false;
+        textbox.querySelector('input').value = '';
       }
     }
 
@@ -45,10 +48,8 @@
   <form method="POST">
     <!-- Confidence -->
     <div class="mb-4">
-      <label for="confidence" class="form-label">
-        How confident do you feel in identifying trustworthy news after completing this study?
-      </label>
-      <select class="form-select" id="confidence" name="confidence" required>
+      <label class="form-label">How confident do you feel in identifying trustworthy news after completing this study?</label>
+      <select class="form-select" name="confidence" required>
         <option value="">Select your answer</option>
         <option>Very Confident</option>
         <option>Somewhat Confident</option>
@@ -60,20 +61,20 @@
 
     <!-- Feedback (optional) -->
     <div class="mb-4">
-      <label for="feedback" class="form-label">Do you have any comments or suggestions about this study?</label>
-      <textarea class="form-control" id="feedback" name="feedback" rows="4"></textarea>
+      <label class="form-label">Do you have any comments or suggestions about this study?</label>
+      <textarea class="form-control" name="feedback" rows="4"></textarea>
     </div>
 
     <!-- Q1 -->
     <div class="mb-4">
       <label class="form-label"><strong>1. What do you think the "Transparency Score" is showing?</strong></label>
       {% for opt in ['How correct the article is','How clearly the sources and methods are explained','How trustworthy the author is','How much readers like the article','How clearly picture information is shared','Something else (please say what)','I’m not sure'] %}
-      <label class="form-check d-block">
-        <input class="form-check-input" type="radio" name="score_meaning" value="{{ opt }}" required onchange="handleOtherRadio('score_meaning', 'score_meaning_other')">
-        {{ opt }}
-      </label>
+        <label class="form-check d-block">
+          <input class="form-check-input" type="radio" name="score_meaning" value="{{ opt }}" required onchange="handleOtherRadio('score_meaning', 'score_meaning_other')">
+          {{ opt }}
+        </label>
       {% endfor %}
-      <div class="mt-2" id="score_meaning_other" style="display: none;">
+      <div class="mt-2 hidden" id="score_meaning_other">
         <input type="text" name="score_meaning_other" class="form-control" placeholder="Please explain.">
       </div>
     </div>
@@ -83,14 +84,14 @@
       <label class="form-label"><strong>2. What kind of information would you expect if you clicked on this label?</strong></label>
       {% set other_value = 'Something else (please say what)' %}
       {% for opt in ['Who the author or publisher is','If AI was used to create it','Where the pictures or text came from','When it was made or changed','Who owns or controls the article',other_value,'I’m not sure'] %}
-      <label class="form-check d-block">
-        <input class="form-check-input" type="checkbox" name="label_expectation" value="{{ opt }}"
-               {% if opt == other_value %} onchange="handleOtherCheckbox(this, 'label_expectation_other')" {% endif %}>
-        {{ opt }}
-      </label>
+        <label class="form-check d-block">
+          <input class="form-check-input" type="checkbox" name="label_expectation" value="{{ opt }}"
+                 {% if opt == other_value %} onchange="handleOtherCheckbox(this, 'label_expectation_other')" {% endif %}>
+          {{ opt }}
+        </label>
       {% endfor %}
       <input type="hidden" id="label_expectation_required" required>
-      <div class="mt-2" id="label_expectation_other" style="display: none;">
+      <div class="mt-2 hidden" id="label_expectation_other">
         <input type="text" name="label_expectation_other" class="form-control"
                placeholder="Please describe what other information you would expect.">
       </div>
@@ -100,12 +101,12 @@
     <div class="mb-4">
       <label class="form-label"><strong>3. The label shows a grade (like A to E). What do you think this grade is based on?</strong></label>
       {% for opt in ['How correct the facts are','How openly the article shows its sources, author, and changes','How clearly picture information is shared','How trustworthy the news site is','If the article is politically biased','Something else (please say what)','I’m not sure'] %}
-      <label class="form-check d-block">
-        <input class="form-check-input" type="radio" name="grade_basis" value="{{ opt }}" required onchange="handleOtherRadio('grade_basis', 'grade_basis_other')">
-        {{ opt }}
-      </label>
+        <label class="form-check d-block">
+          <input class="form-check-input" type="radio" name="grade_basis" value="{{ opt }}" required onchange="handleOtherRadio('grade_basis', 'grade_basis_other')">
+          {{ opt }}
+        </label>
       {% endfor %}
-      <div class="mt-2" id="grade_basis_other" style="display: none;">
+      <div class="mt-2 hidden" id="grade_basis_other">
         <input type="text" name="grade_basis_other" class="form-control" placeholder="Please explain.">
       </div>
     </div>
@@ -114,10 +115,10 @@
     <div class="mb-4">
       <label class="form-label"><strong>4. Would you like it if all online articles had a label like this?</strong></label>
       {% for opt in ['Yes, for sure','Maybe, if it’s easy to understand and always looks the same','Not really, I wouldn’t pay attention to it','No, I don’t trust these kinds of labels','I’m not sure'] %}
-      <label class="form-check d-block">
-        <input class="form-check-input" type="radio" name="label_opinion" value="{{ opt }}" required>
-        {{ opt }}
-      </label>
+        <label class="form-check d-block">
+          <input class="form-check-input" type="radio" name="label_opinion" value="{{ opt }}" required>
+          {{ opt }}
+        </label>
       {% endfor %}
     </div>
 
@@ -127,10 +128,10 @@
         Please select <u>“I’m not sure”</u> to show you're paying attention.
       </label>
       {% for opt in ['Yes, for sure', 'Maybe', 'Not really', 'No', 'I’m not sure'] %}
-      <label class="form-check d-block">
-        <input class="form-check-input" type="radio" name="attention_check" value="{{ opt }}" required>
-        {{ opt }}
-      </label>
+        <label class="form-check d-block">
+          <input class="form-check-input" type="radio" name="attention_check" value="{{ opt }}" required>
+          {{ opt }}
+        </label>
       {% endfor %}
     </div>
 

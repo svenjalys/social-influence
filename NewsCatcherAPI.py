@@ -10,7 +10,7 @@ load_dotenv()
 
 # NewsCatcher API settings
 #NEWS_API_KEY = os.getenv('NEWS_API_KEY')
-NEWS_API_KEY = "m102RlosKZIC9AbVdg8MeyeTAGcpbQdS"
+NEWS_API_KEY = ""
 API_URL = "https://v3-api.newscatcherapi.com/api/search"
 
 # Categories and settings

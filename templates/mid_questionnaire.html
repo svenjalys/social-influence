@@ -34,7 +34,7 @@
         const noneCheckbox = document.getElementById('el7');
         const otherInput = document.getElementById('otherElement');
 
-        // Show/hide the "Other" textbox, but do not disable other options
+        // Show/hide the "Other" textbox
         if (otherCheckbox.checked) {
             otherInput.classList.remove('hidden');
             otherInput.required = true;
@@ -43,19 +43,15 @@
             otherInput.required = false;
         }
 
-        // "Don't know" disables everything else
+        // If "Don't know" is checked, disable the others
         if (noneCheckbox.checked) {
             checkboxes.forEach(cb => {
-                if (cb !== noneCheckbox) {
-                    cb.disabled = true;
-                }
+                if (cb !== noneCheckbox) cb.disabled = true;
             });
             otherInput.classList.add('hidden');
             otherInput.required = false;
         } else {
-            checkboxes.forEach(cb => {
-                cb.disabled = false;
-            });
+            checkboxes.forEach(cb => cb.disabled = false);
         }
     }
 
@@ -87,13 +83,14 @@
 
         return true;
     }
-</script>
-
+    </script>
 </head>
 <body>
 <div class="card">
     <h2 class="mb-4 text-center">Mid Questionnaire</h2>
     <form method="POST" onsubmit="return validateForm()">
+        <!-- Hidden field for round -->
+        <input type="hidden" name="round" value="{{ session['round'] }}">
 
         <!-- 1. Elements influencing article choice -->
         <div class="form-section">

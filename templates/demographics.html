@@ -22,14 +22,16 @@
                 <!-- Gender -->
                 <div class="mb-3">
                     <label class="form-label">1. What best describes your gender?</label>
-                    <select name="gender" id="gender" class="form-select" required onchange="handleOther(this, 'gender_other')">
+                    <select name="gender" id="gender" class="form-select" required onchange="handleOther(this, 'gender_other_wrapper')">
                         <option value="" disabled selected>Select...</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                         <option value="Prefer not to say">Prefer not to say</option>
                         <option value="Self-describe">Self-describe</option>
                     </select>
-                    <input type="text" name="gender_other" id="gender_other" class="form-control mt-2 hidden" placeholder="Please specify">
+                    <div id="gender_other_wrapper" class="hidden mt-2">
+                        <input type="text" name="gender_self_describe" id="gender_other" class="form-control" placeholder="Please specify">
+                    </div>
                 </div>
 
                 <!-- Age -->
@@ -50,19 +52,21 @@
                 <!-- Country -->
                 <div class="mb-3">
                     <label class="form-label">3. Which country do you live in?</label>
-                    <select name="country" id="country" class="form-select" required onchange="handleOther(this, 'country_other')">
+                    <select name="country" id="country" class="form-select" required onchange="handleOther(this, 'country_other_wrapper')">
                         <option value="" disabled selected>Select...</option>
                         <option value="United States">United States</option>
                         <option value="United Kingdom">United Kingdom</option>
                         <option value="Other">Other</option>
                     </select>
-                    <input type="text" name="country_other" id="country_other" class="form-control mt-2 hidden" placeholder="Please specify">
+                    <div id="country_other_wrapper" class="hidden mt-2">
+                        <input type="text" name="other_country" id="country_other" class="form-control" placeholder="Please specify">
+                    </div>
                 </div>
 
                 <!-- Occupation -->
                 <div class="mb-3">
                     <label class="form-label">4. Which of these best describes the occupation of the main income earner in your household?</label>
-                    <select name="occupation" id="occupation" class="form-select" required onchange="handleOther(this, 'occupation_other')">
+                    <select name="occupation" id="occupation" class="form-select" required onchange="handleOther(this, 'occupation_other_wrapper')">
                         <option value="" disabled selected>Select...</option>
                         <option>Very senior management, top level civil servant or professional</option>
                         <option>Administrative or junior management/professional</option>
@@ -77,7 +81,9 @@
                         <option>Prefer not to say</option>
                         <option value="Other">Other</option>
                     </select>
-                    <input type="text" name="occupation_other" id="occupation_other" class="form-control mt-2 hidden" placeholder="Please specify">
+                    <div id="occupation_other_wrapper" class="hidden mt-2">
+                        <input type="text" name="other_occupation" id="occupation_other" class="form-control" placeholder="Please specify">
+                    </div>
                 </div>
 
                 <!-- Submit -->
@@ -90,14 +96,17 @@
 </div>
 
 <script>
-function handleOther(selectElement, inputId) {
-    const input = document.getElementById(inputId);
-    if (selectElement.value === "Other" || selectElement.value === "Self-describe") {
-        input.classList.remove("hidden");
-        input.setAttribute("required", "required");
+function handleOther(selectElement, wrapperId) {
+    const wrapper = document.getElementById(wrapperId);
+    const input = wrapper.querySelector('input');
+    const selectedValue = selectElement.value;
+
+    if (selectedValue === "Other" || selectedValue === "Self-describe") {
+        wrapper.classList.remove("hidden");
+        input.required = true;
     } else {
-        input.classList.add("hidden");
-        input.removeAttribute("required");
+        wrapper.classList.add("hidden");
+        input.required = false;
         input.value = "";
     }
 }

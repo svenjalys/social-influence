@@ -3,282 +3,56 @@
         "participant_id": "participant_20250602_091610",
         "condition": "color",
         "demographics": {
-            "gender": "Male",
-            "age_group": "35\u201344",
-            "country": "United States",
-            "occupation": "Skilled manual worker"
+            "gender": "Prefer not to say",
+            "gender_self_describe": "",
+            "age_group": "16\u201324",
+            "country": "United Kingdom",
+            "other_country": "",
+            "occupation": "Skilled manual worker",
+            "other_occupation": ""
         },
         "pre_questionnaire": {
-            "news_frequency": "About once a week",
-            "device": "Tablet",
+            "news_frequency": "Several times a week",
+            "device": "Computer/Laptop",
             "device_other": null,
-            "platform": "News aggregators",
+            "platform": "News apps",
             "platform_other": null,
             "news_sources": "bbc",
-            "attention_check": "BBC",
-            "trust_level": "1"
+            "attention_check": "CBS",
+            "trust_level": "2"
         },
         "theme_selection": {
-            "selected_article_id": 18,
-            "selected_article_title": "Minnesota AG sued for letting biological males play in girls sports amid trans softball player dominance",
-            "selected_article_category": "sports",
+            "selected_article_id": 48,
+            "selected_article_title": "Fox News Entertainment Newsletter: Mariska Hargitay's family secret, Dakota Johnson struggled to pay rent",
+            "selected_article_category": "entertainment",
             "condition": "color"
         },
         "rounds": [
             {
                 "round": 1,
-                "selected_article_id": 29,
-                "selected_article_title": "\u2018He failed and we won,' \u2013 Watching Ruben Amorim's Europa League final in the city he left for Man Utd",
-                "selected_article_category": "sports",
+                "selected_article_id": 49,
+                "selected_article_title": "Fox News Entertainment Newsletter: Diddy trial sees Cassie testify, Honey Boo Boo claims mother kept TV pay",
                 "selected_article_had_label": true,
                 "label_explained": true
             },
             {
                 "round": 1,
-                "article_id": 29,
+                "article_id": 49,
                 "mid_questionnaire": {
                     "selected_elements": [
-                        "Headline",
-                        "Paragraph",
-                        "Topic"
-                    ],
-                    "trust_article": "4",
-                    "trust_image": "4"
-                }
-            },
-            {
-                "round": 2,
-                "selected_article_id": 15,
-                "selected_article_title": "Denver hosts professional sports leaders, major platforms at Gondola Sports Summit",
-                "selected_article_category": "sports",
-                "selected_article_had_label": false,
-                "label_explained": false
-            },
-            {
-                "round": 2,
-                "article_id": 15,
-                "mid_questionnaire": {
-                    "selected_elements": [
-                        "Image label",
-                        "Picture",
-                        "Headline",
-                        "Paragraph",
-                        "Topic"
+                        "Don't know / None of these"
                     ],
                     "trust_article": "1",
-                    "trust_image": "1"
-                }
-            },
-            {
-                "round": 3,
-                "selected_article_id": 17,
-                "selected_article_title": "Ex-Vikings player rips Minnesota AG as state sues Trump to keep trans athletes in girls sports",
-                "selected_article_category": "sports",
-                "selected_article_had_label": false,
-                "label_explained": true
-            },
-            {
-                "round": 3,
-                "article_id": 17,
-                "mid_questionnaire": {
-                    "selected_elements": [
-                        "Paragraph",
-                        "Topic"
-                    ],
-                    "trust_article": "6",
-                    "trust_image": "6"
-                }
-            }
-        ],
-        "post_questionnaire": {
-            "confidence": "Somewhat Confident",
-            "feedback": "",
-            "score_meaning": "How clearly picture information is shared",
-            "label_expectation": [
-                "If AI was used to create it",
-                "When it was made or changed"
-            ],
-            "grade_basis": "How trustworthy the news site is",
-            "label_opinion": "Not really, I wouldn\u2019t pay attention to it",
-            "attention_check": "Not really",
-            "label_present": false
-        }
-    },
-    "participant_20250603_094151": {
-        "participant_id": "participant_20250603_094151",
-        "condition": "no_color",
-        "theme_selection": {
-            "selected_article_id": 24,
-            "selected_article_title": "Hall of Famer Brian Urlacher reiterates stance on transgender athletes in sports: 'Common sense'",
-            "selected_article_category": "sports",
-            "condition": "color"
-        },
-        "rounds": [
-            {
-                "round": 1,
-                "selected_article_id": 25,
-                "selected_article_title": "YouTube hires former Disney veteran to oversee sports and media",
-                "selected_article_category": "sports",
-                "selected_article_had_label": true,
-                "label_explained": true
-            },
-            {
-                "round": 1,
-                "article_id": 25,
-                "mid_questionnaire": {
-                    "selected_elements": [
-                        "Picture",
-                        "Paragraph",
-                        "Topic"
-                    ],
-                    "trust_article": "4",
                     "trust_image": "4"
-                }
-            },
-            {
-                "round": 1,
-                "selected_article_id": 35,
-                "selected_article_title": "SolarMax Technology: Q1 Earnings Snapshot",
-                "selected_article_category": "technology",
-                "selected_article_had_label": true,
-                "label_explained": false
-            },
-            {
-                "round": 1,
-                "article_id": 35,
-                "mid_questionnaire": {
-                    "selected_elements": [
-                        "Headline",
-                        "Paragraph"
-                    ],
-                    "trust_article": "3",
-                    "trust_image": "4"
-                }
-            },
-            {
-                "round": 1,
-                "article_id": 35,
-                "mid_questionnaire": {
-                    "selected_elements": [
-                        "Headline",
-                        "Paragraph"
-                    ],
-                    "trust_article": "3",
-                    "trust_image": "4"
-                }
-            },
-            {
-                "round": 1,
-                "article_id": 35,
-                "mid_questionnaire": {
-                    "selected_elements": [
-                        "Headline",
-                        "Paragraph"
-                    ],
-                    "trust_article": "3",
-                    "trust_image": "4"
-                }
-            },
-            {
-                "round": 1,
-                "selected_article_id": 25,
-                "selected_article_title": "YouTube hires former Disney veteran to oversee sports and media",
-                "selected_article_category": "sports",
-                "selected_article_had_label": true,
-                "label_explained": false
-            },
-            {
-                "round": 1,
-                "article_id": 25,
-                "mid_questionnaire": {
-                    "selected_elements": [
-                        "Headline",
-                        "Paragraph",
-                        "Topic"
-                    ],
-                    "trust_article": "3",
-                    "trust_image": "3"
-                }
-            },
-            {
-                "round": 1,
-                "article_id": 25,
-                "mid_questionnaire": {
-                    "selected_elements": [
-                        "Headline",
-                        "Paragraph",
-                        "Topic"
-                    ],
-                    "trust_article": "3",
-                    "trust_image": "3"
                 }
             },
             {
                 "round": 2,
-                "selected_article_id": 16,
-                "selected_article_title": "Former Sporting KC M Gadi Kinda dies at 31",
-                "selected_article_category": "sports",
-                "selected_article_had_label": true,
-                "label_explained": false
-            },
-            {
-                "round": 2,
-                "article_id": 16,
+                "article_id": 49,
                 "mid_questionnaire": {
                     "selected_elements": [
-                        "Picture",
                         "Headline",
                         "Paragraph"
-                    ],
-                    "trust_article": "3",
-                    "trust_image": "4"
-                }
-            },
-            {
-                "round": 3,
-                "selected_article_id": 15,
-                "selected_article_title": "Denver hosts professional sports leaders, major platforms at Gondola Sports Summit",
-                "selected_article_category": "sports",
-                "selected_article_had_label": false,
-                "label_explained": false
-            },
-            {
-                "round": 3,
-                "selected_article_id": 15,
-                "selected_article_title": "Denver hosts professional sports leaders, major platforms at Gondola Sports Summit",
-                "selected_article_category": "sports",
-                "selected_article_had_label": false,
-                "label_explained": false
-            },
-            {
-                "round": 3,
-                "article_id": 15,
-                "mid_questionnaire": {
-                    "selected_elements": [
-                        "Picture",
-                        "Headline",
-                        "Paragraph",
-                        "Topic"
-                    ],
-                    "trust_article": "2",
-                    "trust_image": "5"
-                }
-            },
-            {
-                "round": 3,
-                "selected_article_id": 29,
-                "selected_article_title": "\u2018He failed and we won,' \u2013 Watching Ruben Amorim's Europa League final in the city he left for Man Utd",
-                "selected_article_category": "sports",
-                "selected_article_had_label": true,
-                "label_explained": false
-            },
-            {
-                "round": 3,
-                "article_id": 29,
-                "mid_questionnaire": {
-                    "selected_elements": [
-                        "Headline",
-                        "Topic"
                     ],
                     "trust_article": "1",
                     "trust_image": "4"
@@ -286,31 +60,10 @@
             },
             {
                 "round": 3,
-                "selected_article_id": 15,
-                "selected_article_title": "Denver hosts professional sports leaders, major platforms at Gondola Sports Summit",
-                "selected_article_category": "sports",
-                "selected_article_had_label": true,
+                "selected_article_id": 48,
+                "selected_article_title": "Fox News Entertainment Newsletter: Mariska Hargitay's family secret, Dakota Johnson struggled to pay rent",
+                "selected_article_had_label": false,
                 "label_explained": false
-            },
-            {
-                "round": 3,
-                "article_id": 15,
-                "mid_questionnaire": {
-                    "selected_elements": [
-                        "Headline",
-                        "Paragraph"
-                    ],
-                    "trust_article": "4",
-                    "trust_image": "3"
-                }
-            },
-            {
-                "round": 3,
-                "selected_article_id": 38,
-                "selected_article_title": "China plans regulation to aid tech firms listing overseas, official says",
-                "selected_article_category": "technology",
-                "selected_article_had_label": true,
-                "label_explained": true
             }
         ]
     }

@@ -76,36 +76,54 @@ def update_participant_data(section, data):
 def landing():
     return render_template('landing.html')
 
+
 @app.route('/demographics', methods=['GET', 'POST'])
 def demographics():
     if request.method == 'POST':
         gender = request.form.get('gender')
-        gender_self = request.form.get('gender_self_describe')
+        gender_self = request.form.get('gender_self_describe', '').strip()
         age_group = request.form.get('age_group')
         country = request.form.get('country')
-        other_country = request.form.get('other_country')
+        other_country = request.form.get('other_country', '').strip()
         occupation = request.form.get('occupation')
-        other_occupation = request.form.get('other_occupation')
+        other_occupation = request.form.get('other_occupation', '').strip()
 
+        # Replace default values if 'Other' or 'Self-describe' is selected
         if gender == 'Self-describe':
-            gender = gender_self.strip() if gender_self else 'Self-describe'
+            gender_final = gender_self if gender_self else 'Self-describe'
+        else:
+            gender_final = gender
+
         if country == 'Other':
-            country = other_country.strip() if other_country else 'Other'
+            country_final = other_country if other_country else 'Other'
+        else:
+            country_final = country
+
         if occupation == 'Other':
-            occupation = other_occupation.strip() if other_occupation else 'Other'
+            occupation_final = other_occupation if other_occupation else 'Other'
+        else:
+            occupation_final = occupation
+
+        # Age check
         if age_group == '15 or younger':
             return render_template('thank_you.html', message="Sorry, you do not meet the age criteria for this study.")
 
         update_participant_data('demographics', {
-            'gender': gender,
+            'gender': gender_final,
+            'gender_self_describe': gender_self,
             'age_group': age_group,
-            'country': country,
-            'occupation': occupation
+            'country': country_final,
+            'other_country': other_country,
+            'occupation': occupation_final,
+            'other_occupation': other_occupation
         })
 
         session['round'] = 1
         return redirect(url_for('pre_questionnaire'))
+
     return render_template('demographics.html')
+
+
 
 @app.route('/pre-questionnaire', methods=['GET', 'POST'])
 def pre_questionnaire():
@@ -147,7 +165,6 @@ def select_article():
                 'selected_article_id': selected_article_id,
                 'selected_article_title': None,
                 'selected_article_category': None,
-                'condition': session.get('condition', 'unknown')
             })
 
         return redirect(url_for('article', article_id=selected_article_id))
@@ -208,7 +225,6 @@ def article(article_id):
             'round': session.get('round', 1),
             'selected_article_id': selected_article_id,
             'selected_article_title': df.iloc[selected_article_id]['Title'],
-            'selected_article_category': df.iloc[selected_article_id]['Category'],
             'selected_article_had_label': selected_article_had_label,
             'label_explained': label_explained
         })
@@ -268,26 +284,40 @@ def mid_questionnaire():
 
     return render_template('mid_questionnaire.html')
 
+
+
+
 @app.route('/post-questionnaire', methods=['GET', 'POST'])
 def post_questionnaire():
     if request.method == 'POST':
-        # Get all values
         confidence = request.form.get('confidence')
         score_meaning = request.form.get('score_meaning')
+        score_meaning_other = request.form.get('score_meaning_other')
         label_expectation = request.form.getlist('label_expectation')
+        label_expectation_other = request.form.get('label_expectation_other')
         grade_basis = request.form.get('grade_basis')
+        grade_basis_other = request.form.get('grade_basis_other')
         label_opinion = request.form.get('label_opinion')
-        attention_check = request.form.get('attention_check')  # no longer validated
-        feedback = request.form.get('feedback')  # optional
+        attention_check = request.form.get('attention_check')
+        feedback = request.form.get('feedback')
 
-        # Validate required fields (except feedback)
+        # Validation
         if not all([confidence, score_meaning, grade_basis, label_opinion, attention_check]):
             return render_template('post_questionnaire.html', error="Please answer all required questions.")
-        
         if len(label_expectation) == 0:
             return render_template('post_questionnaire.html', error="Please select at least one option for question 2.")
 
-        # Save everything (including attention_check)
+        # Normalize answers
+        if score_meaning == "Something else (please say what)":
+            score_meaning = f"Other: {score_meaning_other}"
+        if grade_basis == "Something else (please say what)":
+            grade_basis = f"Other: {grade_basis_other}"
+        if "Something else (please say what)" in label_expectation and label_expectation_other:
+            label_expectation = [
+                f"Other: {label_expectation_other}" if v == "Something else (please say what)" else v
+                for v in label_expectation
+            ]
+
         update_participant_data('post_questionnaire', {
             'confidence': confidence,
             'feedback': feedback,
@@ -302,6 +332,7 @@ def post_questionnaire():
         return redirect(url_for('thank_you'))
 
     return render_template('post_questionnaire.html')
+
 
 
 @app.route('/thank-you')
