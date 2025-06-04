@@ -21,13 +21,14 @@
             <form method="POST">
                 <!-- Gender -->
                 <div class="mb-3">
-                    <label class="form-label">1. What best describes your gender?</label>
+                    <label class="form-label">1. What is your gender?</label>
                     <select name="gender" id="gender" class="form-select" required onchange="handleOther(this, 'gender_other_wrapper')">
                         <option value="" disabled selected>Select...</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
+                        <option value="Non-binary">Non-binary</option>
                         <option value="Prefer not to say">Prefer not to say</option>
-                        <option value="Self-describe">Self-describe</option>
+                        <option value="Self-describe">Other</option>
                     </select>
                     <div id="gender_other_wrapper" class="hidden mt-2">
                         <input type="text" name="gender_self_describe" id="gender_other" class="form-control" placeholder="Please specify">
@@ -36,7 +37,7 @@
 
                 <!-- Age -->
                 <div class="mb-3">
-                    <label class="form-label">2. How old are you?</label>
+                    <label class="form-label">2. What is your age?</label>
                     <select name="age_group" class="form-select" required>
                         <option value="" disabled selected>Select...</option>
                         <option value="15 or younger">15 or younger</option>
@@ -65,19 +66,19 @@
 
                 <!-- Occupation -->
                 <div class="mb-3">
-                    <label class="form-label">4. Which of these best describes the occupation of the main income earner in your household?</label>
+                    <label class="form-label">4. What is your highest level of education?</label>
                     <select name="occupation" id="occupation" class="form-select" required onchange="handleOther(this, 'occupation_other_wrapper')">
                         <option value="" disabled selected>Select...</option>
-                        <option>Very senior management, top level civil servant or professional</option>
-                        <option>Administrative or junior management/professional</option>
-                        <option>Intermediate management in large company, owner/director of small business</option>
-                        <option>Skilled manual worker</option>
-                        <option>Manual worker</option>
-                        <option>Casual worker or unemployed &lt;6 months</option>
-                        <option>Housewife / house husband / fulltime carer</option>
-                        <option>Student in fulltime education</option>
-                        <option>Retired on state pension only</option>
-                        <option>Unemployed for &gt;6 months</option>
+                        <option>I did not complete any formal education</option>
+                        <option>Less than high school degree</option>
+                        <option>High school degree or equivalent</option>
+                        <option>Some college (no degree)</option>
+                        <option>Technical certification</option>
+                        <option>Associate degree</option>
+                        <option>Bachelor's degree</option>
+                        <option>Master's degree</option>
+                        <option>Doctoral degree (PhD)</option>
+                        <option>Professional degree</option>
                         <option>Prefer not to say</option>
                         <option value="Other">Other</option>
                     </select>
