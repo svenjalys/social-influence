@@ -20,5 +20,11 @@
     "news_sources": "TheExpress",
     "attention_check": "BBC",
     "trust_level": "1"
+  },
+  "theme_selection": {
+    "selected_article_id": 43,
+    "selected_article_title": "Ballistics technology used by Colorado sheriffs helps solve years-old cases",
+    "selected_article_category": "technology",
+    "condition": "c2pa"
   }
 }

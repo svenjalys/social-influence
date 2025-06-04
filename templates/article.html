@@ -101,31 +101,31 @@
         <div class="vstack gap-3">
             {% for rec in recommendations %}
             <button type="submit"
-                    name="selected_article_id"
-                    value="{{ rec['index'] }}"
-                    class="card text-start py-3 px-3 border-0 shadow-sm text-decoration-none text-body recommendation-card"
-                    onclick="document.getElementById('selected_article_had_label').value = '{{ 'true' if rec['index'] in label_shown_ids else 'false' }}'">
-                <div class="row g-3 align-items-center">
-                    <div class="col-md-8">
-                        <h5 class="card-title mb-2">{{ rec['Title'] }}</h5>
-                        <p class="card-text text-muted small mb-0">{{ rec['Content'][:300] }}...</p>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        {% if rec['index'] in label_shown_ids %}
-                            {% if condition == 'color' %}
-                                <img src="{{ url_for('static', filename='images/transp_score_colour_collapsed.png') }}" class="transp-label" alt="Label: Color">
-                            {% elif condition == 'no_color' %}
-                                <img src="{{ url_for('static', filename='images/transp_score_nocolor_collapsed.png') }}" class="transp-label" alt="Label: No Color">
-                            {% elif condition == 'c2pa' %}
-                                <img src="{{ url_for('static', filename='images/c2pa-icon.png') }}" class="transp-label" alt="Label: C2PA">
-                            {% endif %}
-                        {% endif %}
-                        <img src="{{ rec['Image URL'] or 'https://placehold.co/300x180?text=No+Image' }}"
-                             alt="{{ rec['Title'] }}"
-                             class="img-fluid rounded"
-                             style="max-height: 180px; object-fit: cover;">
-                    </div>
+              name="selected_article_id"
+              value="{{ rec['index'] }}"
+              class="card text-start py-3 px-3 border-0 shadow-sm text-decoration-none text-body recommendation-card"
+              onclick="document.getElementById('selected_article_had_label').value = '{{ 'true' if rec['index'] in label_shown_ids else 'false' }}';">
+              <div class="row g-3 align-items-center">
+                <div class="col-md-8">
+                  <h5 class="card-title mb-2">{{ rec['Title'] }}</h5>
+                  <p class="card-text text-muted small mb-0">{{ rec['Content'][:300] }}...</p>
                 </div>
+                <div class="col-md-4 text-end">
+                  {% if rec['index'] in label_shown_ids %}
+                    {% if condition == 'color' %}
+                        <img src="{{ url_for('static', filename='images/transp_score_colour_collapsed.png') }}" class="transp-label" alt="Label: Color">
+                    {% elif condition == 'no_color' %}
+                        <img src="{{ url_for('static', filename='images/transp_score_nocolor_collapsed.png') }}" class="transp-label" alt="Label: No Color">
+                    {% elif condition == 'c2pa' %}
+                        <img src="{{ url_for('static', filename='images/c2pa-icon.png') }}" class="transp-label" alt="Label: C2PA">
+                    {% endif %}
+                  {% endif %}
+                  <img src="{{ rec['Image URL'] or 'https://placehold.co/300x180?text=No+Image' }}"
+                      alt="{{ rec['Title'] }}"
+                      class="img-fluid rounded"
+                      style="max-height: 180px; object-fit: cover;">
+                </div>
+              </div>
             </button>
             {% endfor %}
         </div>
