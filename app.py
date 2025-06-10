@@ -93,6 +93,23 @@ def update_participant_data(section, data):
     else:
         pdata[section] = data
 
+
+    # if section == 'round':
+    #     rounds = pdata.setdefault('rounds', [])
+    #     current_round = session.get('round', 1)
+
+    #     # Check if there's already a round entry
+    #     for r in rounds:
+    #         if r.get('round') == current_round:
+    #             r.update(data)  # Merge into existing round
+    #             break
+    #         else:
+    #             rounds.append(data)  # Add new round if not present
+    #     else:
+    #         pdata[section] = data
+
+
+
     with open(filepath, 'w') as f:
         json.dump(pdata, f, indent=2)
     print("Lagring fullført.")
@@ -248,17 +265,40 @@ def mid_questionnaire():
 @require_previous_step('mid_questionnaire')
 def post_questionnaire():
     if request.method == 'POST':
+        # confidence = request.form.get('confidence')
+        # score_meaning = request.form.getList('score_meaning')
+        # score_meaning_other = request.form.get('score_meaning_other')
+        # label_expectation = request.form.getlist('label_expectation')
+        # label_expectation_other = request.form.get('label_expectation_other')
+        # grade_basis = request.form.get('grade_basis')
+        # grade_basis_other = request.form.get('grade_basis_other')
+        # # label_opinion = request.form.get('label_opinion')
+        # attention_check = request.form.get('attention_check')
+        # feedback = request.form.get('feedback')
+
         confidence = request.form.get('confidence')
-        score_meaning = request.form.get('score_meaning')
+        score_meaning = request.form.getlist('score_meaning')
         score_meaning_other = request.form.get('score_meaning_other')
         label_expectation = request.form.getlist('label_expectation')
         label_expectation_other = request.form.get('label_expectation_other')
         grade_basis = request.form.get('grade_basis')
         grade_basis_other = request.form.get('grade_basis_other')
-        label_opinion = request.form.get('label_opinion')
-        attention_check = request.form.get('attention_check')
+        # label_opinion = request.form.get('label_opinion')
         feedback = request.form.get('feedback')
-        if not all([confidence, score_meaning, grade_basis, label_opinion, attention_check]):
+
+        # Likert-scale responses
+        likert_items = ['understood_label', 'visual_design', 'decision_support', 'info_usefulness',
+                        'image_trust', 'evaluate_trustworthiness', 'more_labels', 'attention_check']
+
+        likert_responses = {}
+        for item in likert_items:
+            val = request.form.get(item)
+            if not val:
+                return render_template('post_questionnaire.html', error="Please answer all Likert-scale questions.")
+            likert_responses[item] = int(val)
+
+
+        if not all([confidence, score_meaning, grade_basis, likert_responses]):
             return render_template('post_questionnaire.html', error="Please answer all required questions.")
         if not label_expectation:
             return render_template('post_questionnaire.html', error="Please select at least one option for question 2.")
@@ -266,19 +306,32 @@ def post_questionnaire():
             score_meaning = f"Other: {score_meaning_other}"
         if grade_basis == "Something else (please say what)":
             grade_basis = f"Other: {grade_basis_other}"
-        if "Something else (please say what)" in label_expectation and label_expectation_other:
+        if "Other" in label_expectation and label_expectation_other:
             label_expectation = [
-                f"Other: {label_expectation_other}" if v == "Something else (please say what)" else v
+                f"Other: {label_expectation_other}" if v == "Other" else v
                 for v in label_expectation
             ]
         update_participant_data('post_questionnaire', {
+            # 'confidence': confidence,
+            # 'feedback': feedback,
+            # 'score_meaning': score_meaning,
+            # 'label_expectation': label_expectation,
+            # 'grade_basis': grade_basis,
+            # # 'label_opinion': label_opinion,
+            # 'attention_check': attention_check,
+            # 'label_present': session.get('last_article_had_label', False)
             'confidence': confidence,
             'feedback': feedback,
-            'score_meaning': score_meaning,
-            'label_expectation': label_expectation,
-            'grade_basis': grade_basis,
-            'label_opinion': label_opinion,
-            'attention_check': attention_check,
+            'score_meaning': [
+                f"Other: {score_meaning_other}" if val == "Other" and score_meaning_other else val
+                for val in score_meaning
+            ],
+            'label_expectation': [
+                f"Other: {label_expectation_other}" if val == "Other" and label_expectation_other else val
+                for val in label_expectation
+            ],
+            'grade_basis': f"Other: {grade_basis_other}" if grade_basis == "Other" and grade_basis_other else grade_basis,
+            'likert_responses': likert_responses,
             'label_present': session.get('last_article_had_label', False)
         })
         session['post_questionnaire_completed'] = True
