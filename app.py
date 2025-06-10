@@ -34,6 +34,9 @@ def assign_condition():
                     except Exception:
                         continue
         session['condition'] = min(condition_counts, key=condition_counts.get)
+        # session.pop('condition', None)
+        # session['condition'] = 'color'  # or 'no_color' or 'c2pa'
+
 
 @app.before_request
 def require_participant():

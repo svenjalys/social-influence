@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Mid Questionnaire</title>
+    <title>Mid-Questionnaire</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; }
@@ -87,7 +87,7 @@
 </head>
 <body>
 <div class="card">
-    <h2 class="mb-4 text-center">Mid Questionnaire</h2>
+    <h2 class="mb-4 text-center">Mid-Questionnaire</h2>
     <form method="POST" onsubmit="return validateForm()">
         <!-- Hidden field for round -->
         <input type="hidden" name="round" value="{{ session['round'] }}">
@@ -96,12 +96,12 @@
         <div class="form-section">
             <label class="form-label">1. Please select one or several elements that made you choose this article:</label>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="choice_elements" value="Image label" id="el1" onchange="updateCheckboxStates()">
-                <label class="form-check-label" for="el1">The image label</label>
+                <input class="form-check-input" type="checkbox" name="choice_elements" value="Picture" id="el1" onchange="updateCheckboxStates()">
+                <label class="form-check-label" for="el1">The image</label>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="choice_elements" value="Picture" id="el2" onchange="updateCheckboxStates()">
-                <label class="form-check-label" for="el2">The picture</label>
+                <input class="form-check-input" type="checkbox" name="choice_elements" value="Image label" id="el2" onchange="updateCheckboxStates()">
+                <label class="form-check-label" for="el2">The image label</label>
             </div>
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="choice_elements" value="Headline" id="el3" onchange="updateCheckboxStates()">
@@ -117,12 +117,12 @@
             </div>
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="choice_elements" value="Other (please specify)" id="el6" onchange="updateCheckboxStates()">
-                <label class="form-check-label" for="el6">Other (please specify)</label>
-                <input type="text" class="form-control mt-2 hidden" name="other_element" id="otherElement" placeholder="Specify other reason">
+                <label class="form-check-label" for="el6">Other</label>
+                <input type="text" class="form-control mt-2 hidden" name="other_element" id="otherElement" placeholder="Please specify">
             </div>
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="choice_elements" value="Don't know / None of these" id="el7" onchange="updateCheckboxStates()">
-                <label class="form-check-label" for="el7">Don't know / None of these</label>
+                <label class="form-check-label" for="el7">Not sure</label>
             </div>
         </div>
 
