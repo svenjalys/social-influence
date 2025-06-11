@@ -22,7 +22,7 @@ def capture_prolific_id():
 @app.before_request
 def assign_condition():
     if 'condition' not in session:
-        condition_counts = {'color': 0, 'no_color': 0, 'c2pa': 0}
+        condition_counts = {'color': 0, 'no_color': 0, 'c2pa': 0, 'nolabel':0}
         for filename in os.listdir(RESPONSES_DIR):
             if filename.endswith('.json'):
                 with open(os.path.join(RESPONSES_DIR, filename), 'r') as f:
@@ -56,7 +56,7 @@ def require_previous_step(step_name):
 
 @app.route('/set-condition/<cond>')
 def set_condition(cond):
-    if cond in ['color', 'no_color', 'c2pa']:
+    if cond in ['color', 'no_color', 'c2pa', 'nolabel']:
         session['condition'] = cond
         return f"Condition set to {cond}. <a href='/select-article'>Continue</a>"
     return "Invalid condition", 400
@@ -341,7 +341,8 @@ def post_questionnaire():
 @app.route('/thank-you')
 @require_previous_step('post_questionnaire')
 def thank_you():
-    return render_template('thank_you.html')
+    condition = session.get('condition', 'none')
+    return render_template('thank_you.html', condition=condition)
 
 if __name__ == '__main__':
     app.run(debug=True)
