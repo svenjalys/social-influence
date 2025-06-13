@@ -39,7 +39,21 @@
 
         .transp-label {
             height: 30px;
-            margin-bottom: 5px;
+            vertical-align: bottom;
+            align-self: end;
+        }
+
+        .cr-wrapper {
+            border-bottom: 1px solid #ccc;
+            border-left: 1px solid #ccc;
+            border-right: 1px solid #ccc;
+            width: inherit;
+            align-content: start;
+        }
+
+        .cr-label {
+            height: 80px;
+            display: block;
         }
     </style>
 </head>
@@ -54,25 +68,28 @@
     <!-- Main Article -->
     <div class="mb-5">
         <h1 class="mb-3">{{ article['Title'] }}</h1>
-        <img src="{{ article['Image URL'] or 'https://placehold.co/600x400?text=No+Image' }}" class="img-fluid mb-3">
+        <img src="{{ article['Image URL'] or 'https://placehold.co/600x400?text=No+Image' }}" class="img-fluid">
 
         <div class="mb-3 article_label">
             {% if condition == 'color' %}
                 <img src="{{ url_for('static', filename='images/transp_score_colour_expanded.png') }}"
-                     alt="Transparency Score Label" style="cursor: pointer;"
+                     alt="Transparency Score Label" class="mt-2 mb-2" style="cursor: pointer;"
                      data-bs-toggle="collapse" data-bs-target="#scoreExplanation"
                      aria-expanded="false" aria-controls="scoreExplanation">
             {% elif condition == 'no_color' %}
                 <img src="{{ url_for('static', filename='images/transp_score_nocolor_expanded.png') }}"
-                     alt="Transparency Score Label" style="cursor: pointer;"
+                     alt="Transparency Score Label" class="mt-2 mb-2" style="cursor: pointer;"
                      data-bs-toggle="collapse" data-bs-target="#scoreExplanation"
                      aria-expanded="false" aria-controls="scoreExplanation">
             {% elif condition == 'c2pa' %}
-                <img src="{{ url_for('static', filename='images/cr_logo.png') }}"
-                     alt="C2PA Label" style="height: 50px;">
+                <div class="cr-wrapper">
+                  <img src="{{ url_for('static', filename='images/' + cr_label) }}"
+                      alt="C2PA Label" class="cr-label" style="height: 80px;"
+                      data-bs-toggle="collapse" data-bs-target="#c2paExplanation"
+                      aria-expanded="false" aria-controls="c2paExplanation">
+                </div>
             {% endif %}
         </div>
-
         {% if condition != 'c2pa' %}
         <div class="collapse" id="scoreExplanation">
             <div class="card card-body border border-success rounded bg-light mb-3 py-3">
@@ -86,6 +103,19 @@
                 </ul>
             </div>
         </div>
+        {% elif condition == 'c2pa' %}
+        <div class="collapse" id="c2paExplanation">
+          <div class="card card-body border border-success rounded bg-light mb-3 py-3">
+              <strong>What is the Image Transparency Score?</strong><br>
+              This score rates how transparent and trustworthy the image is — based on 7 criteria,
+              such as author identity, media asset verification, and edit history.
+              <ul class="mb-0 mt-2">
+                  <li><strong>A</strong>: High transparency and verified information</li>
+                  <li><strong>B–C</strong>: Some elements missing or unclear</li>
+                  <li><strong>D–E</strong>: Poor or no transparency indicators</li>
+              </ul>
+          </div>
+      </div>
         {% endif %}
 
         <p class="article_content">{{ article['Content'] }}</p>
@@ -110,19 +140,21 @@
                   <p class="card-text text-muted small mb-0">{{ rec['Content'][:300] }}...</p>
                 </div>
                 <div class="col-md-4 text-end">
+                  <div class="d-flex justify-content-end align-items-center gap-2">
                   {% if rec['index'] in label_shown_ids %}
                     {% if condition == 'color' %}
                         <img src="{{ url_for('static', filename='images/transp_score_colour_collapsed.png') }}" class="transp-label" alt="Label: Color">
                     {% elif condition == 'no_color' %}
                         <img src="{{ url_for('static', filename='images/transp_score_nocolor_collapsed.png') }}" class="transp-label" alt="Label: No Color">
                     {% elif condition == 'c2pa' %}
-                        <img src="{{ url_for('static', filename='images/c2pa-icon.png') }}" class="transp-label" alt="Label: C2PA">
+                        <img src="{{ url_for('static', filename='images/cr_logo.png') }}" class="transp-label" alt="Label: C2PA">
                     {% endif %}
                   {% endif %}
                   <img src="{{ rec['Image URL'] or 'https://placehold.co/300x180?text=No+Image' }}"
                       alt="{{ rec['Title'] }}"
                       class="img-fluid rounded"
                       style="max-height: 180px; object-fit: cover;">
+                  </div>
                 </div>
               </div>
             </button>

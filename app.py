@@ -226,7 +226,12 @@ def article(article_id):
         session['article_completed'] = True
         return redirect(url_for('mid_questionnaire'))
 
-    return render_template('article.html', article=article_data, recommendations=recommendations, label_shown_ids=label_shown_ids, condition=session['condition'])
+    cr_labels = ['cr1.png', 'cr2.png', 'cr3.png', 'cr4.png']
+    cr_label = None
+    if session.get('condition') == 'c2pa':
+        cr_label = random.choice(cr_labels)
+
+    return render_template('article.html', article=article_data, recommendations=recommendations, label_shown_ids=label_shown_ids, condition=session['condition'], cr_label=cr_label)
 
 @app.route('/mid-questionnaire', methods=['GET', 'POST'])
 @require_previous_step('article')
