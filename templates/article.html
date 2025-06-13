@@ -87,13 +87,14 @@
                       alt="C2PA Label" class="cr-label" style="height: 80px;"
                       data-bs-toggle="collapse" data-bs-target="#c2paExplanation"
                       aria-expanded="false" aria-controls="c2paExplanation">
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-secondary" style="font-size: 0.75rem; width: 1.5rem; height: 1.5rem; line-height: 1.5rem; text-align: center;">?</span>
                 </div>
             {% endif %}
         </div>
         {% if condition != 'c2pa' %}
         <div class="collapse" id="scoreExplanation">
             <div class="card card-body border border-success rounded bg-light mb-3 py-3">
-                <strong>What is the Image Transparency Score?</strong><br>
+                <strong>What is the Image Trust Score?</strong><br>
                 This score rates how transparent and trustworthy the image is — based on 7 criteria,
                 such as author identity, media asset verification, and edit history.
                 <ul class="mb-0 mt-2">
@@ -106,16 +107,16 @@
         {% elif condition == 'c2pa' %}
         <div class="collapse" id="c2paExplanation">
           <div class="card card-body border border-success rounded bg-light mb-3 py-3">
-              <strong>What is the Image Transparency Score?</strong><br>
-              This score rates how transparent and trustworthy the image is — based on 7 criteria,
-              such as author identity, media asset verification, and edit history.
+              <strong>What does this label mean?</strong><br>
+              You may have seen nutrition labels on food items in the supermarket before. These Content Credentials present a "digital nutrition label", provided by the news source. In a real-life setting, you could access verified details about the image by clicking on this label, such as
               <ul class="mb-0 mt-2">
-                  <li><strong>A</strong>: High transparency and verified information</li>
-                  <li><strong>B–C</strong>: Some elements missing or unclear</li>
-                  <li><strong>D–E</strong>: Poor or no transparency indicators</li>
+                  <li>the creator</li>
+                  <li>the creation date and time</li>
+                  <li>location</li>
+                  <li>and any edits made to the original</li>
               </ul>
-          </div>
-      </div>
+            </div>
+        </div>
         {% endif %}
 
         <p class="article_content">{{ article['Content'] }}</p>
