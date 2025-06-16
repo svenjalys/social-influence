@@ -123,45 +123,60 @@
     </div>
 
     <!-- Recommended Articles -->
-    <h3>Recommended</h3>
-    <form method="POST">
-        <input type="hidden" name="label_explained" id="label_explained" value="false">
-        <input type="hidden" name="selected_article_had_label" id="selected_article_had_label" value="false">
+<h3>Recommended</h3>
+<form method="POST">
+    <input type="hidden" name="label_explained" id="label_explained" value="false">
+    <input type="hidden" name="selected_article_had_label" id="selected_article_had_label" value="false">
 
-        <div class="vstack gap-3">
-            {% for rec in recommendations %}
-            <button type="submit"
-              name="selected_article_id"
-              value="{{ rec['index'] }}"
-              class="card text-start py-3 px-3 border-0 shadow-sm text-decoration-none text-body recommendation-card"
-              onclick="document.getElementById('selected_article_had_label').value = '{{ 'true' if rec['index'] in label_shown_ids else 'false' }}';">
-              <div class="row g-3 align-items-center">
+    <div class="vstack gap-3">
+        {% for rec in recommendations %}
+        <button type="submit"
+                name="selected_article_id"
+                value="{{ rec['index'] }}"
+                class="card text-start py-3 px-3 border-0 shadow-sm text-decoration-none text-body recommendation-card"
+                onclick="document.getElementById('selected_article_had_label').value = '{{ 'true' if rec['index'] in label_shown_ids else 'false' }}';">
+            <div class="row g-3 align-items-center">
                 <div class="col-md-8">
-                  <h5 class="card-title mb-2">{{ rec['Title'] }}</h5>
-                  <p class="card-text text-muted small mb-0">{{ rec['Content'][:300] }}...</p>
+                    <h5 class="card-title mb-2">{{ rec['Title'] }}</h5>
+                    <p class="card-text text-muted small mb-0">
+                        {{ rec['Content'][:300] }}...
+                    </p>
                 </div>
-                <div class="col-md-4 text-end">
-                  <div class="d-flex justify-content-end align-items-center gap-2">
-                  {% if rec['index'] in label_shown_ids %}
-                    {% if condition == 'color' %}
-                        <img src="{{ url_for('static', filename='images/transp_score_colour_collapsed.png') }}" class="transp-label" alt="Label: Color">
-                    {% elif condition == 'no_color' %}
-                        <img src="{{ url_for('static', filename='images/transp_score_nocolor_collapsed.png') }}" class="transp-label" alt="Label: No Color">
-                    {% elif condition == 'c2pa' %}
-                        <img src="{{ url_for('static', filename='images/cr_logo.png') }}" class="transp-label" alt="Label: C2PA">
+                <div class="col-md-4">
+                    <!-- Image -->
+                    <img src="{{ rec['Image URL'] or 'https://placehold.co/300x180?text=No+Image' }}"
+                         alt="{{ rec['Title'] }}"
+                         class="img-fluid rounded mb-2"
+                         style="max-height: 180px; object-fit: cover;">
+
+                    <!-- Label directly under image, left-aligned -->
+                    {% if rec['index'] in label_shown_ids %}
+                        {% if condition == 'color' %}
+                            <div class="d-flex align-items-start">
+                                <img src="{{ url_for('static', filename='images/transp_score_colour_collapsed.png') }}"
+                                     alt="Label: Color" style="height: 30px;">
+                            </div>
+                        {% elif condition == 'no_color' %}
+                            <div class="d-flex align-items-start">
+                                <img src="{{ url_for('static', filename='images/transp_score_nocolor_collapsed.png') }}"
+                                     alt="Label: No Color" style="height: 30px;">
+                            </div>
+                        {% elif condition == 'c2pa' %}
+                            <div class="d-flex align-items-start">
+                                <img src="{{ url_for('static', filename='images/cr_logo.png') }}"
+                                     alt="Label: C2PA" style="height: 30px;">
+                            </div>
+                        {% endif %}
                     {% endif %}
-                  {% endif %}
-                  <img src="{{ rec['Image URL'] or 'https://placehold.co/300x180?text=No+Image' }}"
-                      alt="{{ rec['Title'] }}"
-                      class="img-fluid rounded"
-                      style="max-height: 180px; object-fit: cover;">
-                  </div>
                 </div>
-              </div>
-            </button>
-            {% endfor %}
-        </div>
-    </form>
+            </div>
+        </button>
+        {% endfor %}
+    </div>
+</form>
+
+
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
