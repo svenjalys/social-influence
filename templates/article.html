@@ -72,12 +72,12 @@
 
         <div class="mb-3 article_label">
             {% if condition == 'color' %}
-                <img src="{{ url_for('static', filename='images/transp_score_colour_expanded.png') }}"
+                <img src="{{ url_for('static', filename='images/imagetrustscoreCOLOUR.png') }}"
                      alt="Transparency Score Label" class="mt-2 mb-2" style="cursor: pointer;"
                      data-bs-toggle="collapse" data-bs-target="#scoreExplanation"
                      aria-expanded="false" aria-controls="scoreExplanation">
             {% elif condition == 'no_color' %}
-                <img src="{{ url_for('static', filename='images/transp_score_nocolor_expanded.png') }}"
+                <img src="{{ url_for('static', filename='images/imagetrustscoreBW.png') }}"
                      alt="Transparency Score Label" class="mt-2 mb-2" style="cursor: pointer;"
                      data-bs-toggle="collapse" data-bs-target="#scoreExplanation"
                      aria-expanded="false" aria-controls="scoreExplanation">
@@ -138,15 +138,15 @@
               <div class="row g-3 align-items-center">
                 <div class="col-md-8">
                   <h5 class="card-title mb-2">{{ rec['Title'] }}</h5>
-                  <p class="card-text text-muted small mb-0">{{ rec['Content'][:300] }}...</p>
+                  <!-- <p class="card-text text-muted small mb-0">{{ rec['Content'][:300] }}...</p> -->
                 </div>
                 <div class="col-md-4 text-end">
                   <div class="d-flex justify-content-end align-items-center gap-2">
                   {% if rec['index'] in label_shown_ids %}
                     {% if condition == 'color' %}
-                        <img src="{{ url_for('static', filename='images/transp_score_colour_collapsed.png') }}" class="transp-label" alt="Label: Color">
+                        <img src="{{ url_for('static', filename='images/itsCOLOUR.png') }}" class="transp-label" alt="Label: Color">
                     {% elif condition == 'no_color' %}
-                        <img src="{{ url_for('static', filename='images/transp_score_nocolor_collapsed.png') }}" class="transp-label" alt="Label: No Color">
+                        <img src="{{ url_for('static', filename='images/itsBW.png') }}" class="transp-label" alt="Label: No Color">
                     {% elif condition == 'c2pa' %}
                         <img src="{{ url_for('static', filename='images/cr_logo.png') }}" class="transp-label" alt="Label: C2PA">
                     {% endif %}

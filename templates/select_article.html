@@ -81,9 +81,9 @@
                 <div class="headline">
                   <h5 class="card-title">{{ article['Title'] }}</h5>
                   {% if condition == 'color' %}
-                    <img class="article_label" src="{{ url_for('static', filename='images/transp_score_colour_collapsed.png') }}" alt="Label: Color">
+                    <img class="article_label" src="{{ url_for('static', filename='images/itsCOLOUR.png') }}" alt="Label: Color">
                   {% elif condition == 'no_color' %}
-                    <img class="article_label" src="{{ url_for('static', filename='images/transp_score_nocolor_collapsed.png') }}" alt="Label: No Color">
+                    <img class="article_label" src="{{ url_for('static', filename='images/itsBW.png') }}" alt="Label: No Color">
                   {% elif condition == 'c2pa' %}
                     <img class="article_label" src="{{ url_for('static', filename='images/cr_logo.png') }}" alt="Label: C2PA">
                   {% endif %}
