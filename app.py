@@ -179,6 +179,7 @@ def select_article():
     if request.method == 'POST':
         selected_article_id = int(request.form['selected_article_id'])
         session['next_article'] = selected_article_id
+
         article_row = df[df['index'] == selected_article_id]
         if not article_row.empty:
             article = article_row.iloc[0]
@@ -188,17 +189,29 @@ def select_article():
                 'selected_article_category': article['Category'],
                 'condition': session.get('condition', 'unknown')
             })
+
         session['select_article_completed'] = True
         return redirect(url_for('article', article_id=selected_article_id))
 
+    # Group by category and randomly pick 1 article per selected category
     grouped = df.groupby(df['Category'].str.title())
     selected_categories = random.sample(list(grouped.groups), k=min(4, len(grouped)))
     selected_articles = [grouped.get_group(cat).sample(1).iloc[0] for cat in selected_categories]
+
     article_dicts = [a.to_dict() | {'index': int(a['index'])} for a in selected_articles]
-    label_ids = [a['index'] for a in article_dicts]
+    article_selection_indexes = [a['index'] for a in article_dicts]
+
+    # Save selected article indexes for label logic
     session['theme_articles'] = article_dicts
-    session['theme_label_ids'] = label_ids
-    return render_template('select_article.html', articles=article_dicts, label_ids=label_ids, condition=session['condition'])
+    session['article_selection_indexes'] = article_selection_indexes
+
+    return render_template(
+        'select_article.html',
+        articles=article_dicts,
+        label_ids=article_selection_indexes,
+        condition=session['condition']
+    )
+
 
 @app.route('/article/<int:article_id>', methods=['GET', 'POST'])
 @require_previous_step('select_article')
@@ -207,19 +220,23 @@ def article(article_id):
         return redirect(url_for('select_article'))
 
     article_data = df.iloc[article_id].to_dict()
-
-    # Select 4 random recommendations from the same category (excluding the main article)
-    recommendations_df = df[(df['Category'] == article_data['Category']) & (df['index'] != article_id)]
-    recommendations = recommendations_df.sample(min(4, len(recommendations_df))).to_dict(orient='records')
-
-    # Randomly assign labels to 2 recommendations
-    label_shown_ids = set(random.sample([rec['index'] for rec in recommendations], min(2, len(recommendations))))
+    article_index = article_data['index']
     condition = session.get('condition')
 
-    # Always include the main article if a label condition is active
-    if condition in ['color', 'no_color', 'c2pa']:
-        label_shown_ids.add(article_id)
+    # Select 4 recommendations from the same category (excluding the current article)
+    recommendations_df = df[(df['Category'] == article_data['Category']) & (df['index'] != article_index)]
+    recommendations = recommendations_df.sample(n=min(4, len(recommendations_df))).to_dict(orient='records')
 
+    # Randomly assign labels to 2 recommendations
+    rec_indexes = [rec['index'] for rec in recommendations]
+    label_shown_ids = set(random.sample(rec_indexes, min(2, len(rec_indexes))))
+
+    # Add article_selection_indexes to label_shown_ids if condition requires labels
+    article_selection_indexes = session.get('article_selection_indexes', [])
+    if condition in ['color', 'no_color', 'c2pa']:
+        label_shown_ids.update(article_selection_indexes)
+
+    # Store current label state in session
     session['label_shown_ids'] = list(label_shown_ids)
 
     if request.method == 'POST':
@@ -229,16 +246,15 @@ def article(article_id):
         label_explained = request.form.get('label_explained') == 'true'
         selected_article_had_label = request.form.get('selected_article_had_label') == 'true'
 
-        # Ensure label_shown_ids includes selected article if label was visible
-        if selected_article_had_label and selected_article_id not in session.get('label_shown_ids', []):
-            label_shown = session['label_shown_ids']
-            label_shown.append(selected_article_id)
-            session['label_shown_ids'] = label_shown
+        if selected_article_had_label:
+            label_shown = set(session.get('label_shown_ids', []))
+            label_shown.add(selected_article_id)
+            session['label_shown_ids'] = list(label_shown)
 
         update_participant_data('round', {
             'round': session.get('round', 1),
             'selected_article_id': selected_article_id,
-            'selected_article_title': df.iloc[selected_article_id]['Title'],
+            'selected_article_title': df[df['index'] == selected_article_id].iloc[0]['Title'],
             'selected_article_had_label': selected_article_had_label,
             'label_explained': label_explained
         })
@@ -246,18 +262,26 @@ def article(article_id):
         session['article_completed'] = True
         return redirect(url_for('mid_questionnaire'))
 
-    # If condition is C2PA, pick a random CR label image
+    # Assign random CR label if needed
     cr_labels = ['cr1.png', 'cr2.png', 'cr3.png', 'cr4.png']
     cr_label = random.choice(cr_labels) if condition == 'c2pa' else None
+
+    # Show label only if this article was in the labeled list
+    show_label = article_index in session.get('label_shown_ids', [])
 
     return render_template(
         'article.html',
         article=article_data,
         recommendations=recommendations,
-        label_shown_ids=list(label_shown_ids),
+        label_shown_ids=session['label_shown_ids'],
         condition=condition,
-        cr_label=cr_label
+        cr_label=cr_label,
+        show_label=show_label,
+        debug=True
     )
+
+
+
 
 @app.route('/mid-questionnaire', methods=['GET', 'POST'])
 @require_previous_step('article')

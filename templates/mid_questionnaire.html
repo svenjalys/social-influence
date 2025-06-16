@@ -96,14 +96,12 @@
     <h2 class="mb-4 text-center">Mid-Questionnaire</h2>
 <!-- Selected Article Display -->
 <div class="card mb-4 shadow-sm p-3">
-    <div class="row g-3 align-items-start">
-        <!-- Left: Article Text -->
-        <div class="col-md-8">
-            <h5 class="mb-2">{{ article['Title'] }}</h5>
-            <p class="text-muted small mb-0">
-                {{ article['Content'][:300] }}...
-            </p>
-        </div>
+  <div class="row g-3 align-items-center"> <!-- Vertically aligns both cols -->
+
+    <!-- Left: Only Title (vertically centered) -->
+    <div class="col-md-8 d-flex align-items-center">
+      <h3 class="mb-0 fw-bold" style="font-size: 1.5rem;">{{ article['Title'] }}</h3>
+    </div>
 
         <!-- Right: Image + Label Below -->
         <div class="col-md-4 text-end">

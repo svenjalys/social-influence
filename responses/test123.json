@@ -1,0 +1,70 @@
+{
+  "prolific_id": "test123",
+  "condition": "color",
+  "timestamp_start": "2025-06-16T14:17:11.523535",
+  "demographics": {
+    "gender": "Prefer not to say",
+    "gender_self_describe": "",
+    "age_group": "16\u201324",
+    "country": "United Kingdom",
+    "other_country": "",
+    "occupation": "Associate degree",
+    "other_occupation": ""
+  },
+  "pre_questionnaire": {
+    "news_frequency": "Every day",
+    "device": "Computer/Laptop",
+    "device_other": null,
+    "platform": "Social media",
+    "platform_other": null,
+    "news_sources": "Forbes",
+    "attention_check": "BBC",
+    "trust_level": "2"
+  },
+  "theme_selection": {
+    "selected_article_id": 24,
+    "selected_article_title": "Hall of Famer Brian Urlacher reiterates stance on transgender athletes in sports: 'Common sense'",
+    "selected_article_category": "sports",
+    "condition": "color"
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "selected_article_id": 28,
+      "selected_article_title": "Chip Ganassi: Team Penske needs to be held to 'higher standard to protect the sport'",
+      "selected_article_had_label": false,
+      "label_explained": false
+    },
+    {
+      "round": 1,
+      "article_id": 28,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Headline",
+          "Paragraph"
+        ],
+        "trust_article": "3",
+        "trust_image": "4"
+      }
+    },
+    {
+      "round": 2,
+      "selected_article_id": 22,
+      "selected_article_title": "South Carolina coach Dawn Staley weighs in on Caitlin Clark-Angel Reese rivalry: \u2018It's great for the WNBA'",
+      "selected_article_had_label": true,
+      "label_explained": false
+    },
+    {
+      "round": 2,
+      "article_id": 22,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Headline",
+          "Paragraph"
+        ],
+        "trust_article": "4",
+        "trust_image": "4"
+      }
+    }
+  ]
+}

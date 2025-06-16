@@ -1,0 +1,214 @@
+{
+  "prolific_id": "test1234",
+  "condition": "no_color",
+  "timestamp_start": "2025-06-16T13:57:16.275869",
+  "theme_selection": {
+    "selected_article_id": 46,
+    "selected_article_title": "Entertainment attorney: Cassie Ventura's graphic testimony \u2018is just the tip of the iceberg'",
+    "selected_article_category": "entertainment",
+    "condition": "no_color"
+  },
+  "rounds": [
+    {
+      "round": 3,
+      "selected_article_id": 16,
+      "selected_article_title": "Former Sporting KC M Gadi Kinda dies at 31",
+      "selected_article_had_label": false,
+      "label_explained": false
+    },
+    {
+      "round": 3,
+      "article_id": 16,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Image label",
+          "Paragraph"
+        ],
+        "trust_article": "5",
+        "trust_image": "5"
+      }
+    },
+    {
+      "round": 1,
+      "selected_article_id": 34,
+      "selected_article_title": "'It was the best technology of the 80's': Former FAA official calls for technology overhaul",
+      "selected_article_had_label": false,
+      "label_explained": false
+    },
+    {
+      "round": 1,
+      "article_id": 34,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Image label"
+        ],
+        "trust_article": "3",
+        "trust_image": "4"
+      }
+    },
+    {
+      "round": 2,
+      "selected_article_id": 36,
+      "selected_article_title": "Space capsule marks milestone for bringing cargo back from orbit",
+      "selected_article_had_label": false,
+      "label_explained": false
+    },
+    {
+      "round": 2,
+      "article_id": 36,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Headline"
+        ],
+        "trust_article": "1",
+        "trust_image": "2"
+      }
+    },
+    {
+      "round": 3,
+      "article_id": 36,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Headline"
+        ],
+        "trust_article": "1",
+        "trust_image": "2"
+      }
+    },
+    {
+      "round": 3,
+      "selected_article_id": 40,
+      "selected_article_title": "Airbus appoints Remi Maillard as head of technology,\u00a0sources\u00a0say",
+      "selected_article_had_label": false,
+      "label_explained": false
+    },
+    {
+      "round": 3,
+      "article_id": 40,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Image label",
+          "Topic"
+        ],
+        "trust_article": "4",
+        "trust_image": "4"
+      }
+    },
+    {
+      "round": 1,
+      "selected_article_id": 39,
+      "selected_article_title": "Cassie Ventura's husband issues statement",
+      "selected_article_had_label": false,
+      "label_explained": false
+    },
+    {
+      "round": 1,
+      "article_id": 39,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Image label"
+        ],
+        "trust_article": "3",
+        "trust_image": "4"
+      }
+    },
+    {
+      "round": 2,
+      "selected_article_id": 43,
+      "selected_article_title": "Ballistics technology used by Colorado sheriffs helps solve years-old cases",
+      "selected_article_had_label": false,
+      "label_explained": false
+    },
+    {
+      "round": 2,
+      "article_id": 43,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Image label",
+          "Headline"
+        ],
+        "trust_article": "4",
+        "trust_image": "4"
+      }
+    },
+    {
+      "round": 3,
+      "selected_article_id": 30,
+      "selected_article_title": "Firsthand Technology Value Fund: Q1 Earnings Snapshot",
+      "selected_article_had_label": false,
+      "label_explained": false
+    },
+    {
+      "round": 3,
+      "article_id": 30,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Headline"
+        ],
+        "trust_article": "4",
+        "trust_image": "4"
+      }
+    },
+    {
+      "round": 1,
+      "selected_article_id": 58,
+      "selected_article_title": "Miss Manners: No need to keep inviting no-show couple",
+      "selected_article_had_label": false,
+      "label_explained": false
+    },
+    {
+      "round": 1,
+      "article_id": 58,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Headline"
+        ],
+        "trust_article": "3",
+        "trust_image": "4"
+      }
+    }
+  ],
+  "post_questionnaire": {
+    "confidence": "Neutral",
+    "feedback": "",
+    "score_meaning": [
+      "How trustworthy the image is",
+      "How much readers like the article"
+    ],
+    "label_expectation": [
+      "Any changes that have been made to the original image",
+      "How trustworthy the image is"
+    ],
+    "grade_basis": "The accuracy of the information in the article",
+    "likert_responses": {
+      "understood_label": 4,
+      "visual_design": 4,
+      "decision_support": 4,
+      "info_usefulness": 4,
+      "image_trust": 4,
+      "evaluate_trustworthiness": 4,
+      "more_labels": 4,
+      "attention_check": 4
+    },
+    "label_present": false
+  },
+  "demographics": {
+    "gender": "Female",
+    "gender_self_describe": "",
+    "age_group": "25\u201334",
+    "country": "United States",
+    "other_country": "",
+    "occupation": "I did not complete any formal education",
+    "other_occupation": ""
+  },
+  "pre_questionnaire": {
+    "news_frequency": "About once a week",
+    "device": "Computer/Laptop",
+    "device_other": null,
+    "platform": "News aggregators (e.g. Google News, Apple News)",
+    "platform_other": null,
+    "news_sources": "Bloomberg",
+    "attention_check": "New York Times",
+    "trust_level": "4"
+  }
+}
