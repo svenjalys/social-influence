@@ -153,12 +153,12 @@
                     {% if rec['index'] in label_shown_ids %}
                         {% if condition == 'color' %}
                             <div class="d-flex align-items-start">
-                                <img src="{{ url_for('static', filename='images/transp_score_colour_collapsed.png') }}"
+                                <img src="{{ url_for('static', filename='images/itsCOLOUR.png') }}"
                                      alt="Label: Color" style="height: 30px;">
                             </div>
                         {% elif condition == 'no_color' %}
                             <div class="d-flex align-items-start">
-                                <img src="{{ url_for('static', filename='images/transp_score_nocolor_collapsed.png') }}"
+                                <img src="{{ url_for('static', filename='images/itsBW.png') }}"
                                      alt="Label: No Color" style="height: 30px;">
                             </div>
                         {% elif condition == 'c2pa' %}
