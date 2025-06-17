@@ -34,6 +34,17 @@
             justify-content: space-between;
         }
     </style>
+    <!-- <script>
+    function toggleOtherInput(checkbox, inputId) {
+        const input = document.getElementById(inputId);
+        if (checkbox.checked) {
+        input.classList.remove('d-none');
+        } else {
+        input.classList.add('d-none');
+        input.value = '';
+        }
+    }
+    </script>
     <script>
         function toggleOtherInput(selectElem, inputId) {
             const input = document.getElementById(inputId);
@@ -41,6 +52,99 @@
             input.required = selectElem.value === 'Other';
         }
     </script>
+    <script>
+        function toggleOtherInput(checkbox, inputId) {
+            const input = document.getElementById(inputId);
+            if (checkbox.checked) {
+                input.classList.remove('d-none');
+            } else {
+                input.classList.add('d-none');
+                input.value = ''; // optional: clear input when hidden
+            }
+        }
+        function validateForm() {
+            let valid = true;
+
+            // validate device question
+            const deviceCheckboxes = document.querySelectorAll('input[name="device"]');
+            const deviceError = document.getElementById('deviceError');
+            const anyDeviceChecked = Array.from(deviceCheckboxes).some(cb => cb.checked);
+
+            if (!anyDeviceChecked) {
+            deviceError.classList.remove('d-none');
+            valid = false;
+            } else {
+            deviceError.classList.add('d-none');
+            }
+
+            // validate source question
+            const newsCheckboxes = document.querySelectorAll('input[name="news_sources"]:checked, input[name="sources_other"]:checked');
+            const sourcesError = document.getElementById('sourcesError');
+
+            if (newsCheckboxes.length === 0) {
+            sourcesError.classList.remove('d-none');
+            valid = false;
+            } else {
+            sourcesError.classList.add('d-none');
+            }
+
+            return valid;
+        }
+      </script> -->
+      <script>
+        // For checkboxes with "Other"
+        function toggleCheckboxOther(checkbox, wrapperId) {
+            const wrapper = document.getElementById(wrapperId);
+            const input = wrapper.querySelector('input');
+            if (checkbox.checked) {
+                wrapper.classList.remove("hidden");
+                input.required = true;
+            } else {
+                wrapper.classList.add("hidden");
+                input.required = false;
+                input.value = "";
+            }
+        }
+        
+        // For selects with "Other"
+        function toggleSelectOther(selectElement, wrapperId) {
+            const wrapper = document.getElementById(wrapperId);
+            const input = wrapper.querySelector('input');
+            if (selectElement.value === "Other") {
+                wrapper.classList.remove("hidden");
+                input.required = true;
+            } else {
+                wrapper.classList.add("hidden");
+                input.required = false;
+                input.value = "";
+            }
+        }
+        
+        // Validation
+        function validateForm() {
+            let valid = true;
+            // validate device question
+            const deviceCheckboxes = document.querySelectorAll('input[name="device"]');
+            const deviceError = document.getElementById('deviceError');
+            const anyDeviceChecked = Array.from(deviceCheckboxes).some(cb => cb.checked);
+            if (!anyDeviceChecked) {
+                deviceError.classList.remove('hidden');
+                valid = false;
+            } else {
+                deviceError.classList.add('hidden');
+            }
+            // validate source question
+            const newsCheckboxes = document.querySelectorAll('input[name="news_sources"]:checked, input[name="sources_other"]:checked');
+            const sourcesError = document.getElementById('sourcesError');
+            if (newsCheckboxes.length === 0) {
+                sourcesError.classList.remove('hidden');
+                valid = false;
+            } else {
+                sourcesError.classList.add('hidden');
+            }
+            return valid;
+        }
+        </script>
 </head>
 <body>
 <div class="card">
@@ -94,69 +198,34 @@
             </div>
         
             <div class="form-check">
-              <input class="form-check-input" type="checkbox" name="device" value="Other" id="deviceOtherCheckbox" onchange="toggleOtherInput(this, 'deviceOtherInput')">
+              <input class="form-check-input" type="checkbox" name="device" value="Other" id="deviceOtherCheckbox" onchange="toggleCheckboxOther(this, 'deviceOtherInput')">
               <label class="form-check-label" for="deviceOtherCheckbox">Other</label>
             </div>
         
-            <input type="text" id="deviceOtherInput" class="form-control mt-2 d-none" name="device_other" placeholder="Please specify">
-        
-            <div id="deviceError" class="text-danger mt-2 d-none">Please select at least one device.</div>
+            <!-- <input type="text" id="deviceOtherInput" class="form-control mt-2 d-none" name="device_other" placeholder="Please specify"> -->
+            <div id="deviceOtherInput" class="hidden mt-2">
+                <input type="text" name="device_other" class="form-control" placeholder="Please specify">
+            </div>
+
+            <div id="deviceError" class="text-danger mt-2 hidden">Please select at least one device.</div>
           </div>
-
-          <script>
-            function toggleOtherInput(checkbox, inputId) {
-                const input = document.getElementById(inputId);
-                if (checkbox.checked) {
-                    input.classList.remove('d-none');
-                } else {
-                    input.classList.add('d-none');
-                    input.value = ''; // optional: clear input when hidden
-                }
-            }
-            function validateForm() {
-                let valid = true;
-
-                // validate device question
-                const deviceCheckboxes = document.querySelectorAll('input[name="device"]');
-                const deviceError = document.getElementById('deviceError');
-                const anyDeviceChecked = Array.from(deviceCheckboxes).some(cb => cb.checked);
-
-                if (!anyDeviceChecked) {
-                deviceError.classList.remove('d-none');
-                valid = false;
-                } else {
-                deviceError.classList.add('d-none');
-                }
-
-                // validate source question
-                const newsCheckboxes = document.querySelectorAll('input[name="news_sources"]:checked, input[name="sources_other"]:checked');
-                const sourcesError = document.getElementById('sourcesError');
-
-                if (newsCheckboxes.length === 0) {
-                sourcesError.classList.remove('d-none');
-                valid = false;
-                } else {
-                sourcesError.classList.add('d-none');
-                }
-
-                return valid;
-            }
-          </script>
           
 
         <!-- 3. Place of news consumption -->
         <div class="form-section">
             <label class="form-label">3. Where do you usually consume news?</label>
-            <select class="form-select" name="platform" id="platformSelect" onchange="togglePlatformOther()" required>
-    <option disabled selected value>Select</option>
-    <option value="News websites">News websites</option>
-    <option value="News apps">News apps</option>
-    <option value="News aggregators">News aggregators (e.g. Google News, Apple News)</option>
-    <option value="Social media">Social media</option>
-    <option value="Other">Other</option>
-</select>
-<input type="text" id="platformOtherInput" class="form-control mt-2 d-none" name="platform_other" placeholder="Please specify">
-
+            <select class="form-select" name="platform" onchange="toggleSelectOther(this, 'platformOtherInput')" required>
+                <option disabled selected value>Select</option>
+                <option>News websites</option>
+                <option>News apps</option>
+                <option>News aggregators (e.g. Google News, Apple News)</option>
+                <option>Social media</option>
+                <option value="Other">Other</option>
+            </select>
+            <div id="platformOtherInput" class="hidden mt-2">
+                <input type="text" name="platform_other" class="form-control" placeholder="Please specify">
+            </div>
+            <!-- <input type="text" id="platformOther" class="form-control mt-2 hidden" name="platform_other" placeholder="Please specify"> -->
         </div>
 
         <!-- 4. News websites and apps used -->
@@ -299,72 +368,52 @@
               <!-- Start of checkbox items -->
               <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="BBC" id="sourceBBC"><label class="form-check-label" for="sourceBBC">BBC</label></div></div>
               <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="TheGuardian" id="sourceGuardian"><label class="form-check-label" for="sourceGuardian">The Guardian</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="CBSNews" id="sourceCBS"><label class="form-check-label" for="sourceCBS">CBS News</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="NBCNews" id="sourceNBC"><label class="form-check-label" for="sourceNBC">NBC News</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="NewYorkTimes" id="sourceNYTimes"><label class="form-check-label" for="sourceNYTimes">New York Times</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="TheMirror" id="sourceMirror"><label class="form-check-label" for="sourceMirror">The Mirror</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="WashingtonPost" id="sourceWashingtonPost"><label class="form-check-label" for="sourceWashingtonPost">Washington Post</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="FoxNews" id="sourceFoxNews"><label class="form-check-label" for="sourceFoxNews">Fox News</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="CNBC" id="sourceCNBC"><label class="form-check-label" for="sourceCNBC">CNBC</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Bloomberg" id="sourceBloomberg"><label class="form-check-label" for="sourceBloomberg">Bloomberg</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="CNN" id="sourceCNN"><label class="form-check-label" for="sourceCNN">CNN</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Reuters" id="sourceReuters"><label class="form-check-label" for="sourceReuters">Reuters</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Forbes" id="sourceForbes"><label class="form-check-label" for="sourceForbes">Forbes</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="HuffPost" id="sourceHuffPost"><label class="form-check-label" for="sourceHuffPost">HuffPost</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Metro" id="sourceMetro"><label class="form-check-label" for="sourceMetro">Metro</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Independent" id="sourceIndependent"><label class="form-check-label" for="sourceIndependent">Independent</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="DailyMail" id="sourceDailyMail"><label class="form-check-label" for="sourceDailyMail">Daily Mail</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Upday" id="sourceUpday"><label class="form-check-label" for="sourceUpday">Upday</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="AppleNews" id="sourceAppleNews"><label class="form-check-label" for="sourceAppleNews">Apple News</label></div></div>
               <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="SkyNews" id="sourceSkyNews"><label class="form-check-label" for="sourceSkyNews">Sky News</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="TheExpress" id="sourceExpress"><label class="form-check-label" for="sourceExpress">The Express</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="MailOnline" id="sourceMailOnline"><label class="form-check-label" for="sourceMailOnline">MailOnline</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Telegraph" id="sourceTelegraph"><label class="form-check-label" for="sourceTelegraph">Telegraph</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="sourceGBNews" id="sourceGBNews"><label class="form-check-label" for="sourceGBNews">GB News</label></div></div>
               <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="TheSun" id="sourceSun"><label class="form-check-label" for="sourceSun">The Sun</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="MSNNews" id="sourceMSNNews"><label class="form-check-label" for="sourceMSNNews">MSN News</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="ITVNews" id="sourceITV"><label class="form-check-label" for="sourceITV">ITV News</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="TheTimes" id="sourceTimes"><label class="form-check-label" for="sourceTimes">The Times</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="TheMirror" id="sourceMirror"><label class="form-check-label" for="sourceMirror">The Mirror</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Yahoo" id="sourceYahoo"><label class="form-check-label" for="sourceYahoo">Yahoo!</label></div></div>
+
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="CNN" id="sourceCNN"><label class="form-check-label" for="sourceCNN">CNN</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="FoxNews" id="sourceFoxNews"><label class="form-check-label" for="sourceFoxNews">Fox News</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="NewYorkTimes" id="sourceNYTimes"><label class="form-check-label" for="sourceNYTimes">New York Times</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="USAToday" id="sourceUSAToday"><label class="form-check-label" for="sourceUSAToday">USA Today</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="WashingtonPost" id="sourceWashingtonPost"><label class="form-check-label" for="sourceWashingtonPost">Washington Post</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="WallStreetJournal" id="sourceWallStreetJournal"><label class="form-check-label" for="sourceWallStreetJournal">Wall Street Journal</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="ABCNews" id="sourceABCNews"><label class="form-check-label" for="sourceABCNews">ABC News</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="NBCNews" id="sourceNBC"><label class="form-check-label" for="sourceNBC">NBC News</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="CBSNews" id="sourceCBS"><label class="form-check-label" for="sourceCBS">CBS News</label></div></div>
+             
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="AppleNews" id="sourceAppleNews"><label class="form-check-label" for="sourceAppleNews">Apple News</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Facebook" id="sourceFacebook"><label class="form-check-label" for="sourceFacebook">Facebook</label></div></div>
+              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Youtube" id="sourceYoutube"><label class="form-check-label" for="sourceYoutube">Youtube</label></div></div>
               <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Instagram" id="sourceInstagram"><label class="form-check-label" for="sourceInstagram">Instagram</label></div></div>
               <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Tiktok" id="sourceTiktok"><label class="form-check-label" for="sourceTiktok">Tiktok</label></div></div>
               <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="X" id="sourceX"><label class="form-check-label" for="sourceX">X</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Reddit" id="sourceReddit"><label class="form-check-label" for="sourceReddit">Reddit</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Snapchat" id="sourceSnapchat"><label class="form-check-label" for="sourceSnapchat">Snapchat</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Whatsapp" id="sourceWhatsapp"><label class="form-check-label" for="sourceWhatsapp">Whatsapp</label></div></div>
-              <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="news_sources" value="Yahoo" id="sourceYahoo"><label class="form-check-label" for="sourceYahoo">Yahoo!</label></div></div>
           
               <!-- Other option -->
               <div class="col">
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" name="sources_other" value="Other" id="sourcesOtherCheckbox" onchange="toggleOtherInput(this, 'sourcesOtherInput')">
+                  <input class="form-check-input" type="checkbox" name="sources_other" value="Other" id="sourcesOtherCheckbox" onchange="toggleCheckboxOther(this, 'sourcesOtherInput')">
                   <label class="form-check-label" for="sourcesOtherCheckbox">Other</label>
                 </div>
               </div>
             </div>
           
             <!-- Optional other input -->
-            <input type="text" id="sourcesOtherInput" class="form-control mt-2 d-none" name="sources_other_text" placeholder="Please specify">
-            <div id="sourcesError" class="text-danger mt-2 d-none">Please select at least one source.</div>
+            <!-- <input type="text" id="sourcesOtherInput" class="form-control mt-2 d-none" name="sources_other_text" placeholder="Please specify"> -->
+            <div id="sourcesOtherInput" class="hidden mt-2">
+                <input type="text" name="sources_other_text" class="form-control" placeholder="Please specify">
+            </div>
+            <div id="sourcesError" class="text-danger mt-2 hidden">Please select at least one source.</div>
           </div>
           
-          <script>
-            function toggleOtherInput(checkbox, inputId) {
-              const input = document.getElementById(inputId);
-              if (checkbox.checked) {
-                input.classList.remove('d-none');
-              } else {
-                input.classList.add('d-none');
-                input.value = '';
-              }
-            }
 
-            function togglePlatformOther() {
-    const select = document.getElementById('platformSelect');
-    const input = document.getElementById('platformOtherInput');
-    if (select.value === 'Other') {
-      input.classList.remove('d-none');
-      input.required = true;
-    } else {
-      input.classList.add('d-none');
-      input.required = false;
-      input.value = '';
-    }
-  }
-          </script>
           
 
         <!-- 5. Attention check -->
