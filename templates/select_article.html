@@ -4,77 +4,83 @@
   <meta charset="UTF-8">
   <title>Select a News Article</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap" rel="stylesheet">
   <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 1.1rem;
+      background-color: #f8f9fa;
+    }
 
-  body {
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    font-size: 1.1rem;
-    background-color: #f8f9fa;
-  }
+    .card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s ease-in-out;
+      border-radius: 12px;
+    }
 
-  .card-img-top {
-    width: 100%;
-    height: 300px;
-    object-fit: cover;
-  }
+    .card:hover {
+      transform: translateY(-5px);
+    }
 
-  .card {
-    height: 100%;
-    transition: transform 0.2s ease-in-out;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    border-radius: 12px;
-  }
+    .card-img-top {
+      height: 250px;
+      object-fit: cover;
+      width: 100%;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
 
-  .card:hover {
-    transform: translateY(-5px);
-  }
+    .card-body {
+      flex-grow: 1;
+      padding: 1.2rem 1.5rem;
+    }
 
-  .card-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    line-height: 1.3;
-    color: #212529;
-    margin-bottom: 0.3rem;
-  }
+    .card-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #212529;
+      margin-bottom: 0.8rem;
+      line-height: 1.3;
+    }
 
-  .article_label {
-    height: 2.2em;
-    margin-left: 0.5rem;
-  }
+    .headline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-  .headline {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-  }
+    .article_label {
+      height: 2.2em;
+      flex-shrink: 0;
+      margin-left: 0.5rem;
+    }
 
-  .article-button {
-    background: none;
-    border: none;
-    padding: 0;
-    width: 100%;
-    text-align: left;
-  }
+    .article-button {
+      background: none;
+      border: none;
+      padding: 0;
+      width: 100%;
+      text-align: left;
+    }
 
-  .article-button:focus {
-    outline: none;
-  }
+    .article-button:focus {
+      outline: none;
+    }
 
-  .card-body {
-    padding: 1rem 1.25rem;
-  }
+    .equal-height {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
 
-  .alert-primary {
-    font-size: 1.25rem;
-    font-weight: 500;
-    font-family: 'Inter', sans-serif;
-  }
-</style>
-
+    .alert-primary {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+  </style>
   <script>
     function selectArticle(id, hadLabel) {
       document.getElementById('selected_article_id').value = id;
@@ -83,7 +89,7 @@
     }
   </script>
 </head>
-<body>
+<body class="bg-light">
   <div class="container py-5">
     <div class="d-flex justify-content-center mb-4">
       <div class="alert alert-primary text-center h4 mb-0 px-4 py-3" role="alert">
@@ -98,25 +104,22 @@
       <div class="row g-4">
         {% for article in articles %}
         <div class="col-md-6">
-          <button type="submit"
-                  class="article-button"
+          <button type="submit" class="article-button"
                   onclick="return selectArticle({{ article.get('index') }}, {{ 'true' if article.get('show_label') else 'false' }})">
-            <div class="card h-100">
+            <div class="card equal-height h-100 shadow-sm">
               <img src="{{ article['Image URL'] or 'https://placehold.co/600x400?text=No+Image' }}"
                    class="card-img-top" alt="{{ article['Title'] }}">
-              <div class="card-body">
-                <div class="headline">
-                  <h3 class="card-title">{{ article['Title'] }}</h3>
-                  {% if article.get('show_label') %}
-                    {% if condition == 'color' %}
-                      <img class="article_label" src="{{ url_for('static', filename='images/itsCOLOUR.png') }}" alt="Label: Color">
-                    {% elif condition == 'no_color' %}
-                      <img class="article_label" src="{{ url_for('static', filename='images/itsBW.png') }}" alt="Label: No Color">
-                    {% elif condition == 'c2pa' %}
-                      <img class="article_label" src="{{ url_for('static', filename='images/cr_logo.png') }}" alt="Label: C2PA">
-                    {% endif %}
+              <div class="card-body d-flex justify-content-between align-items-start">
+                <div class="card-title">{{ article['Title'] }}</div>
+                {% if article.get('show_label') %}
+                  {% if condition == 'color' %}
+                    <img class="article_label" src="{{ url_for('static', filename='images/itsCOLOUR.png') }}">
+                  {% elif condition == 'no_color' %}
+                    <img class="article_label" src="{{ url_for('static', filename='images/itsBW.png') }}">
+                  {% elif condition == 'c2pa' %}
+                    <img class="article_label" src="{{ url_for('static', filename='images/cr_logo.png') }}">
                   {% endif %}
-                </div>
+                {% endif %}
               </div>
             </div>
           </button>
