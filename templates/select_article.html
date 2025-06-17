@@ -4,49 +4,58 @@
   <meta charset="UTF-8">
   <title>Select a News Article</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap" rel="stylesheet">
   <style>
-    .card-img-top {
-      width: 100%;
-      height: 350px;
-      object-fit: cover;
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 1.1rem;
+      background-color: #f8f9fa;
     }
 
     .card {
-      transition: transform 0.2s ease-in-out;
       height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s ease-in-out;
+      border-radius: 12px;
     }
 
     .card:hover {
       transform: translateY(-5px);
     }
 
+    .card-img-top {
+      height: 250px;
+      object-fit: cover;
+      width: 100%;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+
+    .card-body {
+      flex-grow: 1;
+      padding: 1.2rem 1.5rem;
+    }
+
     .card-title {
-      font-size: 1.5rem;
-      font-weight: 600;
-      padding-right: 2em;
-      display: flex;
-      flex-wrap: wrap;
-    }
-
-    .card-text {
-      font-size: 0.9rem;
-      color: #555;
-    }
-
-    .article_label {
-      width: auto;
-      height: 3em;
-      object-fit: contain;
-      flex-shrink: 0;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #212529;
+      margin-bottom: 0.8rem;
+      line-height: 1.3;
     }
 
     .headline {
       display: flex;
-      flex-direction: row;
-      width: 100%;
       justify-content: space-between;
-      margin-bottom: 1em;
       align-items: center;
+    }
+
+    .article_label {
+      height: 2.2em;
+      flex-shrink: 0;
+      margin-left: 0.5rem;
     }
 
     .article-button {
@@ -60,35 +69,57 @@
     .article-button:focus {
       outline: none;
     }
+
+    .equal-height {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .alert-primary {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
   </style>
+  <script>
+    function selectArticle(id, hadLabel) {
+      document.getElementById('selected_article_id').value = id;
+      document.getElementById('selected_article_had_label').value = hadLabel ? 'true' : 'false';
+      return true;
+    }
+  </script>
 </head>
 <body class="bg-light">
-
   <div class="container py-5">
     <div class="d-flex justify-content-center mb-4">
-      <div class="alert alert-primary text-center h4 mb-0 px-4 py-3" role="alert"><strong>Task:</strong> Out of the 4 news articles below, please select the one you would like to read most.</div>
-  </div>
-    <!-- <h2 class="text-center mb-4">Out of the 4 news articles below, please select the one you would like to read most.</h2> -->
+      <div class="alert alert-primary text-center h4 mb-0 px-4 py-3" role="alert">
+        <strong>Task:</strong> Out of the 4 news articles below, please select the one you would like to read most.
+      </div>
+    </div>
 
     <form method="POST">
+      <input type="hidden" name="selected_article_id" id="selected_article_id">
+      <input type="hidden" name="selected_article_had_label" id="selected_article_had_label">
+
       <div class="row g-4">
         {% for article in articles %}
         <div class="col-md-6">
-          <button type="submit" name="selected_article_id" value="{{ article.get('index') }}" class="article-button">
-            <div class="card h-100">
-              <img src="{{ article['Image URL'] or 'https://placehold.co/600x400?text=No+Image' }}" class="card-img-top" alt="{{ article['Title'] }}">
-              <div class="card-body d-flex flex-column">
-                <div class="headline">
-                  <h5 class="card-title">{{ article['Title'] }}</h5>
+          <button type="submit" class="article-button"
+                  onclick="return selectArticle({{ article.get('index') }}, {{ 'true' if article.get('show_label') else 'false' }})">
+            <div class="card equal-height h-100 shadow-sm">
+              <img src="{{ article['Image URL'] or 'https://placehold.co/600x400?text=No+Image' }}"
+                   class="card-img-top" alt="{{ article['Title'] }}">
+              <div class="card-body d-flex justify-content-between align-items-start">
+                <div class="card-title">{{ article['Title'] }}</div>
+                {% if article.get('show_label') %}
                   {% if condition == 'color' %}
-                    <img class="article_label" src="{{ url_for('static', filename='images/itsCOLOUR.png') }}" alt="Label: Color">
+                    <img class="article_label" src="{{ url_for('static', filename='images/itsCOLOUR.png') }}">
                   {% elif condition == 'no_color' %}
-                    <img class="article_label" src="{{ url_for('static', filename='images/itsBW.png') }}" alt="Label: No Color">
+                    <img class="article_label" src="{{ url_for('static', filename='images/itsBW.png') }}">
                   {% elif condition == 'c2pa' %}
-                    <img class="article_label" src="{{ url_for('static', filename='images/cr_logo.png') }}" alt="Label: C2PA">
+                    <img class="article_label" src="{{ url_for('static', filename='images/cr_logo.png') }}">
                   {% endif %}
-                </div>
-                <p class="card-text">{{ article['Content'][:250] }}...</p>
+                {% endif %}
               </div>
             </div>
           </button>
@@ -97,6 +128,5 @@
       </div>
     </form>
   </div>
-
 </body>
 </html>

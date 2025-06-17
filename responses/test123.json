@@ -3,13 +3,10 @@
   "condition": "color",
   "timestamp_start": "2025-06-16T14:17:11.523535",
   "demographics": {
-    "gender": "Prefer not to say",
-    "gender_self_describe": "",
+    "gender": "Non-binary",
     "age_group": "16\u201324",
-    "country": "United Kingdom",
-    "other_country": "",
-    "occupation": "Associate degree",
-    "other_occupation": ""
+    "country": "United States",
+    "occupation": "Technical certification"
   },
   "pre_questionnaire": {
     "news_frequency": "Every day",
