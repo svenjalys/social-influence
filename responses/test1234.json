@@ -3,8 +3,8 @@
   "condition": "no_color",
   "timestamp_start": "2025-06-16T13:57:16.275869",
   "theme_selection": {
-    "selected_article_id": 46,
-    "selected_article_title": "Entertainment attorney: Cassie Ventura's graphic testimony \u2018is just the tip of the iceberg'",
+    "selected_article_id": 48,
+    "selected_article_title": "Fox News Entertainment Newsletter: Mariska Hargitay's family secret, Dakota Johnson struggled to pay rent",
     "selected_article_category": "entertainment",
     "condition": "no_color"
   },
@@ -166,6 +166,133 @@
         "trust_article": "3",
         "trust_image": "4"
       }
+    },
+    {
+      "round": 1,
+      "selected_article_id": 45,
+      "selected_article_title": "San Francisco Mayor Daniel Lurie approves 5 more \"entertainment zones\" across city",
+      "selected_article_had_label": true,
+      "label_explained": true
+    },
+    {
+      "round": 1,
+      "article_id": 45,
+      "selected_article_had_label": true,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Headline",
+          "Paragraph"
+        ],
+        "trust_article": "4",
+        "trust_image": "4"
+      }
+    },
+    {
+      "round": 2,
+      "selected_article_id": 58,
+      "selected_article_title": "Miss Manners: No need to keep inviting no-show couple",
+      "selected_article_had_label": false,
+      "label_explained": false
+    },
+    {
+      "round": 2,
+      "article_id": 58,
+      "selected_article_had_label": false,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Headline",
+          "Topic"
+        ],
+        "trust_article": "5",
+        "trust_image": "5"
+      }
+    },
+    {
+      "round": 3,
+      "selected_article_id": 47,
+      "selected_article_title": "San Jose creating downtown entertainment zones to boost business",
+      "selected_article_had_label": true,
+      "label_explained": false
+    },
+    {
+      "round": 3,
+      "selected_article_id": 14,
+      "selected_article_title": "Bangladesh's Yunus threatens to quit amid growing political uncertainty",
+      "selected_article_had_label": true,
+      "label_explained": false
+    },
+    {
+      "round": 3,
+      "article_id": 14,
+      "selected_article_had_label": true,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Image label",
+          "Headline"
+        ],
+        "trust_article": "4",
+        "trust_image": "4"
+      }
+    },
+    {
+      "round": 1,
+      "selected_article_id": 23,
+      "selected_article_title": "Louisville signs former Packers VP Andrew Brandt as advisor for athletic department",
+      "selected_article_had_label": false,
+      "label_explained": false
+    },
+    {
+      "round": 1,
+      "article_id": 23,
+      "selected_article_had_label": false,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Headline",
+          "Paragraph"
+        ],
+        "trust_article": "6",
+        "trust_image": "6"
+      }
+    },
+    {
+      "round": 1,
+      "selected_article_id": 47,
+      "selected_article_title": "San Jose creating downtown entertainment zones to boost business",
+      "selected_article_had_label": true,
+      "label_explained": true
+    },
+    {
+      "round": 1,
+      "article_id": 47,
+      "selected_article_had_label": true,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Headline",
+          "Paragraph"
+        ],
+        "trust_article": "5",
+        "trust_image": "4"
+      }
+    },
+    {
+      "round": 2,
+      "selected_article_id": 45,
+      "selected_article_title": "San Francisco Mayor Daniel Lurie approves 5 more \"entertainment zones\" across city",
+      "selected_article_had_label": false,
+      "label_explained": false
+    },
+    {
+      "round": 2,
+      "article_id": 45,
+      "selected_article_had_label": false,
+      "mid_questionnaire": {
+        "selected_elements": [
+          "Image label",
+          "Headline"
+        ],
+        "trust_article": "4",
+        "trust_image": "4"
+      }
     }
   ],
   "post_questionnaire": {
@@ -193,22 +320,21 @@
     "label_present": false
   },
   "demographics": {
-    "gender": "Female",
-    "gender_self_describe": "",
-    "age_group": "25\u201334",
-    "country": "United States",
-    "other_country": "",
-    "occupation": "I did not complete any formal education",
-    "other_occupation": ""
+    "gender": "Prefer not to say",
+    "age_group": "35\u201344",
+    "country": "United Kingdom",
+    "occupation": "Some college (no degree)"
   },
   "pre_questionnaire": {
-    "news_frequency": "About once a week",
-    "device": "Computer/Laptop",
-    "device_other": null,
-    "platform": "News aggregators (e.g. Google News, Apple News)",
-    "platform_other": null,
-    "news_sources": "Bloomberg",
-    "attention_check": "New York Times",
+    "news_frequency": "Several times a week",
+    "devices": [
+      "Computer/Laptop"
+    ],
+    "platform": "Other: hallo",
+    "news_sources": [
+      "TheTimes"
+    ],
+    "attention_check": "BBC",
     "trust_level": "4"
   }
 }
