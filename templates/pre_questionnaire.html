@@ -34,6 +34,17 @@
             justify-content: space-between;
         }
     </style>
+    <!-- <script>
+    function toggleOtherInput(checkbox, inputId) {
+        const input = document.getElementById(inputId);
+        if (checkbox.checked) {
+        input.classList.remove('d-none');
+        } else {
+        input.classList.add('d-none');
+        input.value = '';
+        }
+    }
+    </script>
     <script>
         function toggleOtherInput(selectElem, inputId) {
             const input = document.getElementById(inputId);
@@ -41,6 +52,99 @@
             input.required = selectElem.value === 'Other';
         }
     </script>
+    <script>
+        function toggleOtherInput(checkbox, inputId) {
+            const input = document.getElementById(inputId);
+            if (checkbox.checked) {
+                input.classList.remove('d-none');
+            } else {
+                input.classList.add('d-none');
+                input.value = ''; // optional: clear input when hidden
+            }
+        }
+        function validateForm() {
+            let valid = true;
+
+            // validate device question
+            const deviceCheckboxes = document.querySelectorAll('input[name="device"]');
+            const deviceError = document.getElementById('deviceError');
+            const anyDeviceChecked = Array.from(deviceCheckboxes).some(cb => cb.checked);
+
+            if (!anyDeviceChecked) {
+            deviceError.classList.remove('d-none');
+            valid = false;
+            } else {
+            deviceError.classList.add('d-none');
+            }
+
+            // validate source question
+            const newsCheckboxes = document.querySelectorAll('input[name="news_sources"]:checked, input[name="sources_other"]:checked');
+            const sourcesError = document.getElementById('sourcesError');
+
+            if (newsCheckboxes.length === 0) {
+            sourcesError.classList.remove('d-none');
+            valid = false;
+            } else {
+            sourcesError.classList.add('d-none');
+            }
+
+            return valid;
+        }
+      </script> -->
+      <script>
+        // For checkboxes with "Other"
+        function toggleCheckboxOther(checkbox, wrapperId) {
+            const wrapper = document.getElementById(wrapperId);
+            const input = wrapper.querySelector('input');
+            if (checkbox.checked) {
+                wrapper.classList.remove("hidden");
+                input.required = true;
+            } else {
+                wrapper.classList.add("hidden");
+                input.required = false;
+                input.value = "";
+            }
+        }
+        
+        // For selects with "Other"
+        function toggleSelectOther(selectElement, wrapperId) {
+            const wrapper = document.getElementById(wrapperId);
+            const input = wrapper.querySelector('input');
+            if (selectElement.value === "Other") {
+                wrapper.classList.remove("hidden");
+                input.required = true;
+            } else {
+                wrapper.classList.add("hidden");
+                input.required = false;
+                input.value = "";
+            }
+        }
+        
+        // Validation
+        function validateForm() {
+            let valid = true;
+            // validate device question
+            const deviceCheckboxes = document.querySelectorAll('input[name="device"]');
+            const deviceError = document.getElementById('deviceError');
+            const anyDeviceChecked = Array.from(deviceCheckboxes).some(cb => cb.checked);
+            if (!anyDeviceChecked) {
+                deviceError.classList.remove('hidden');
+                valid = false;
+            } else {
+                deviceError.classList.add('hidden');
+            }
+            // validate source question
+            const newsCheckboxes = document.querySelectorAll('input[name="news_sources"]:checked, input[name="sources_other"]:checked');
+            const sourcesError = document.getElementById('sourcesError');
+            if (newsCheckboxes.length === 0) {
+                sourcesError.classList.remove('hidden');
+                valid = false;
+            } else {
+                sourcesError.classList.add('hidden');
+            }
+            return valid;
+        }
+        </script>
 </head>
 <body>
 <div class="card">
@@ -94,68 +198,34 @@
             </div>
         
             <div class="form-check">
-              <input class="form-check-input" type="checkbox" name="device" value="Other" id="deviceOtherCheckbox" onchange="toggleOtherInput(this, 'deviceOtherInput')">
+              <input class="form-check-input" type="checkbox" name="device" value="Other" id="deviceOtherCheckbox" onchange="toggleCheckboxOther(this, 'deviceOtherInput')">
               <label class="form-check-label" for="deviceOtherCheckbox">Other</label>
             </div>
         
-            <input type="text" id="deviceOtherInput" class="form-control mt-2 d-none" name="device_other" placeholder="Please specify">
-        
-            <div id="deviceError" class="text-danger mt-2 d-none">Please select at least one device.</div>
+            <!-- <input type="text" id="deviceOtherInput" class="form-control mt-2 d-none" name="device_other" placeholder="Please specify"> -->
+            <div id="deviceOtherInput" class="hidden mt-2">
+                <input type="text" name="device_other" class="form-control" placeholder="Please specify">
+            </div>
+
+            <div id="deviceError" class="text-danger mt-2 hidden">Please select at least one device.</div>
           </div>
-
-          <script>
-            function toggleOtherInput(checkbox, inputId) {
-                const input = document.getElementById(inputId);
-                if (checkbox.checked) {
-                    input.classList.remove('d-none');
-                } else {
-                    input.classList.add('d-none');
-                    input.value = ''; // optional: clear input when hidden
-                }
-            }
-            function validateForm() {
-                let valid = true;
-
-                // validate device question
-                const deviceCheckboxes = document.querySelectorAll('input[name="device"]');
-                const deviceError = document.getElementById('deviceError');
-                const anyDeviceChecked = Array.from(deviceCheckboxes).some(cb => cb.checked);
-
-                if (!anyDeviceChecked) {
-                deviceError.classList.remove('d-none');
-                valid = false;
-                } else {
-                deviceError.classList.add('d-none');
-                }
-
-                // validate source question
-                const newsCheckboxes = document.querySelectorAll('input[name="news_sources"]:checked, input[name="sources_other"]:checked');
-                const sourcesError = document.getElementById('sourcesError');
-
-                if (newsCheckboxes.length === 0) {
-                sourcesError.classList.remove('d-none');
-                valid = false;
-                } else {
-                sourcesError.classList.add('d-none');
-                }
-
-                return valid;
-            }
-          </script>
           
 
         <!-- 3. Place of news consumption -->
         <div class="form-section">
             <label class="form-label">3. Where do you usually consume news?</label>
-            <select class="form-select" name="platform" onchange="toggleOtherInput(this, 'platformOther')" required>
+            <select class="form-select" name="platform" onchange="toggleSelectOther(this, 'platformOtherInput')" required>
                 <option disabled selected value>Select</option>
                 <option>News websites</option>
                 <option>News apps</option>
                 <option>News aggregators (e.g. Google News, Apple News)</option>
                 <option>Social media</option>
-                <option>Other</option>
+                <option value="Other">Other</option>
             </select>
-            <input type="text" id="platformOther" class="form-control mt-2 hidden" name="platform_other" placeholder="Please specify">
+            <div id="platformOtherInput" class="hidden mt-2">
+                <input type="text" name="platform_other" class="form-control" placeholder="Please specify">
+            </div>
+            <!-- <input type="text" id="platformOther" class="form-control mt-2 hidden" name="platform_other" placeholder="Please specify"> -->
         </div>
 
         <!-- 4. News websites and apps used -->
@@ -329,28 +399,21 @@
               <!-- Other option -->
               <div class="col">
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" name="sources_other" value="Other" id="sourcesOtherCheckbox" onchange="toggleOtherInput(this, 'sourcesOtherInput')">
+                  <input class="form-check-input" type="checkbox" name="sources_other" value="Other" id="sourcesOtherCheckbox" onchange="toggleCheckboxOther(this, 'sourcesOtherInput')">
                   <label class="form-check-label" for="sourcesOtherCheckbox">Other</label>
                 </div>
               </div>
             </div>
           
             <!-- Optional other input -->
-            <input type="text" id="sourcesOtherInput" class="form-control mt-2 d-none" name="sources_other_text" placeholder="Please specify">
-            <div id="sourcesError" class="text-danger mt-2 d-none">Please select at least one source.</div>
+            <!-- <input type="text" id="sourcesOtherInput" class="form-control mt-2 d-none" name="sources_other_text" placeholder="Please specify"> -->
+            <div id="sourcesOtherInput" class="hidden mt-2">
+                <input type="text" name="sources_other_text" class="form-control" placeholder="Please specify">
+            </div>
+            <div id="sourcesError" class="text-danger mt-2 hidden">Please select at least one source.</div>
           </div>
           
-          <script>
-            function toggleOtherInput(checkbox, inputId) {
-              const input = document.getElementById(inputId);
-              if (checkbox.checked) {
-                input.classList.remove('d-none');
-              } else {
-                input.classList.add('d-none');
-                input.value = '';
-              }
-            }
-          </script>
+
           
 
         <!-- 5. Attention check -->
