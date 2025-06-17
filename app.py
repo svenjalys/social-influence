@@ -123,17 +123,50 @@ def demographics():
 @app.route('/pre-questionnaire', methods=['GET', 'POST'])
 @require_previous_step('demographics')
 def pre_questionnaire():
+    # if request.method == 'POST':
+    #     data = {
+    #         'news_frequency': request.form.get('news_frequency'),
+    #         'device': request.form.get('device'),
+    #         'device_other': request.form.get('device_other') if request.form.get('device') == 'Other' else None,
+    #         'platform': request.form.get('platform'),
+    #         'platform_other': request.form.get('platform_other') if request.form.get('platform') == 'Other' else None,
+    #         'news_sources': request.form.get('news_sources'),
+    #         'attention_check': request.form.get('attention_check'),
+    #         'trust_level': request.form.get('trust_level')
+    #     }
+    #     update_participant_data('pre_questionnaire', data)
+    #     session['pre_questionnaire_completed'] = True
+    #     session['round'] = 1
+    #     return redirect(url_for('select_article'))
     if request.method == 'POST':
+        # Devices: Get list of all checked devices, including "Other"
+        devices = request.form.getlist('device')
+        device_other = request.form.get('device_other', '').strip()
+        if 'Other' in devices and device_other:
+            devices = [d if d != 'Other' else f"Other: {device_other}" for d in devices]
+
+        # Platform: Get value and check if "Other" was selected
+        platform = request.form.get('platform')
+        platform_other = request.form.get('platform_other', '').strip()
+        if platform == 'Other' and platform_other:
+            platform = f"Other: {platform_other}"
+
+        # News sources: Get all checked, including "Other"
+        sources = request.form.getlist('news_sources')
+        sources_other_checked = 'Other' in request.form.getlist('sources_other')  # checkbox for Other
+        sources_other_text = request.form.get('sources_other_text', '').strip()
+        if sources_other_checked and sources_other_text:
+            sources.append(f"Other: {sources_other_text}")
+
         data = {
             'news_frequency': request.form.get('news_frequency'),
-            'device': request.form.get('device'),
-            'device_other': request.form.get('device_other') if request.form.get('device') == 'Other' else None,
-            'platform': request.form.get('platform'),
-            'platform_other': request.form.get('platform_other') if request.form.get('platform') == 'Other' else None,
-            'news_sources': request.form.get('news_sources'),
+            'devices': devices,                      # Now a list with "Other" replaced if present
+            'platform': platform,                    # "Other: text" if "Other" was selected
+            'news_sources': sources,                 # List, with "Other: text" if "Other" checked
             'attention_check': request.form.get('attention_check'),
             'trust_level': request.form.get('trust_level')
         }
+
         update_participant_data('pre_questionnaire', data)
         session['pre_questionnaire_completed'] = True
         return redirect(url_for('select_article'))
