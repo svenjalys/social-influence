@@ -179,6 +179,7 @@ def select_article():
     if request.method == 'POST':
         selected_article_id = int(request.form['selected_article_id'])
         session['next_article'] = selected_article_id
+
         article_row = df[df['index'] == selected_article_id]
         if not article_row.empty:
             article = article_row.iloc[0]
@@ -188,83 +189,165 @@ def select_article():
                 'selected_article_category': article['Category'],
                 'condition': session.get('condition', 'unknown')
             })
+
         session['select_article_completed'] = True
         return redirect(url_for('article', article_id=selected_article_id))
 
+    # Group by category and randomly pick 1 article per selected category
     grouped = df.groupby(df['Category'].str.title())
     selected_categories = random.sample(list(grouped.groups), k=min(4, len(grouped)))
     selected_articles = [grouped.get_group(cat).sample(1).iloc[0] for cat in selected_categories]
+
     article_dicts = [a.to_dict() | {'index': int(a['index'])} for a in selected_articles]
-    label_ids = [a['index'] for a in article_dicts]
+    article_selection_indexes = [a['index'] for a in article_dicts]
+
+    # Save selected article indexes for label logic
     session['theme_articles'] = article_dicts
-    session['theme_label_ids'] = label_ids
-    return render_template('select_article.html', articles=article_dicts, label_ids=label_ids, condition=session['condition'])
+    session['article_selection_indexes'] = article_selection_indexes
+
+    return render_template(
+        'select_article.html',
+        articles=article_dicts,
+        label_ids=article_selection_indexes,
+        condition=session['condition']
+    )
+
 
 @app.route('/article/<int:article_id>', methods=['GET', 'POST'])
 @require_previous_step('select_article')
 def article(article_id):
     if article_id >= len(df):
         return redirect(url_for('select_article'))
+
     article_data = df.iloc[article_id].to_dict()
-    recommendations_df = df[(df['Category'] == article_data['Category']) & (df['index'] != article_id)]
-    recommendations = recommendations_df.sample(min(4, len(recommendations_df))).to_dict(orient='records')
-    label_shown_ids = set(random.sample([rec['index'] for rec in recommendations], min(2, len(recommendations))))
+    article_index = article_data['index']
+    condition = session.get('condition')
+
+    # Select 4 recommendations from the same category (excluding the current article)
+    recommendations_df = df[(df['Category'] == article_data['Category']) & (df['index'] != article_index)]
+    recommendations = recommendations_df.sample(n=min(4, len(recommendations_df))).to_dict(orient='records')
+
+    # Randomly assign labels to 2 recommendations
+    rec_indexes = [rec['index'] for rec in recommendations]
+    label_shown_ids = set(random.sample(rec_indexes, min(2, len(rec_indexes))))
+
+    # Add article_selection_indexes to label_shown_ids if condition requires labels
+    article_selection_indexes = session.get('article_selection_indexes', [])
+    if condition in ['color', 'no_color', 'c2pa']:
+        label_shown_ids.update(article_selection_indexes)
+
+    # Store current label state in session
     session['label_shown_ids'] = list(label_shown_ids)
 
     if request.method == 'POST':
         selected_article_id = int(request.form['selected_article_id'])
         session['next_article'] = selected_article_id
+
         label_explained = request.form.get('label_explained') == 'true'
         selected_article_had_label = request.form.get('selected_article_had_label') == 'true'
+
+        if selected_article_had_label:
+            label_shown = set(session.get('label_shown_ids', []))
+            label_shown.add(selected_article_id)
+            session['label_shown_ids'] = list(label_shown)
+
         update_participant_data('round', {
             'round': session.get('round', 1),
             'selected_article_id': selected_article_id,
-            'selected_article_title': df.iloc[selected_article_id]['Title'],
+            'selected_article_title': df[df['index'] == selected_article_id].iloc[0]['Title'],
             'selected_article_had_label': selected_article_had_label,
             'label_explained': label_explained
         })
+
         session['article_completed'] = True
         return redirect(url_for('mid_questionnaire'))
 
+    # Assign random CR label if needed
     cr_labels = ['cr1.png', 'cr2.png', 'cr3.png', 'cr4.png']
-    cr_label = None
-    if session.get('condition') == 'c2pa':
-        cr_label = random.choice(cr_labels)
+    cr_label = random.choice(cr_labels) if condition == 'c2pa' else None
 
-    return render_template('article.html', article=article_data, recommendations=recommendations, label_shown_ids=label_shown_ids, condition=session['condition'], cr_label=cr_label)
+    # Show label only if this article was in the labeled list
+    show_label = article_index in session.get('label_shown_ids', [])
+
+    return render_template(
+        'article.html',
+        article=article_data,
+        recommendations=recommendations,
+        label_shown_ids=session['label_shown_ids'],
+        condition=condition,
+        cr_label=cr_label,
+        show_label=show_label,
+        debug=True
+    )
+
+
+
 
 @app.route('/mid-questionnaire', methods=['GET', 'POST'])
 @require_previous_step('article')
 def mid_questionnaire():
+    article_id = session.get('next_article')
+    article = df.iloc[article_id].to_dict()
+    article['index'] = article_id 
+
+    condition = session.get('condition')
+    label_shown_ids = session.get('label_shown_ids', [])
+
+    #Debug: Print current article ID and label logic
+    print(f"[DEBUG] Article ID: {article_id}")
+    print(f"[DEBUG] Label condition: {condition}")
+    print(f"[DEBUG] Label shown IDs: {label_shown_ids}")
+    print(f"[DEBUG] Should show label: {article_id in label_shown_ids}")
+
     if request.method == 'POST':
         selected_elements = request.form.getlist('choice_elements')
         other_text = request.form.get('other_element')
+        
         if not selected_elements:
-            return render_template('mid_questionnaire.html', error="Please select at least one element that influenced your choice.")
+            return render_template('mid_questionnaire.html', error="Please select at least one element that influenced your choice.",
+                                   article=article, condition=condition, label_shown_ids=label_shown_ids)
+        
         if 'Other (please specify)' in selected_elements and not other_text:
-            return render_template('mid_questionnaire.html', error="Please specify what 'Other' means.")
+            return render_template('mid_questionnaire.html', error="Please specify what 'Other' means.",
+                                   article=article, condition=condition, label_shown_ids=label_shown_ids)
+        
         if "Don't know / None of these" in selected_elements and len(selected_elements) > 1:
-            return render_template('mid_questionnaire.html', error="'Don't know' cannot be selected with other options.")
+            return render_template('mid_questionnaire.html', error="'Don't know' cannot be selected with other options.",
+                                   article=article, condition=condition, label_shown_ids=label_shown_ids)
+        
         if selected_elements == ['Other (please specify)']:
             selected_elements = [f"Other: {other_text}"]
+
         trust_article = request.form.get('trust_article')
         trust_image = request.form.get('trust_image')
+
         update_participant_data('round', {
             'round': session.get('round', 1),
-            'article_id': session.get('next_article'),
+            'article_id': article_id,
             'mid_questionnaire': {
                 'selected_elements': selected_elements,
                 'trust_article': trust_article,
                 'trust_image': trust_image
             }
         })
+
         session['mid_questionnaire_completed'] = True
         if session.get('round', 1) < 3:
             session['round'] += 1
             return redirect(url_for('article', article_id=session.get('next_article')))
         else:
             return redirect(url_for('post_questionnaire'))
-    return render_template('mid_questionnaire.html')
+
+    return render_template(
+        'mid_questionnaire.html',
+        article=article,
+        condition=condition,
+        label_shown_ids=label_shown_ids
+    )
+
+
+
+
 
 @app.route('/post-questionnaire', methods=['GET', 'POST'])
 @require_previous_step('mid_questionnaire')

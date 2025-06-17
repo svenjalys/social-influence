@@ -85,9 +85,54 @@
     }
     </script>
 </head>
-<body>
+<body class="container mt-5">
+    <div class="d-flex justify-content-center mb-4">
+    <div class="alert alert-primary text-center h4 mb-0 px-4 py-3" role="alert">
+        <strong>Task:</strong> Reflect on the article you just selected. The questions below are about the article you have just chosen from the list of recommendations. 
+        Please consider what influenced your choice, and indicate to what extent you agree with the statements.
+    </div>
+</div>
 <div class="card">
     <h2 class="mb-4 text-center">Mid-Questionnaire</h2>
+<!-- Selected Article Display -->
+<div class="card mb-4 shadow-sm p-3">
+  <div class="row g-3 align-items-center"> <!-- Vertically aligns both cols -->
+
+    <!-- Left: Only Title (vertically centered) -->
+    <div class="col-md-8 d-flex align-items-center">
+      <h3 class="mb-0 fw-bold" style="font-size: 1.5rem;">{{ article['Title'] }}</h3>
+    </div>
+
+        <!-- Right: Image + Label Below -->
+        <div class="col-md-4 text-end">
+            <div class="d-flex flex-column align-items-end">
+                <!-- Image -->
+                <img src="{{ article['Image URL'] or 'https://placehold.co/300x180?text=No+Image' }}"
+                     alt="{{ article['Title'] }}"
+                     class="img-fluid rounded"
+                     style="max-height: 180px; object-fit: cover;">
+
+                <!-- Label directly below image, aligned left -->
+                {% if condition and article['index'] in label_shown_ids %}
+                    <div class="w-100 d-flex justify-content-start mt-1">
+                        {% if condition == 'color' %}
+                            <img src="{{ url_for('static', filename='images/itsCOLOUR.png') }}"
+                                 alt="Label: Color" style="height: 30px;">
+                        {% elif condition == 'no_color' %}
+                            <img src="{{ url_for('static', filename='images/itsBW.png') }}"
+                                 alt="Label: No Color" style="height: 30px;">
+                        {% elif condition == 'c2pa' %}
+                            <img src="{{ url_for('static', filename='images/cr_logo.png') }}"
+                                 alt="Label: C2PA" style="height: 30px;">
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+    
     <form method="POST" onsubmit="return validateForm()">
         <!-- Hidden field for round -->
         <input type="hidden" name="round" value="{{ session['round'] }}">
