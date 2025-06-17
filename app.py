@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session
+from flask_sqlalchemy import SQLAlchemy #for sqlite
 import pandas as pd
 import json
 import os
@@ -7,6 +8,32 @@ from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///responses.db' #for sqlite
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #for sqlite
+db = SQLAlchemy(app) #for sqlite
+
+###define database models for sqlite
+class Participant(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    prolific_id = db.Column(db.String(64), unique=True, nullable=False)
+    condition = db.Column(db.String(32))
+    timestamp_start = db.Column(db.DateTime)
+    demographics = db.Column(db.JSON)
+    pre_questionnaire = db.Column(db.JSON)
+    post_questionnaire = db.Column(db.JSON)
+    rounds = db.relationship('Round', backref='participant', lazy=True)
+
+class Round(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    round_number = db.Column(db.Integer)
+    participant_id = db.Column(db.Integer, db.ForeignKey('participant.id'), nullable=False)
+    theme_selection = db.Column(db.JSON)
+    article = db.Column(db.JSON)
+    mid_questionnaire = db.Column(db.JSON)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+###
+
 
 RESPONSES_DIR = "responses"
 os.makedirs(RESPONSES_DIR, exist_ok=True)
@@ -69,50 +96,103 @@ def get_participant_id():
 
 def update_participant_data(section, data):
     pid = get_participant_id()
-    print("Prolific ID:", pid)
-
     if not pid:
-        print("Ingen PID – avbryter lagring")
+        print("No Prolific PID found - skipping save.")
         return
 
-    filepath = os.path.join(RESPONSES_DIR, f"{pid}.json")
-    print("Skal lagres til:", filepath)
+    # Try to get existing participant, else create new one
+    participant = Participant.query.filter_by(prolific_id=pid).first()
+    if not participant:
+        participant = Participant(
+            prolific_id=pid,
+            condition=session.get('condition', 'unknown'),
+            timestamp_start=datetime.utcnow()
+        )
+        db.session.add(participant)
+        db.session.commit()  # commit so participant.id is assigned
 
-    if os.path.exists(filepath):
-        with open(filepath, 'r') as f:
-            pdata = json.load(f)
-    else:
-        pdata = {
-            'prolific_id': pid,
-            'condition': session.get('condition', 'unknown'),
-            'timestamp_start': datetime.utcnow().isoformat()
-        }
+    # Save data based on section
+    if section == 'demographics':
+        participant.demographics = data
+    elif section == 'pre_questionnaire':
+        participant.pre_questionnaire = data
+    elif section == 'post_questionnaire':
+        participant.post_questionnaire = data
+    elif section == 'round':
+        round_number = session.get('round', 1)
+        # Find existing round for this participant & number
+        existing_round = Round.query.filter_by(participant_id=participant.id, round_number=round_number).first()
+        if existing_round:
+            # Update existing round (merge data)
+            if data.get('theme_selection'):
+                existing_round.theme_selection = data['theme_selection']
+            if data.get('article'):
+                existing_round.article = data['article']
+            if data.get('mid_questionnaire'):
+                existing_round.mid_questionnaire = data['mid_questionnaire']
+            existing_round.timestamp = datetime.utcnow()
+        else:
+            # Insert new round
+            new_round = Round(
+                round_number=round_number,
+                participant_id=participant.id,
+                theme_selection=data.get('theme_selection'),
+                article=data.get('article'),
+                mid_questionnaire=data.get('mid_questionnaire'),
+                timestamp=datetime.utcnow()
+            )
+            db.session.add(new_round)
 
-    if section == 'round':
-        pdata.setdefault('rounds', []).append(data)
-    else:
-        pdata[section] = data
+    db.session.commit()
+    print(f"Saved '{section}' for participant {pid}")
 
 
-    # if section == 'round':
-    #     rounds = pdata.setdefault('rounds', [])
-    #     current_round = session.get('round', 1)
+# def update_participant_data(section, data):
+#     pid = get_participant_id()
+#     print("Prolific ID:", pid)
 
-    #     # Check if there's already a round entry
-    #     for r in rounds:
-    #         if r.get('round') == current_round:
-    #             r.update(data)  # Merge into existing round
-    #             break
-    #         else:
-    #             rounds.append(data)  # Add new round if not present
-    #     else:
-    #         pdata[section] = data
+#     if not pid:
+#         print("Ingen PID – avbryter lagring")
+#         return
+
+#     filepath = os.path.join(RESPONSES_DIR, f"{pid}.json")
+#     print("Skal lagres til:", filepath)
+
+#     if os.path.exists(filepath):
+#         with open(filepath, 'r') as f:
+#             pdata = json.load(f)
+#     else:
+#         pdata = {
+#             'prolific_id': pid,
+#             'condition': session.get('condition', 'unknown'),
+#             'timestamp_start': datetime.utcnow().isoformat()
+#         }
+
+#     if section == 'round':
+#         pdata.setdefault('rounds', []).append(data)
+#     else:
+#         pdata[section] = data
+
+
+#     # if section == 'round':
+#     #     rounds = pdata.setdefault('rounds', [])
+#     #     current_round = session.get('round', 1)
+
+#     #     # Check if there's already a round entry
+#     #     for r in rounds:
+#     #         if r.get('round') == current_round:
+#     #             r.update(data)  # Merge into existing round
+#     #             break
+#     #         else:
+#     #             rounds.append(data)  # Add new round if not present
+#     #     else:
+#     #         pdata[section] = data
 
 
 
-    with open(filepath, 'w') as f:
-        json.dump(pdata, f, indent=2)
-    print("Lagring fullført.")
+#     with open(filepath, 'w') as f:
+#         json.dump(pdata, f, indent=2)
+#     print("Lagring fullført.")
 
 
 
