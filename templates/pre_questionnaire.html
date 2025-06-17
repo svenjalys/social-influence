@@ -147,15 +147,16 @@
         <!-- 3. Place of news consumption -->
         <div class="form-section">
             <label class="form-label">3. Where do you usually consume news?</label>
-            <select class="form-select" name="platform" onchange="toggleOtherInput(this, 'platformOther')" required>
-                <option disabled selected value>Select</option>
-                <option>News websites</option>
-                <option>News apps</option>
-                <option>News aggregators (e.g. Google News, Apple News)</option>
-                <option>Social media</option>
-                <option>Other</option>
-            </select>
-            <input type="text" id="platformOther" class="form-control mt-2 hidden" name="platform_other" placeholder="Please specify">
+            <select class="form-select" name="platform" id="platformSelect" onchange="togglePlatformOther()" required>
+    <option disabled selected value>Select</option>
+    <option value="News websites">News websites</option>
+    <option value="News apps">News apps</option>
+    <option value="News aggregators">News aggregators (e.g. Google News, Apple News)</option>
+    <option value="Social media">Social media</option>
+    <option value="Other">Other</option>
+</select>
+<input type="text" id="platformOtherInput" class="form-control mt-2 d-none" name="platform_other" placeholder="Please specify">
+
         </div>
 
         <!-- 4. News websites and apps used -->
@@ -350,6 +351,19 @@
                 input.value = '';
               }
             }
+
+            function togglePlatformOther() {
+    const select = document.getElementById('platformSelect');
+    const input = document.getElementById('platformOtherInput');
+    if (select.value === 'Other') {
+      input.classList.remove('d-none');
+      input.required = true;
+    } else {
+      input.classList.add('d-none');
+      input.required = false;
+      input.value = '';
+    }
+  }
           </script>
           
 

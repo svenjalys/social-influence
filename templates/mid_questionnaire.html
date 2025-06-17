@@ -34,7 +34,6 @@
         const noneCheckbox = document.getElementById('el7');
         const otherInput = document.getElementById('otherElement');
 
-        // Show/hide the "Other" textbox
         if (otherCheckbox.checked) {
             otherInput.classList.remove('hidden');
             otherInput.required = true;
@@ -43,7 +42,6 @@
             otherInput.required = false;
         }
 
-        // If "Don't know" is checked, disable the others
         if (noneCheckbox.checked) {
             checkboxes.forEach(cb => {
                 if (cb !== noneCheckbox) cb.disabled = true;
@@ -86,34 +84,40 @@
     </script>
 </head>
 <body class="container mt-5">
-    <div class="d-flex justify-content-center mb-4">
+
+{% if debug %}
+<div class="alert alert-warning">
+  <strong>DEBUG:</strong><br>
+  article_id: {{ article['index'] }}<br>
+  condition: {{ condition }}<br>
+  show_label: {{ show_label }}
+</div>
+{% endif %}
+
+<div class="d-flex justify-content-center mb-4">
     <div class="alert alert-primary text-center h4 mb-0 px-4 py-3" role="alert">
         <strong>Task:</strong> Reflect on the article you just selected. The questions below are about the article you have just chosen from the list of recommendations. 
         Please consider what influenced your choice, and indicate to what extent you agree with the statements.
     </div>
 </div>
+
 <div class="card">
     <h2 class="mb-4 text-center">Mid-Questionnaire</h2>
-<!-- Selected Article Display -->
-<div class="card mb-4 shadow-sm p-3">
-  <div class="row g-3 align-items-center"> <!-- Vertically aligns both cols -->
 
-    <!-- Left: Only Title (vertically centered) -->
-    <div class="col-md-8 d-flex align-items-center">
-      <h3 class="mb-0 fw-bold" style="font-size: 1.5rem;">{{ article['Title'] }}</h3>
-    </div>
+    <!-- Selected Article Display -->
+    <div class="card mb-4 shadow-sm p-3">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-8 d-flex align-items-center">
+                <h3 class="mb-0 fw-bold" style="font-size: 1.5rem;">{{ article['Title'] }}</h3>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="d-flex flex-column align-items-end">
+                    <img src="{{ article['Image URL'] or 'https://placehold.co/300x180?text=No+Image' }}"
+                         alt="{{ article['Title'] }}"
+                         class="img-fluid rounded"
+                         style="max-height: 180px; object-fit: cover;">
 
-        <!-- Right: Image + Label Below -->
-        <div class="col-md-4 text-end">
-            <div class="d-flex flex-column align-items-end">
-                <!-- Image -->
-                <img src="{{ article['Image URL'] or 'https://placehold.co/300x180?text=No+Image' }}"
-                     alt="{{ article['Title'] }}"
-                     class="img-fluid rounded"
-                     style="max-height: 180px; object-fit: cover;">
-
-                <!-- Label directly below image, aligned left -->
-                {% if condition and article['index'] in label_shown_ids %}
+                    {% if show_label %}
                     <div class="w-100 d-flex justify-content-start mt-1">
                         {% if condition == 'color' %}
                             <img src="{{ url_for('static', filename='images/itsCOLOUR.png') }}"
@@ -126,40 +130,25 @@
                                  alt="Label: C2PA" style="height: 30px;">
                         {% endif %}
                     </div>
-                {% endif %}
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-    
+    <!-- Questionnaire Form -->
     <form method="POST" onsubmit="return validateForm()">
-        <!-- Hidden field for round -->
         <input type="hidden" name="round" value="{{ session['round'] }}">
+        <input type="hidden" name="selected_article_had_label" value="{{ 'true' if show_label else 'false' }}">
 
-        <!-- 1. Elements influencing article choice -->
+        <!-- Q1 -->
         <div class="form-section">
             <label class="form-label">1. Please select one or several elements that made you choose this article:</label>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="choice_elements" value="Picture" id="el1" onchange="updateCheckboxStates()">
-                <label class="form-check-label" for="el1">The image</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="choice_elements" value="Image label" id="el2" onchange="updateCheckboxStates()">
-                <label class="form-check-label" for="el2">The image label</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="choice_elements" value="Headline" id="el3" onchange="updateCheckboxStates()">
-                <label class="form-check-label" for="el3">The headline</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="choice_elements" value="Paragraph" id="el4" onchange="updateCheckboxStates()">
-                <label class="form-check-label" for="el4">The short paragraph below the headline</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="choice_elements" value="Topic" id="el5" onchange="updateCheckboxStates()">
-                <label class="form-check-label" for="el5">The topic</label>
-            </div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="choice_elements" value="Picture" id="el1" onchange="updateCheckboxStates()"><label class="form-check-label" for="el1">The image</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="choice_elements" value="Image label" id="el2" onchange="updateCheckboxStates()"><label class="form-check-label" for="el2">The image label</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="choice_elements" value="Headline" id="el3" onchange="updateCheckboxStates()"><label class="form-check-label" for="el3">The headline</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="choice_elements" value="Paragraph" id="el4" onchange="updateCheckboxStates()"><label class="form-check-label" for="el4">The short paragraph below the headline</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="choice_elements" value="Topic" id="el5" onchange="updateCheckboxStates()"><label class="form-check-label" for="el5">The topic</label></div>
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="choice_elements" value="Other (please specify)" id="el6" onchange="updateCheckboxStates()">
                 <label class="form-check-label" for="el6">Other</label>
@@ -171,43 +160,29 @@
             </div>
         </div>
 
-        <!-- 2. Trust questions -->
+        <!-- Q2 -->
         <div class="form-section">
             <label class="form-label">2. Please indicate how much you agree or disagree with the following statements:</label>
 
             <p><em>I trust this article most among all 4 recommended articles.</em></p>
             <div class="likert-container">
                 <label for="trust_article_1">1</label>
-                <input type="radio" name="trust_article" value="1" id="trust_article_1" required>
-                <input type="radio" name="trust_article" value="2" id="trust_article_2">
-                <input type="radio" name="trust_article" value="3" id="trust_article_3">
-                <input type="radio" name="trust_article" value="4" id="trust_article_4">
-                <input type="radio" name="trust_article" value="5" id="trust_article_5">
-                <input type="radio" name="trust_article" value="6" id="trust_article_6">
-                <input type="radio" name="trust_article" value="7" id="trust_article_7">
+                {% for i in range(1, 8) %}
+                    <input type="radio" name="trust_article" value="{{ i }}" id="trust_article_{{ i }}" {% if i == 1 %}required{% endif %}>
+                {% endfor %}
                 <label for="trust_article_7">7</label>
             </div>
-            <div class="likert-labels">
-                <small>Strongly disagree</small>
-                <small>Strongly agree</small>
-            </div>
+            <div class="likert-labels"><small>Strongly disagree</small><small>Strongly agree</small></div>
 
             <p class="mt-4"><em>I think the cover image in this article is trustworthy.</em></p>
             <div class="likert-container">
                 <label for="trust_image_1">1</label>
-                <input type="radio" name="trust_image" value="1" id="trust_image_1" required>
-                <input type="radio" name="trust_image" value="2" id="trust_image_2">
-                <input type="radio" name="trust_image" value="3" id="trust_image_3">
-                <input type="radio" name="trust_image" value="4" id="trust_image_4">
-                <input type="radio" name="trust_image" value="5" id="trust_image_5">
-                <input type="radio" name="trust_image" value="6" id="trust_image_6">
-                <input type="radio" name="trust_image" value="7" id="trust_image_7">
+                {% for i in range(1, 8) %}
+                    <input type="radio" name="trust_image" value="{{ i }}" id="trust_image_{{ i }}" {% if i == 1 %}required{% endif %}>
+                {% endfor %}
                 <label for="trust_image_7">7</label>
             </div>
-            <div class="likert-labels">
-                <small>Strongly disagree</small>
-                <small>Strongly agree</small>
-            </div>
+            <div class="likert-labels"><small>Strongly disagree</small><small>Strongly agree</small></div>
         </div>
 
         <div class="text-center">
