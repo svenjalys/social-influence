@@ -26,6 +26,10 @@
     .hidden {
         display: none;
     }
+    .transp-label {
+        max-height: 100px;
+        margin-top: 5px;
+    }
   </style>
   <script>
     function handleOtherCheckbox(source, textboxId) {
@@ -68,96 +72,110 @@
     {% if condition == 'color' or condition == 'no_color' or condition == 'c2pa' %}
       <p><strong>Task:</strong> The following questions are about the labels that you have been shown in the news articles (you can see the simplified and more detailed versions below), as well as some questions about your familiarity with labels. Please reflect on your experience with the labels in this study and answer the related questions carefully. You can also give us feedback about the study at the end.</p>
     {% else %}
-    <p><strong>Task:</strong> The questions below are about your familiarity with labels and your confidence in identifying trustworthy news. Please answer the questions carefully. You can also give us feedback about the study at the end.</p>
+    <p><strong>Task:</strong> Please answer the final questions below about your familiarity with labels and your confidence in identifying trustworthy news. You can also give us feedback about the study at the end.</p>
     {% endif %}
-    <div class="mb-2">
+    <div class="d-flex justify-content-center gap-3 mb-4">
       {% if condition == 'color' %}
-        <img src="{{ url_for('static', filename='images/itsCOLOUR.png') }}" class="p-2">
-        <img src="{{ url_for('static', filename='images/imagetrustscoreCOLOUR.png') }}" class="p-2">
+        <img src="{{ url_for('static', filename='images/itsCOLOUR.png') }}" class="transp-label">
+        <img src="{{ url_for('static', filename='images/imagetrustscoreCOLOUR.png') }}" class="transp-label">
       {% elif condition == 'no_color' %}
-        <img src="{{ url_for('static', filename='images/itsBW.png') }}" class="p-2">
-        <img src="{{ url_for('static', filename='images/imagetrustscoreBW.png') }}" class="p-2">
+        <img src="{{ url_for('static', filename='images/itsBW.png') }}" class="transp-label">
+        <img src="{{ url_for('static', filename='images/imagetrustscoreBW.png') }}" class="transp-label">
       {% elif condition == 'c2pa' %}
-        <img src="{{ url_for('static', filename='images/cr_logo.png') }}" class="p-2">
-        <img src="{{ url_for('static', filename='images/cr1.png') }}" class="p-2">
+        <img src="{{ url_for('static', filename='images/cr_logo.png') }}" class="transp-label">
+        <img src="{{ url_for('static', filename='images/cr1.png') }}" class="transp-label">
       {% endif %}
     </div>
 
     <form method="POST">
-      <!-- Q1 -->
-      <div class="mb-4">
-        <label class="form-label"><strong>When you see these labels, what do you think they represents?</strong></label>
-        {% set other_value = 'Other' %}
-        {% for opt in ['How much verified information about the creation and edits of the picture is available','How much of the picture is real/fake','How trustworthy the image is','How trustworthy the article is','How much readers like the article','Not sure',other_value] %}
-          <label class="form-check d-block">
-            <input class="form-check-input" type="checkbox" name="score_meaning" value="{{ opt }}"
-              {% if opt == other_value %} onchange="handleOtherCheckbox(this, 'score_meaning_other')" {% endif %}>
-            {{ opt }}
-          </label>
-        {% endfor %}
-        <input type="hidden" id="score_meaning_required" required>
-        <div class="mt-2 hidden" id="score_meaning_other">
-          <input type="text" name="score_meaning_other" class="form-control" placeholder="Please specify">
-        </div>
-      </div>
-
-      <!-- Q2 -->
-      <div class="mb-4">
-        <label class="form-label"><strong>What kind of information would you expect to see if you clicked on these labels?</strong></label>
-        {% set other_value = 'Other' %}
-        {% for opt in ['Whether AI was used in the image creation process','Where the image was taken','When the image was taken','Any changes that have been made to the original image','How trustworthy the image is','The copyright holder or owner of the image','The publisher','Not sure',other_value] %}
-          <label class="form-check d-block">
-            <input class="form-check-input" type="checkbox" name="label_expectation" value="{{ opt }}"
-              {% if opt == other_value %} onchange="handleOtherCheckbox(this, 'label_expectation_other')" {% endif %}>
-            {{ opt }}
-          </label>
-        {% endfor %}
-        <input type="hidden" id="label_expectation_required" required>
-        <div class="mt-2 hidden" id="label_expectation_other">
-          <input type="text" name="label_expectation_other" class="form-control" placeholder="Please specify">
-        </div>
-      </div>
-
-      <!-- Q3 -->
-      <div class="form-section">
-        <label class="form-label"><strong>Please indicate how much you agree or disagree with the following statements:</strong></label>
-      
-        {% set questions = [
-          ('understood_label', 'a. I immediately understood what the labels represent.'),
-          ('visual_design', 'b. I found the design of the labels visually appealing.'),
-          ('decision_support', 'c. I found the labels useful for deciding which news article to read.'),
-          ('info_usefulness', 'd. The labels provide useful information.'),
-          ('image_trust', 'e. The labels reassured me that the image was trustworthy by clarifying important information about the related image.'),
-          ('evaluate_trustworthiness', 'f. The labels helped me to evaluate the trustworthiness of the related image.'),
-          ('more_labels', 'g. I would like more articles to show labels like these for their images.'),
-          ('attention_check', 'h. Please select "3" in the scale below. This is an attention check.')
-        ] %}
-      
-        {% for name, question in questions %}
+      {% if condition == 'color' or condition == 'no_color' or condition == 'c2pa' %}
+        <!-- Q1 -->
         <div class="mb-4">
-          <label class="form-label"><em>{{ question }}</em></label>
-          <div class="d-flex justify-content-between text-center">
-            {% for i in range(1, 8) %}
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="{{ name }}" id="{{ name }}_{{ i }}" value="{{ i }}" required>
-              <label class="form-check-label" for="{{ name }}_{{ i }}">{{ i }}</label>
+          <label class="form-label"><strong>When you see these labels, what do you think they represents?</strong></label>
+          {% set other_value = 'Other' %}
+          {% for opt in ['How much verified information about the creation and edits of the picture is available','How much of the picture is real/fake','How trustworthy the image is','How trustworthy the article is','How much readers like the article','Not sure',other_value] %}
+            <label class="form-check d-block">
+              <input class="form-check-input" type="checkbox" name="score_meaning" value="{{ opt }}"
+                {% if opt == other_value %} onchange="handleOtherCheckbox(this, 'score_meaning_other')" {% endif %}>
+              {{ opt }}
+            </label>
+          {% endfor %}
+          <input type="hidden" id="score_meaning_required" required>
+          <div class="mt-2 hidden" id="score_meaning_other">
+            <input type="text" name="score_meaning_other" class="form-control" placeholder="Please specify">
+          </div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="mb-4">
+          <label class="form-label"><strong>What kind of information would you expect to see if you clicked on these labels?</strong></label>
+          {% set other_value = 'Other' %}
+          {% for opt in ['Whether AI was used in the image creation process','Where the image was taken','When the image was taken','Any changes that have been made to the original image','How trustworthy the image is','The copyright holder or owner of the image','The publisher','Not sure',other_value] %}
+            <label class="form-check d-block">
+              <input class="form-check-input" type="checkbox" name="label_expectation" value="{{ opt }}"
+                {% if opt == other_value %} onchange="handleOtherCheckbox(this, 'label_expectation_other')" {% endif %}>
+              {{ opt }}
+            </label>
+          {% endfor %}
+          <input type="hidden" id="label_expectation_required" required>
+          <div class="mt-2 hidden" id="label_expectation_other">
+            <input type="text" name="label_expectation_other" class="form-control" placeholder="Please specify">
+          </div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="form-section">
+          <label class="form-label"><strong>Please indicate how much you agree or disagree with the following statements:</strong></label>
+        
+          {% set questions = [
+            ('understood_label', 'a. I immediately understood what the labels represent.'),
+            ('visual_design', 'b. I found the design of the labels visually appealing.'),
+            ('decision_support', 'c. I found the labels useful for deciding which news article to read.'),
+            ('info_usefulness', 'd. The labels provide useful information.'),
+            ('image_trust', 'e. The labels reassured me that the image was trustworthy by clarifying important information about the related image.'),
+            ('evaluate_trustworthiness', 'f. The labels helped me to evaluate the trustworthiness of the related image.'),
+            ('more_labels', 'g. I would like more articles to show labels like these for their images.'),
+            ('attention_check', 'h. Please select "3" in the scale below. This is an attention check.')
+          ] %}
+        
+          {% for name, question in questions %}
+          <div class="mb-4">
+            <label class="form-label"><em>{{ question }}</em></label>
+            <div class="d-flex justify-content-between text-center">
+              {% for i in range(1, 8) %}
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="{{ name }}" id="{{ name }}_{{ i }}" value="{{ i }}" required>
+                <label class="form-check-label" for="{{ name }}_{{ i }}">{{ i }}</label>
+              </div>
+              {% endfor %}
             </div>
-            {% endfor %}
+            <div class="d-flex justify-content-between">
+              <small class="text-muted">Strongly disagree</small>
+              <small class="text-muted">Strongly agree</small>
+            </div>
           </div>
-          <div class="d-flex justify-content-between">
-            <small class="text-muted">Strongly disagree</small>
-            <small class="text-muted">Strongly agree</small>
-          </div>
+          {% endfor %}
         </div>
-        {% endfor %}
-      </div>
-    <!-- </div> -->
+        <!-- </div> -->
 
-      <!-- Q4 -->
-      {% if condition == 'color' or condition == 'no_color' %}
-        <div class="mb-4">
-          <label class="form-label"><strong>The labels show a score of the level 'A'. What do you think this grade is based on?</strong></label>
-          {% for opt in ['The accuracy of the information in the article','How transparently the article shows its sources, author, and any edits','How clearly information about the image is provided','The overall trustworthiness of the news provider','The level of political bias in the article','Not sure','Other'] %}
+        <!-- Q4 -->
+        {% if condition == 'color' or condition == 'no_color' %}
+          <div class="mb-4">
+            <label class="form-label"><strong>The labels show a score of the level 'A'. What do you think this grade is based on?</strong></label>
+            {% for opt in ['The accuracy of the information in the article','How transparently the article shows its sources, author, and any edits','How clearly information about the image is provided','The overall trustworthiness of the news provider','The level of political bias in the article','Not sure','Other'] %}
+              <label class="form-check d-block">
+                <input class="form-check-input" type="radio" name="grade_basis" value="{{ opt }}" required onchange="handleOtherRadio('grade_basis', 'grade_basis_other')">
+                {{ opt }}
+              </label>
+            {% endfor %}
+            <div class="mt-2 hidden" id="grade_basis_other">
+              <input type="text" name="grade_basis_other" class="form-control" placeholder="Please specify">
+            </div>
+          </div>
+        {% endif %}    
+        <!-- <div class="mb-4">
+          <label class="form-label"><strong>4. The label shows the grade A. What do you think this grade is based on?</strong></label>
+          {% for opt in ['The accuracy of the information in the article','How transparently the article shows its sources, author, and any edits','How clearly information about the image is provided','The overall trustworthiness of the news provider','The level of political bias in the article','Not sure',other_value] %}
             <label class="form-check d-block">
               <input class="form-check-input" type="radio" name="grade_basis" value="{{ opt }}" required onchange="handleOtherRadio('grade_basis', 'grade_basis_other')">
               {{ opt }}
@@ -166,50 +184,37 @@
           <div class="mt-2 hidden" id="grade_basis_other">
             <input type="text" name="grade_basis_other" class="form-control" placeholder="Please specify">
           </div>
-        </div>
-      {% endif %}    
-      <!-- <div class="mb-4">
-        <label class="form-label"><strong>4. The label shows the grade A. What do you think this grade is based on?</strong></label>
-        {% for opt in ['The accuracy of the information in the article','How transparently the article shows its sources, author, and any edits','How clearly information about the image is provided','The overall trustworthiness of the news provider','The level of political bias in the article','Not sure',other_value] %}
-          <label class="form-check d-block">
-            <input class="form-check-input" type="radio" name="grade_basis" value="{{ opt }}" required onchange="handleOtherRadio('grade_basis', 'grade_basis_other')">
-            {{ opt }}
-          </label>
-        {% endfor %}
-        <div class="mt-2 hidden" id="grade_basis_other">
-          <input type="text" name="grade_basis_other" class="form-control" placeholder="Please specify">
-        </div>
-      </div> -->
+        </div> -->
 
-      <!-- Q5: Attention Check -->
-      <!-- <div class="mb-4">
-        <label class="form-label"><strong>5. Please select "3" on the scale below. This is an attention check.</strong><br></label>
-        {% for opt in ['Yes, for sure', 'Maybe', 'Not really', 'No', 'I’m not sure'] %}
-          <label class="form-check d-block">
-            <input class="form-check-input" type="radio" name="attention_check" value="{{ opt }}" required>
-            {{ opt }}
-          </label>
-        {% endfor %}
-      </div> -->
+        <!-- Q5: Attention Check -->
+        <!-- <div class="mb-4">
+          <label class="form-label"><strong>5. Please select "3" on the scale below. This is an attention check.</strong><br></label>
+          {% for opt in ['Yes, for sure', 'Maybe', 'Not really', 'No', 'I’m not sure'] %}
+            <label class="form-check d-block">
+              <input class="form-check-input" type="radio" name="attention_check" value="{{ opt }}" required>
+              {{ opt }}
+            </label>
+          {% endfor %}
+        </div> -->
 
-      <!-- <div class="form-section">
-        <label class="form-label"><strong>5. Please select "3" on the scale below. This is an attention check.</strong></label>
-        <div class="mb-4">
-          <div class="d-flex justify-content-between text-center">
-            {% for i in range(1, 8) %}
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="attention_check" id="attention_check_{{ i }}" value="{{ i }}" required>
-              <label class="form-check-label" for="attention_check_{{ i }}">{{ i }}</label>
+        <!-- <div class="form-section">
+          <label class="form-label"><strong>5. Please select "3" on the scale below. This is an attention check.</strong></label>
+          <div class="mb-4">
+            <div class="d-flex justify-content-between text-center">
+              {% for i in range(1, 8) %}
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="attention_check" id="attention_check_{{ i }}" value="{{ i }}" required>
+                <label class="form-check-label" for="attention_check_{{ i }}">{{ i }}</label>
+              </div>
+              {% endfor %}
             </div>
-            {% endfor %}
+            <div class="d-flex justify-content-between">
+              <small class="text-muted">Strongly disagree</small>
+              <small class="text-muted">Strongly agree</small>
+            </div>
           </div>
-          <div class="d-flex justify-content-between">
-            <small class="text-muted">Strongly disagree</small>
-            <small class="text-muted">Strongly agree</small>
-          </div>
-        </div>
-      </div> -->
-
+        </div> -->
+      {% endif %}
 
       <!-- Familiarity: Trust Levels -->
       <div class="mb-4">
