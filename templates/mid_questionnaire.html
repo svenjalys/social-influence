@@ -28,26 +28,27 @@
         }
     </style>
     <script>
+    function toggleCheckboxOther(checkbox, wrapperId) {
+        const wrapper = document.getElementById(wrapperId);
+        const input = wrapper.querySelector('input');
+        if (checkbox.checked) {
+            wrapper.classList.remove("hidden");
+            input.required = true;
+        } else {
+            wrapper.classList.add("hidden");
+            input.required = false;
+            input.value = "";
+        }
+    }
     function updateCheckboxStates() {
         const checkboxes = document.querySelectorAll('input[name="choice_elements"]');
-        const otherCheckbox = document.getElementById('el6');
         const noneCheckbox = document.getElementById('el7');
-        const otherInput = document.getElementById('otherElement');
-
-        if (otherCheckbox.checked) {
-            otherInput.classList.remove('hidden');
-            otherInput.required = true;
-        } else {
-            otherInput.classList.add('hidden');
-            otherInput.required = false;
-        }
-
         if (noneCheckbox.checked) {
             checkboxes.forEach(cb => {
                 if (cb !== noneCheckbox) cb.disabled = true;
             });
-            otherInput.classList.add('hidden');
-            otherInput.required = false;
+            // Hide and clear the "Other" field
+            toggleCheckboxOther(document.getElementById('choiceOtherCheckbox'), 'choiceOtherInput');
         } else {
             checkboxes.forEach(cb => cb.disabled = false);
         }
@@ -145,21 +146,58 @@
         <!-- Q1 -->
         <div class="form-section">
             <label class="form-label">1. Please select one or several elements that made you choose this article:</label>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="choice_elements" value="Picture" id="el1" onchange="updateCheckboxStates()">
+                <label class="form-check-label" for="el1">The image</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="choice_elements" value="Image label" id="el2" onchange="updateCheckboxStates()">
+                <label class="form-check-label" for="el2">The image label</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="choice_elements" value="Headline" id="el3" onchange="updateCheckboxStates()">
+                <label class="form-check-label" for="el3">The headline</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="choice_elements" value="Paragraph" id="el4" onchange="updateCheckboxStates()">
+                <label class="form-check-label" for="el4">The short paragraph below the headline</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="choice_elements" value="Topic" id="el5" onchange="updateCheckboxStates()">
+                <label class="form-check-label" for="el5">The topic</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="choice_elements" value="Other" id="choiceOtherCheckbox" onchange="toggleCheckboxOther(this, 'choiceOtherInput'); updateCheckboxStates()">
+                <label class="form-check-label" for="choiceOtherCheckbox">Other</label>
+            </div>
+            <div id="choiceOtherInput" class="hidden mt-2">
+                <input type="text" name="choice_elements_other" class="form-control" placeholder="Please specify">
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="choice_elements" value="Don't know/None of these" id="el7"
+                       onchange="updateCheckboxStates(); toggleCheckboxOther(document.getElementById('choiceOtherCheckbox'), 'choiceOtherInput')">
+                <label class="form-check-label" for="el7">Don't know/None of these</label>
+            </div>
+        </div>
+        <!-- <div class="form-section">
+            <label class="form-label">1. Please select one or several elements that made you choose this article:</label>
             <div class="form-check"><input class="form-check-input" type="checkbox" name="choice_elements" value="Picture" id="el1" onchange="updateCheckboxStates()"><label class="form-check-label" for="el1">The image</label></div>
             <div class="form-check"><input class="form-check-input" type="checkbox" name="choice_elements" value="Image label" id="el2" onchange="updateCheckboxStates()"><label class="form-check-label" for="el2">The image label</label></div>
             <div class="form-check"><input class="form-check-input" type="checkbox" name="choice_elements" value="Headline" id="el3" onchange="updateCheckboxStates()"><label class="form-check-label" for="el3">The headline</label></div>
             <div class="form-check"><input class="form-check-input" type="checkbox" name="choice_elements" value="Paragraph" id="el4" onchange="updateCheckboxStates()"><label class="form-check-label" for="el4">The short paragraph below the headline</label></div>
             <div class="form-check"><input class="form-check-input" type="checkbox" name="choice_elements" value="Topic" id="el5" onchange="updateCheckboxStates()"><label class="form-check-label" for="el5">The topic</label></div>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="choice_elements" value="Other (please specify)" id="el6" onchange="updateCheckboxStates()">
-                <label class="form-check-label" for="el6">Other</label>
-                <input type="text" class="form-control mt-2 hidden" name="other_element" id="otherElement" placeholder="Please specify">
+                <input class="form-check-input" type="checkbox" name="choice_elements" value="Other" id="choiceOtherCheckbox" onchange="updateCheckboxStates()">
+                <label class="form-check-label" for="choiceOtherCheckbox">Other</label>
+            </div>
+            <div id="sourcesOtherInput" class="hidden mt-2">
+                <input type="text" name="sources_other_text" class="form-control" placeholder="Please specify">
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="choice_elements" value="Don't know / None of these" id="el7" onchange="updateCheckboxStates()">
-                <label class="form-check-label" for="el7">Not sure</label>
+                <input class="form-check-input" type="checkbox" name="choice_elements" value="Don't know/None of these" id="el7" onchange="updateCheckboxStates()">
+                <label class="form-check-label" for="el7">Don't know/None of these</label>
             </div>
-        </div>
+        </div> -->
 
         <!-- Q2 -->
         <div class="form-section">

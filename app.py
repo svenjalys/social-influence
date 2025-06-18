@@ -203,12 +203,12 @@ def demographics():
         age_group = request.form.get('age_group')
         country = request.form.get('country')
         other_country = request.form.get('other_country', '').strip()
-        occupation = request.form.get('occupation')
-        other_occupation = request.form.get('other_occupation', '').strip()
+        education = request.form.get('education')
+        other_education = request.form.get('other_education', '').strip()
 
         gender_final = gender_self if gender == 'Self-describe' else gender
         country_final = other_country if country == 'Other' else country
-        occupation_final = other_occupation if occupation == 'Other' else occupation
+        education_final = other_education if education == 'Other' else education
 
         if age_group == '15 or younger':
             return render_template('thank_you.html', message="Sorry, you do not meet the age criteria for this study.")
@@ -217,7 +217,7 @@ def demographics():
             'gender': gender_final,
             'age_group': age_group,
             'country': country_final,
-            'occupation': occupation_final
+            'education': education_final
         })
 
         session['demographics_completed'] = True
@@ -457,31 +457,52 @@ def mid_questionnaire():
 
     if request.method == 'POST':
         selected_elements = request.form.getlist('choice_elements')
-        other_text = request.form.get('other_element')
+        other_text = request.form.get('choice_elements_other', '').strip()
         trust_article = request.form.get('trust_article')
         trust_image = request.form.get('trust_image')
 
-        if not selected_elements or ("Other (please specify)" in selected_elements and not other_text):
+        # if not selected_elements or ("Other (please specify)" in selected_elements and not other_text):
+        #     return render_template('mid_questionnaire.html',
+        #                            article=article,
+        #                            condition=condition,
+        #                            show_label=show_label,
+        #                            error="Please complete the form.")
+        # if "Don't know / None of these" in selected_elements and len(selected_elements) > 1:
+        #     return render_template('mid_questionnaire.html',
+        #                            article=article,
+        #                            condition=condition,
+        #                            show_label=show_label,
+        #                            error="'Don't know' cannot be combined.")
+        # if selected_elements == ['Other (please specify)']:
+        #     selected_elements = [f"Other: {other_text}"]
+
+        selected_elements_out = []
+        for el in selected_elements:
+            if el == "Other":
+                if other_text:
+                    selected_elements_out.append(f"Other: {other_text}")
+                else:
+                    return render_template('mid_questionnaire.html',
+                                        article=article,
+                                        condition=condition,
+                                        show_label=show_label,
+                                        error="Please specify what 'Other' means.")
+            else:
+                selected_elements_out.append(el)
+
+        if "Don't know/None of these" in selected_elements and len(selected_elements) > 1:
             return render_template('mid_questionnaire.html',
-                                   article=article,
-                                   condition=condition,
-                                   show_label=show_label,
-                                   error="Please complete the form.")
-        if "Don't know / None of these" in selected_elements and len(selected_elements) > 1:
-            return render_template('mid_questionnaire.html',
-                                   article=article,
-                                   condition=condition,
-                                   show_label=show_label,
-                                   error="'Don't know' cannot be combined.")
-        if selected_elements == ['Other (please specify)']:
-            selected_elements = [f"Other: {other_text}"]
+                                article=article,
+                                condition=condition,
+                                show_label=show_label,
+                                error="'Don't know' cannot be combined.")
 
         update_participant_data('round', {
             'round': session.get('round', 1),
             'article_id': article_id,
             'selected_article_had_label': show_label,
             'mid_questionnaire': {
-                'selected_elements': selected_elements,
+                'selected_elements': selected_elements_out,
                 'trust_article': trust_article,
                 'trust_image': trust_image
             }
