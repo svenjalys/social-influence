@@ -94,18 +94,19 @@
 </div>
 {% endif %}
 
-<div class="d-flex justify-content-center mb-4">
+<!-- <div class="d-flex justify-content-center mb-4">
     <div class="alert alert-primary text-center h4 mb-0 px-4 py-3" role="alert">
         <strong>Task:</strong> Reflect on the article you just selected. The questions below are about the article you have just chosen from the list of recommendations. 
         Please consider what influenced your choice, and indicate to what extent you agree with the statements.
     </div>
-</div>
+</div> -->
 
 <div class="card">
     <h2 class="mb-4 text-center">Mid-Questionnaire</h2>
-
+    <p><strong>Task:</strong> Please reflect on the article you just selected. The questions below are about the article you have just chosen from the list of recommendations. 
+        Please consider what influenced your choice, and indicate to what extent you agree with the statements.</p>
     <!-- Selected Article Display -->
-    <div class="card mb-4 shadow-sm p-3">
+    <div class="card mb-4 shadow-sm p-3 mt-1">
         <div class="row g-3 align-items-center">
             <div class="col-md-8 d-flex align-items-center">
                 <h3 class="mb-0 fw-bold" style="font-size: 1.5rem;">{{ article['Title'] }}</h3>
