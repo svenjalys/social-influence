@@ -166,7 +166,21 @@
     </div>
 
     <!-- Q4 -->
+    {% if condition == 'color' or condition == 'no_color' %}
     <div class="mb-4">
+      <label class="form-label"><strong>4. The label shows the grade A. What do you think this grade is based on?</strong></label>
+      {% for opt in ['The accuracy of the information in the article','How transparently the article shows its sources, author, and any edits','How clearly information about the image is provided','The overall trustworthiness of the news provider','The level of political bias in the article','Not sure','Other'] %}
+        <label class="form-check d-block">
+          <input class="form-check-input" type="radio" name="grade_basis" value="{{ opt }}" required onchange="handleOtherRadio('grade_basis', 'grade_basis_other')">
+          {{ opt }}
+        </label>
+      {% endfor %}
+      <div class="mt-2 hidden" id="grade_basis_other">
+        <input type="text" name="grade_basis_other" class="form-control" placeholder="Please specify">
+      </div>
+    </div>
+    {% endif %}    
+    <!-- <div class="mb-4">
       <label class="form-label"><strong>4. The label shows the grade A. What do you think this grade is based on?</strong></label>
       {% for opt in ['The accuracy of the information in the article','How transparently the article shows its sources, author, and any edits','How clearly information about the image is provided','The overall trustworthiness of the news provider','The level of political bias in the article','Not sure',other_value] %}
         <label class="form-check d-block">
@@ -177,7 +191,7 @@
       <div class="mt-2 hidden" id="grade_basis_other">
         <input type="text" name="grade_basis_other" class="form-control" placeholder="Please specify">
       </div>
-    </div>
+    </div> -->
 
     <!-- Q5: Attention Check -->
     <!-- <div class="mb-4">

@@ -508,6 +508,8 @@ def mid_questionnaire():
 @app.route('/post-questionnaire', methods=['GET', 'POST'])
 @require_previous_step('mid_questionnaire')
 def post_questionnaire():
+    condition = session.get('condition')
+
     if request.method == 'POST':
         confidence = request.form.get('confidence')
         feedback = request.form.get('feedback')
@@ -515,8 +517,12 @@ def post_questionnaire():
         score_meaning_other = request.form.get('score_meaning_other')
         label_expectation = request.form.getlist('label_expectation')
         label_expectation_other = request.form.get('label_expectation_other')
-        grade_basis = request.form.get('grade_basis')
-        grade_basis_other = request.form.get('grade_basis_other')
+        if condition in ['color', 'no_color']:
+            grade_basis = request.form.get('grade_basis')
+            grade_basis_other = request.form.get('grade_basis_other')
+        else:
+            grade_basis = None
+            grade_basis_other = None
         familiar_trust_levels = request.form.get('familiar_trust_levels')
         familiar_nutriscore = request.form.get('familiar_nutriscore')
 
@@ -549,7 +555,9 @@ def post_questionnaire():
         session['post_questionnaire_completed'] = True
         return redirect(url_for('thank_you'))
 
-    return render_template('post_questionnaire.html')
+    return render_template(
+        'post_questionnaire.html',
+        condition=session.get('condition'))
 
 @app.route('/thank-you')
 @require_previous_step('post_questionnaire')
