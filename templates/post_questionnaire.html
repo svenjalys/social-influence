@@ -65,10 +65,15 @@
 <body class="container mt-5 mb-5" style="max-width: 800px;">
   <div class="card">
     <h1 class="mb-4">Post-Questionnaire</h1>
+      {% if condition == 'color' or condition == 'no_color' or condition == 'c2pa' %}
+        <p><strong>Task:</strong> The questions below are about the label you have been shown in the news articles and recommended articles, as well as some questions about your familiarity with labels. Please reflect on your experience with the label in this study and answer the related questions carefully. You can also give us feedback about the study at the end.</p>
+      {% else %}
+      <p><strong>Task:</strong> The questions below are about your familiarity with labels and your confidence in identifying trustworthy news. Please answer the questions carefully. You can also give us feedback about the study at the end.</p>
+      {% endif %}
     <form method="POST">
       <!-- Q1 -->
       <div class="mb-4">
-        <label class="form-label"><strong>1. When you see this label, what do you think it represents?</strong></label>
+        <label class="form-label"><strong>When you see this label, what do you think it represents?</strong></label>
         {% set other_value = 'Other' %}
         {% for opt in ['How much verified information about the creation and edits of the picture is available','How much of the picture is real/fake','How trustworthy the image is','How trustworthy the article is','How much readers like the article','Not sure',other_value] %}
           <label class="form-check d-block">
@@ -85,7 +90,7 @@
 
       <!-- Q2 -->
       <div class="mb-4">
-        <label class="form-label"><strong>2. What kind of information would you expect to see if you clicked on this label?</strong></label>
+        <label class="form-label"><strong>What kind of information would you expect to see if you clicked on this label?</strong></label>
         {% set other_value = 'Other' %}
         {% for opt in ['Whether AI was used in the image creation process','Where the image was taken','When the image was taken','Any changes that have been made to the original image','How trustworthy the image is','The copyright holder or owner of the image','The publisher','Not sure',other_value] %}
           <label class="form-check d-block">
@@ -102,7 +107,7 @@
 
       <!-- Q3 -->
       <div class="form-section">
-        <label class="form-label"><strong>3. Please indicate how much you agree or disagree with the following statements:</strong></label>
+        <label class="form-label"><strong>Please indicate how much you agree or disagree with the following statements:</strong></label>
       
         {% set questions = [
           ('understood_label', 'a. I immediately understood what the label represents.'),
@@ -138,7 +143,7 @@
       <!-- Q4 -->
       {% if condition == 'color' or condition == 'no_color' %}
         <div class="mb-4">
-          <label class="form-label"><strong>4. The label shows the grade A. What do you think this grade is based on?</strong></label>
+          <label class="form-label"><strong>The label shows the grade A. What do you think this grade is based on?</strong></label>
           {% for opt in ['The accuracy of the information in the article','How transparently the article shows its sources, author, and any edits','How clearly information about the image is provided','The overall trustworthiness of the news provider','The level of political bias in the article','Not sure','Other'] %}
             <label class="form-check d-block">
               <input class="form-check-input" type="radio" name="grade_basis" value="{{ opt }}" required onchange="handleOtherRadio('grade_basis', 'grade_basis_other')">
@@ -195,7 +200,7 @@
 
       <!-- Familiarity: Trust Levels -->
       <div class="mb-4">
-        <label class="form-label"><strong>5. Are you familiar with trust labels on social media (e.g., verification badges)?</strong></label>
+        <label class="form-label"><strong>Are you familiar with trust labels on social media (e.g., verification badges)?</strong></label>
         <div>
           <div class="form-check form-check-inline">
             <input class="form-check-input" type="radio" name="familiar_trust_levels" id="familiar_trust_levels_yes" value="Yes" required>
@@ -214,7 +219,7 @@
 
       <!-- Familiarity: Nutriscore -->
       <div class="mb-4">
-        <label class="form-label"><strong>6. Are you familiar with the Nutriscore front-of-pack food label?</strong></label>
+        <label class="form-label"><strong>Are you familiar with the Nutriscore front-of-pack food label?</strong></label>
         <div>
           <div class="form-check form-check-inline">
             <input class="form-check-input" type="radio" name="familiar_nutriscore" id="familiar_nutriscore_yes" value="Yes" required>
@@ -233,7 +238,7 @@
 
       <!-- Confidence -->
       <div class="mb-4">
-        <label class="form-label"><strong>7. How confident do you feel in identifying trustworthy news after completing this study?</strong></label>
+        <label class="form-label"><strong>How confident do you feel in identifying trustworthy news after completing this study?</strong></label>
         <select class="form-select" name="confidence" required>
           <option value="">Select</option>
           <option>Very Confident</option>
