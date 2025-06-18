@@ -517,6 +517,8 @@ def post_questionnaire():
         label_expectation_other = request.form.get('label_expectation_other')
         grade_basis = request.form.get('grade_basis')
         grade_basis_other = request.form.get('grade_basis_other')
+        familiar_trust_levels = request.form.get('familiar_trust_levels')
+        familiar_nutriscore = request.form.get('familiar_nutriscore')
 
         likert_items = ['understood_label', 'visual_design', 'decision_support', 'info_usefulness',
                         'image_trust', 'evaluate_trustworthiness', 'more_labels', 'attention_check']
@@ -538,6 +540,8 @@ def post_questionnaire():
                 f"Other: {label_expectation_other}" if val == "Other" and label_expectation_other else val
                 for val in label_expectation
             ],
+            'familiar_trust_levels': familiar_trust_levels,
+            'familiar_nutriscore': familiar_nutriscore,
             'grade_basis': f"Other: {grade_basis_other}" if grade_basis == "Other" and grade_basis_other else grade_basis,
             'likert_responses': likert_responses,
             'label_present': session.get('last_article_had_label', False)
