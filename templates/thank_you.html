@@ -64,12 +64,6 @@
                             <img src="{{ url_for('static', filename='images/cr1.png') }}" class="transp-label" style="max-height: 80px; border: 2px solid grey; border-radius: 15px;" alt="Label: C2PA">
                             <img src="{{ url_for('static', filename='images/cr_logo.png') }}" class="transp-label" alt="Label: C2PA">
                         </div>
-                        <p>The transparency score was based on factors such as:</p>
-                        <ul>
-                            <li>Whether the <strong>image’s author</strong> is known,</li>
-                            <li>If the image includes <strong>verifiable metadata</strong> (e.g., location, time, edits),</li>
-                            <li>And whether there's a clear <strong>edit history</strong> or usage trace.</li>
-                        </ul>
                     {% endif %}
                 <p class="mt-4">Thank you again - your contribution helps us build better tools for transparency and trust in digital media.</p>
             {% elif condition == 'nolabel' %}

@@ -117,26 +117,45 @@ def update_participant_data(section, data):
         round_number = session.get('round', 1)
         # Find existing round for this participant & number
         existing_round = Round.query.filter_by(participant_id=participant.id, round_number=round_number).first()
-        if existing_round:
-            # Update existing round (merge data)
-            if data.get('theme_selection'):
-                existing_round.theme_selection = data['theme_selection']
-            if data.get('article'):
-                existing_round.article = data['article']
-            if data.get('mid_questionnaire'):
-                existing_round.mid_questionnaire = data['mid_questionnaire']
-            existing_round.timestamp = datetime.utcnow()
-        else:
-            # Insert new round
-            new_round = Round(
+        # if existing_round:
+        #     # Update existing round (merge data)
+        #     if data.get('theme_selection'):
+        #         existing_round.theme_selection = data['theme_selection']
+        #     if data.get('article'):
+        #         existing_round.article = data['article']
+        #     if data.get('mid_questionnaire'):
+        #         existing_round.mid_questionnaire = data['mid_questionnaire']
+        #     existing_round.timestamp = datetime.utcnow()
+        # else:
+        #     # Insert new round
+        #     new_round = Round(
+        #         round_number=round_number,
+        #         participant_id=participant.id,
+        #         theme_selection=data.get('theme_selection'),
+        #         article=data.get('article'),
+        #         mid_questionnaire=data.get('mid_questionnaire'),
+        #         timestamp=datetime.utcnow()
+        #     )
+        #     db.session.add(new_round)
+        if not existing_round:
+            existing_round = Round(
                 round_number=round_number,
                 participant_id=participant.id,
-                theme_selection=data.get('theme_selection'),
-                article=data.get('article'),
-                mid_questionnaire=data.get('mid_questionnaire'),
                 timestamp=datetime.utcnow()
             )
-            db.session.add(new_round)
+            db.session.add(existing_round)
+            db.session.commit()
+        # Merge dicts for each key (theme_selection, article, mid_questionnaire)
+        for k in ['theme_selection', 'article', 'mid_questionnaire']:
+            if k in data:
+                val = getattr(existing_round, k)
+                # merge if both are dicts, else just overwrite
+                if val and isinstance(val, dict) and isinstance(data[k], dict):
+                    val.update(data[k])
+                    setattr(existing_round, k, val)
+                else:
+                    setattr(existing_round, k, data[k])
+        existing_round.timestamp = datetime.utcnow()
 
     db.session.commit()
     print(f"Saved '{section}' for participant {pid}")
@@ -292,12 +311,23 @@ def select_article():
         article_row = df[df['index'] == selected_article_id]
         if not article_row.empty:
             article = article_row.iloc[0]
-            update_participant_data('theme_selection', {
-                'selected_article_id': selected_article_id,
-                'selected_article_title': article['Title'],
-                'selected_article_category': article['Category'],
-                'condition': session.get('condition', 'unknown')
+            # selected_article_title = article_row.iloc[0]['Title']
+            # update_participant_data('theme_selection', {
+            #     'selected_article_id': selected_article_id,
+            #     'selected_article_title': article['Title'],
+            #     'selected_article_category': article['Category'],
+            #     'condition': session.get('condition', 'unknown')
+            # })
+            update_participant_data('round', {
+                'theme_selection': {
+                    'selected_article_id': selected_article_id,
+                    'selected_article_title': article['Title'],
+                    'selected_article_category': article['Category'],
+                    'condition': session.get('condition', 'unknown')
+                }
             })
+        # else:
+        #     selected_article_title = ""
 
         session['select_article_completed'] = True
         session['seen_article_ids'] = [selected_article_id]  # Init seen
@@ -398,6 +428,7 @@ def article(article_id):
     # Handle POST (article selection)
     if request.method == 'POST':
         selected_article_id = int(request.form['selected_article_id'])
+        # selected_article_title = request.form.get('selected_article_title')
         selected_article_had_label = request.form.get('selected_article_had_label') == 'true'
         label_explained = request.form.get('label_explained') == 'true'
 
@@ -410,12 +441,27 @@ def article(article_id):
         seen_ids.add(selected_article_id)
         session['seen_article_ids'] = list(seen_ids)
 
+        # NEW: Get the article title from the DataFrame
+        article_row = df[df['index'] == selected_article_id]
+        if not article_row.empty:
+            selected_article_title = article_row.iloc[0]['Title']
+        else:
+            selected_article_title = ""
+
+        # update_participant_data('round', {
+        #     'round': round_number,
+        #     'selected_article_id': selected_article_id,
+        #     'selected_article_title': df[df['index'] == selected_article_id].iloc[0]['Title'],
+        #     'selected_article_had_label': selected_article_had_label,
+        #     'label_explained': label_explained
+        # })
         update_participant_data('round', {
-            'round': round_number,
-            'selected_article_id': selected_article_id,
-            'selected_article_title': df[df['index'] == selected_article_id].iloc[0]['Title'],
-            'selected_article_had_label': selected_article_had_label,
-            'label_explained': label_explained
+            'article': {
+                'selected_article_id': selected_article_id,
+                'selected_article_title': selected_article_title,
+                'selected_article_had_label': selected_article_had_label,
+                'label_explained': label_explained
+            }
         })
 
         session['article_completed'] = True
@@ -526,6 +572,60 @@ def mid_questionnaire():
 
 
 
+# @app.route('/post-questionnaire', methods=['GET', 'POST'])
+# @require_previous_step('mid_questionnaire')
+# def post_questionnaire():
+#     condition = session.get('condition')
+
+#     if request.method == 'POST':
+#         confidence = request.form.get('confidence')
+#         feedback = request.form.get('feedback')
+#         score_meaning = request.form.getlist('score_meaning')
+#         score_meaning_other = request.form.get('score_meaning_other')
+#         label_expectation = request.form.getlist('label_expectation')
+#         label_expectation_other = request.form.get('label_expectation_other')
+#         if condition in ['color', 'no_color']:
+#             grade_basis = request.form.get('grade_basis')
+#             grade_basis_other = request.form.get('grade_basis_other')
+#         else:
+#             grade_basis = None
+#             grade_basis_other = None
+#         familiar_trust_levels = request.form.get('familiar_trust_levels')
+#         familiar_nutriscore = request.form.get('familiar_nutriscore')
+
+#         likert_items = ['understood_label', 'visual_design', 'decision_support', 'info_usefulness',
+#                         'image_trust', 'evaluate_trustworthiness', 'more_labels', 'attention_check']
+#         likert_responses = {}
+#         for item in likert_items:
+#             val = request.form.get(item)
+#             if not val:
+#                 return render_template('post_questionnaire.html', error="Please answer all questions.")
+#             likert_responses[item] = int(val)
+
+#         update_participant_data('post_questionnaire', {
+#             'confidence': confidence,
+#             'feedback': feedback,
+#             'score_meaning': [
+#                 f"Other: {score_meaning_other}" if val == "Other" and score_meaning_other else val
+#                 for val in score_meaning
+#             ],
+#             'label_expectation': [
+#                 f"Other: {label_expectation_other}" if val == "Other" and label_expectation_other else val
+#                 for val in label_expectation
+#             ],
+#             'familiar_trust_levels': familiar_trust_levels,
+#             'familiar_nutriscore': familiar_nutriscore,
+#             'grade_basis': f"Other: {grade_basis_other}" if grade_basis == "Other" and grade_basis_other else grade_basis,
+#             'likert_responses': likert_responses,
+#             'label_present': session.get('last_article_had_label', False)
+#         })
+#         session['post_questionnaire_completed'] = True
+#         return redirect(url_for('thank_you'))
+
+#     return render_template(
+#         'post_questionnaire.html',
+#         condition=session.get('condition'))
+
 @app.route('/post-questionnaire', methods=['GET', 'POST'])
 @require_previous_step('mid_questionnaire')
 def post_questionnaire():
@@ -534,45 +634,60 @@ def post_questionnaire():
     if request.method == 'POST':
         confidence = request.form.get('confidence')
         feedback = request.form.get('feedback')
-        score_meaning = request.form.getlist('score_meaning')
-        score_meaning_other = request.form.get('score_meaning_other')
-        label_expectation = request.form.getlist('label_expectation')
-        label_expectation_other = request.form.get('label_expectation_other')
-        if condition in ['color', 'no_color']:
-            grade_basis = request.form.get('grade_basis')
-            grade_basis_other = request.form.get('grade_basis_other')
-        else:
-            grade_basis = None
-            grade_basis_other = None
         familiar_trust_levels = request.form.get('familiar_trust_levels')
         familiar_nutriscore = request.form.get('familiar_nutriscore')
 
-        likert_items = ['understood_label', 'visual_design', 'decision_support', 'info_usefulness',
-                        'image_trust', 'evaluate_trustworthiness', 'more_labels', 'attention_check']
-        likert_responses = {}
-        for item in likert_items:
-            val = request.form.get(item)
-            if not val:
-                return render_template('post_questionnaire.html', error="Please answer all questions.")
-            likert_responses[item] = int(val)
+        # Only handle these if the fields are present (i.e., if condition is NOT 'nolabel')
+        if condition in ['color', 'no_color', 'c2pa']:
+            score_meaning = request.form.getlist('score_meaning')
+            score_meaning_other = request.form.get('score_meaning_other')
+            label_expectation = request.form.getlist('label_expectation')
+            label_expectation_other = request.form.get('label_expectation_other')
 
-        update_participant_data('post_questionnaire', {
-            'confidence': confidence,
-            'feedback': feedback,
-            'score_meaning': [
-                f"Other: {score_meaning_other}" if val == "Other" and score_meaning_other else val
-                for val in score_meaning
-            ],
-            'label_expectation': [
-                f"Other: {label_expectation_other}" if val == "Other" and label_expectation_other else val
-                for val in label_expectation
-            ],
-            'familiar_trust_levels': familiar_trust_levels,
-            'familiar_nutriscore': familiar_nutriscore,
-            'grade_basis': f"Other: {grade_basis_other}" if grade_basis == "Other" and grade_basis_other else grade_basis,
-            'likert_responses': likert_responses,
-            'label_present': session.get('last_article_had_label', False)
-        })
+            if condition in ['color', 'no_color']:
+                grade_basis = request.form.get('grade_basis')
+                grade_basis_other = request.form.get('grade_basis_other')
+            else:
+                grade_basis = None
+                grade_basis_other = None
+
+            # Process Likert
+            likert_items = ['understood_label', 'visual_design', 'decision_support', 'info_usefulness',
+                            'image_trust', 'evaluate_trustworthiness', 'more_labels', 'attention_check']
+            likert_responses = {}
+            for item in likert_items:
+                val = request.form.get(item)
+                if not val:
+                    return render_template('post_questionnaire.html', error="Please answer all questions.", condition=condition)
+                likert_responses[item] = int(val)
+
+            # Save all data
+            update_participant_data('post_questionnaire', {
+                'confidence': confidence,
+                'feedback': feedback,
+                'score_meaning': [
+                    f"Other: {score_meaning_other}" if val == "Other" and score_meaning_other else val
+                    for val in score_meaning
+                ],
+                'label_expectation': [
+                    f"Other: {label_expectation_other}" if val == "Other" and label_expectation_other else val
+                    for val in label_expectation
+                ],
+                'familiar_trust_levels': familiar_trust_levels,
+                'familiar_nutriscore': familiar_nutriscore,
+                'grade_basis': f"Other: {grade_basis_other}" if grade_basis == "Other" and grade_basis_other else grade_basis,
+                'likert_responses': likert_responses,
+                'label_present': session.get('last_article_had_label', False)
+            })
+        else:  # NO LABEL condition
+            # Just save the available data
+            update_participant_data('post_questionnaire', {
+                'confidence': confidence,
+                'feedback': feedback,
+                'familiar_trust_levels': familiar_trust_levels,
+                'familiar_nutriscore': familiar_nutriscore,
+                'label_present': session.get('last_article_had_label', False)
+            })
         session['post_questionnaire_completed'] = True
         return redirect(url_for('thank_you'))
 
