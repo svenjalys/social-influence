@@ -30,13 +30,27 @@
         max-height: 100px;
         margin-top: 5px;
     }
+    .is-invalid { border-color: #dc3545; }
   </style>
   <script>
+    // function handleOtherCheckbox(source, textboxId) {
+    //   const textbox = document.getElementById(textboxId);
+    //   textbox.style.display = source.checked ? 'block' : 'none';
+    //   textbox.required = source.checked;
+    // }
     function handleOtherCheckbox(source, textboxId) {
-      const textbox = document.getElementById(textboxId);
-      textbox.style.display = source.checked ? 'block' : 'none';
-      textbox.required = source.checked;
+      const textboxDiv = document.getElementById(textboxId);
+      const textbox = textboxDiv.querySelector('input');
+      if (source.checked) {
+        textboxDiv.classList.remove('hidden');
+        textbox.required = true;
+      } else {
+        textboxDiv.classList.add('hidden');
+        textbox.required = false;
+        textbox.value = '';
+      }
     }
+
 
     function handleOtherRadio(groupName, textboxId) {
       const textbox = document.getElementById(textboxId);
@@ -64,6 +78,50 @@
       checkboxes.forEach(cb => cb.addEventListener('change', validateCheckboxes));
       form.addEventListener('submit', validateCheckboxes);
     });
+
+
+    // Form validation to require "Other" input if "Other" is checked
+    document.addEventListener("DOMContentLoaded", function () {
+      const form = document.querySelector('form');
+
+      form.addEventListener('submit', function(e) {
+        let valid = true;
+
+        // Q1: score_meaning
+        const otherScore = document.querySelector('input[name="score_meaning"][value="Other"]');
+        const otherScoreInput = document.querySelector('input[name="score_meaning_other"]');
+        if (otherScore && otherScore.checked && (!otherScoreInput.value.trim())) {
+          valid = false;
+          otherScoreInput.focus();
+          otherScoreInput.classList.add('is-invalid');
+        } else {
+          otherScoreInput.classList.remove('is-invalid');
+        }
+
+        // Q2: label_expectation
+        const otherLabel = document.querySelector('input[name="label_expectation"][value="Other"]');
+        const otherLabelInput = document.querySelector('input[name="label_expectation_other"]');
+        if (otherLabel && otherLabel.checked && (!otherLabelInput.value.trim())) {
+          valid = false;
+          otherLabelInput.focus();
+          otherLabelInput.classList.add('is-invalid');
+        } else {
+          otherLabelInput.classList.remove('is-invalid');
+        }
+
+        if (!valid) {
+          e.preventDefault();
+        }
+      });
+
+      // Remove validation feedback on input
+      document.querySelectorAll('input[name="score_meaning_other"], input[name="label_expectation_other"]').forEach(function(input) {
+        input.addEventListener('input', function() {
+          input.classList.remove('is-invalid');
+        });
+      });
+    });
+
   </script>
 </head>
 <body class="container mt-5 mb-5" style="max-width: 800px;">
