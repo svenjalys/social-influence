@@ -95,118 +95,51 @@ def update_participant_data(section, data):
         print("No Prolific PID found - skipping save.")
         return
 
-    # Try to get existing participant, else create new one
-    participant = Participant.query.filter_by(prolific_id=pid).first()
-    if not participant:
-        participant = Participant(
-            prolific_id=pid,
-            condition=session.get('condition', 'unknown'),
-            timestamp_start=datetime.utcnow()
-        )
-        db.session.add(participant)
-        db.session.commit()  # commit so participant.id is assigned
-
-    # Save data based on section
-    if section == 'demographics':
-        participant.demographics = data
-    elif section == 'pre_questionnaire':
-        participant.pre_questionnaire = data
-    elif section == 'post_questionnaire':
-        participant.post_questionnaire = data
-    elif section == 'round':
-        round_number = session.get('round', 1)
-        # Find existing round for this participant & number
-        existing_round = Round.query.filter_by(participant_id=participant.id, round_number=round_number).first()
-        # if existing_round:
-        #     # Update existing round (merge data)
-        #     if data.get('theme_selection'):
-        #         existing_round.theme_selection = data['theme_selection']
-        #     if data.get('article'):
-        #         existing_round.article = data['article']
-        #     if data.get('mid_questionnaire'):
-        #         existing_round.mid_questionnaire = data['mid_questionnaire']
-        #     existing_round.timestamp = datetime.utcnow()
-        # else:
-        #     # Insert new round
-        #     new_round = Round(
-        #         round_number=round_number,
-        #         participant_id=participant.id,
-        #         theme_selection=data.get('theme_selection'),
-        #         article=data.get('article'),
-        #         mid_questionnaire=data.get('mid_questionnaire'),
-        #         timestamp=datetime.utcnow()
-        #     )
-        #     db.session.add(new_round)
-        if not existing_round:
-            existing_round = Round(
-                round_number=round_number,
-                participant_id=participant.id,
-                timestamp=datetime.utcnow()
+    try:
+        # Get or create participant
+        participant = Participant.query.filter_by(prolific_id=pid).first()
+        if not participant:
+            participant = Participant(
+                prolific_id=pid,
+                condition=session.get('condition', 'unknown'),
+                timestamp_start=datetime.utcnow()
             )
-            db.session.add(existing_round)
-            db.session.commit()
-        # Merge dicts for each key (theme_selection, article, mid_questionnaire)
-        for k in ['theme_selection', 'article', 'mid_questionnaire']:
-            if k in data:
-                val = getattr(existing_round, k)
-                # merge if both are dicts, else just overwrite
-                if val and isinstance(val, dict) and isinstance(data[k], dict):
-                    val.update(data[k])
-                    setattr(existing_round, k, val)
-                else:
-                    setattr(existing_round, k, data[k])
-        existing_round.timestamp = datetime.utcnow()
+            db.session.add(participant)
+            db.session.flush()  # Assigns participant.id without full commit
 
-    db.session.commit()
-    print(f"Saved '{section}' for participant {pid}")
+        if section == 'demographics':
+            participant.demographics = data
+        elif section == 'pre_questionnaire':
+            participant.pre_questionnaire = data
+        elif section == 'post_questionnaire':
+            participant.post_questionnaire = data
+        elif section == 'round':
+            round_number = session.get('round', 1)
+            existing_round = Round.query.filter_by(participant_id=participant.id, round_number=round_number).first()
+            if not existing_round:
+                existing_round = Round(
+                    round_number=round_number,
+                    participant_id=participant.id,
+                    timestamp=datetime.utcnow()
+                )
+                db.session.add(existing_round)
+                db.session.flush()
+            for k in ['theme_selection', 'article', 'mid_questionnaire']:
+                if k in data:
+                    val = getattr(existing_round, k)
+                    if val and isinstance(val, dict) and isinstance(data[k], dict):
+                        val.update(data[k])
+                        setattr(existing_round, k, val)
+                    else:
+                        setattr(existing_round, k, data[k])
+            existing_round.timestamp = datetime.utcnow()
 
+        db.session.commit()
+        print(f"[SAVE] '{section}' saved for participant {pid} at {datetime.utcnow().isoformat()}")
 
-# def update_participant_data(section, data):
-#     pid = get_participant_id()
-#     print("Prolific ID:", pid)
-
-#     if not pid:
-#         print("Ingen PID – avbryter lagring")
-#         return
-
-#     filepath = os.path.join(RESPONSES_DIR, f"{pid}.json")
-#     print("Skal lagres til:", filepath)
-
-#     if os.path.exists(filepath):
-#         with open(filepath, 'r') as f:
-#             pdata = json.load(f)
-#     else:
-#         pdata = {
-#             'prolific_id': pid,
-#             'condition': session.get('condition', 'unknown'),
-#             'timestamp_start': datetime.utcnow().isoformat()
-#         }
-
-#     if section == 'round':
-#         pdata.setdefault('rounds', []).append(data)
-#     else:
-#         pdata[section] = data
-
-
-#     # if section == 'round':
-#     #     rounds = pdata.setdefault('rounds', [])
-#     #     current_round = session.get('round', 1)
-
-#     #     # Check if there's already a round entry
-#     #     for r in rounds:
-#     #         if r.get('round') == current_round:
-#     #             r.update(data)  # Merge into existing round
-#     #             break
-#     #         else:
-#     #             rounds.append(data)  # Add new round if not present
-#     #     else:
-#     #         pdata[section] = data
-
-
-
-#     with open(filepath, 'w') as f:
-#         json.dump(pdata, f, indent=2)
-#     print("Lagring fullført.")
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Failed to save '{section}' for participant {pid}: {e}")
 
 
 
