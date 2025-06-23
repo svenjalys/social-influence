@@ -13,6 +13,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///responses.db' #for sqlite
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #for sqlite
 db = SQLAlchemy(app) #for sqlite
 
+
+
 ###define database models for sqlite
 class Participant(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -39,48 +41,18 @@ RESPONSES_DIR = "responses"
 os.makedirs(RESPONSES_DIR, exist_ok=True)
 
 @app.before_request
-def capture_prolific_id():
+def setup_session_and_redirects():
     pid = request.args.get('PROLIFIC_PID')
     if pid:
         session['prolific_id'] = pid
 
-@app.before_request
-def assign_condition():
-    # 1. Capture Prolific PID from URL
-    pid = request.args.get('PROLIFIC_PID')
-    if pid:
-        session['prolific_id'] = pid
-
-    # 2. Assign condition if not already in session
-    if 'condition' not in session:
-        from sqlalchemy import func
-
-        # Count number of participants per condition
-        condition_counts = dict(
-            db.session.query(Participant.condition, func.count(Participant.id))
-            .group_by(Participant.condition)
-            .all()
-        )
-
-        # Ensure all conditions are represented
-        all_conditions = ['color', 'no_color', 'c2pa', 'nolabel']
-        for cond in all_conditions:
-            condition_counts.setdefault(cond, 0)
-
-        # Pick condition with the lowest count
-        session['condition'] = min(condition_counts, key=condition_counts.get)
-
-    # 3. Force redirect to landing if no PID and not on public route
     allowed_routes = {'landing', 'static'}
+
+    # Redirect to landing if no Prolific ID
     if not session.get('prolific_id') and request.endpoint not in allowed_routes:
         return redirect(url_for('landing'))
 
 
-@app.before_request
-def require_participant():
-    allowed_routes = {'landing', 'static'}
-    if not session.get('prolific_id') and request.endpoint not in allowed_routes:
-        return redirect(url_for('landing'))
 
 def require_previous_step(step_name):
     def wrapper(f):
@@ -115,14 +87,21 @@ def update_participant_data(section, data):
         # Get or create participant
         participant = Participant.query.filter_by(prolific_id=pid).first()
         if not participant:
+            # Assign condition in 4-person full cycle based on current count
+            all_conditions = ['color', 'no_color', 'c2pa', 'nolabel']
+            total = Participant.query.count()
+            assigned_condition = all_conditions[total % 4]
+            session['condition'] = assigned_condition
+
             participant = Participant(
                 prolific_id=pid,
-                condition=session.get('condition', 'unknown'),
+                condition=assigned_condition,
                 timestamp_start=datetime.utcnow()
             )
             db.session.add(participant)
-            db.session.flush()  # Assigns participant.id without full commit
+            db.session.flush()  # Assigns participant.id
 
+        # Save section data
         if section == 'demographics':
             participant.demographics = data
         elif section == 'pre_questionnaire':
@@ -649,6 +628,22 @@ def post_questionnaire():
 def thank_you():
     condition = session.get('condition', 'none')
     return render_template('thank_you.html', condition=condition)
+
+
+
+
+@app.route('/reset-db')
+def reset_db():
+    try:
+        Round.query.delete()
+        Participant.query.delete()
+        db.session.commit()
+        return "База данных очищена."
+    except Exception as e:
+        db.session.rollback()
+        return f"Ошибка при очистке: {e}"
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
