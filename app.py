@@ -46,19 +46,35 @@ def capture_prolific_id():
 
 @app.before_request
 def assign_condition():
+    # 1. Capture Prolific PID from URL
+    pid = request.args.get('PROLIFIC_PID')
+    if pid:
+        session['prolific_id'] = pid
+
+    # 2. Assign condition if not already in session
     if 'condition' not in session:
-        condition_counts = {'color': 0, 'no_color': 0, 'c2pa': 0, 'nolabel': 0}
-        for filename in os.listdir(RESPONSES_DIR):
-            if filename.endswith('.json'):
-                with open(os.path.join(RESPONSES_DIR, filename), 'r') as f:
-                    try:
-                        data = json.load(f)
-                        cond = data.get('condition')
-                        if cond in condition_counts:
-                            condition_counts[cond] += 1
-                    except Exception:
-                        continue
+        from sqlalchemy import func
+
+        # Count number of participants per condition
+        condition_counts = dict(
+            db.session.query(Participant.condition, func.count(Participant.id))
+            .group_by(Participant.condition)
+            .all()
+        )
+
+        # Ensure all conditions are represented
+        all_conditions = ['color', 'no_color', 'c2pa', 'nolabel']
+        for cond in all_conditions:
+            condition_counts.setdefault(cond, 0)
+
+        # Pick condition with the lowest count
         session['condition'] = min(condition_counts, key=condition_counts.get)
+
+    # 3. Force redirect to landing if no PID and not on public route
+    allowed_routes = {'landing', 'static'}
+    if not session.get('prolific_id') and request.endpoint not in allowed_routes:
+        return redirect(url_for('landing'))
+
 
 @app.before_request
 def require_participant():
