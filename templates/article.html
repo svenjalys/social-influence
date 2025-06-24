@@ -39,6 +39,44 @@
     .recommendation-card:hover {
       transform: translateY(-5px);
     }
+
+    .article_body {
+      font-family: 'Georgia', serif;
+      font-size: 1.15rem;
+      line-height: 1.8;
+      color: #1a1a1a;
+      margin-top: 2rem;
+    }
+
+    .article_body p {
+      margin-bottom: 1.5rem;
+      text-align: justify;
+    }
+
+    .article_body p:first-of-type::first-letter {
+      float: left;
+      font-size: 3rem;
+      font-weight: bold;
+      line-height: 1;
+      margin-right: 0.1em;
+      font-family: 'Times New Roman', Times, serif;
+    }
+
+    .article_quote {
+      border-left: 4px solid #ccc;
+      padding-left: 1rem;
+      margin: 1.5rem 0;
+      font-style: italic;
+      color: #444;
+      background: #f8f9fa;
+    }
+
+    .article_metadata {
+      color: #6c757d;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      font-style: italic;
+    }
   </style>
 </head>
 <body class="container mt-5">
@@ -65,7 +103,7 @@
     <h1 class="mb-3">{{ article['Title'] }}</h1>
     <img src="{{ article['Image URL'] or 'https://placehold.co/600x400?text=No+Image' }}" class="img-fluid mb-4">
 
-    {% if condition != 'nolabel' and (round_number == 1 or show_label) %}
+    {% if condition in ['color', 'no_color', 'c2pa'] and (round_number == 1 or show_label) %}
       {% set explanation_id = 'scoreExplanation' if condition != 'c2pa' else 'c2paExplanation' %}
       <div class="d-inline-flex align-items-center gap-2 mb-3">
         {% if condition == 'color' %}
@@ -84,6 +122,7 @@
                data-bs-toggle="collapse" data-bs-target="#{{ explanation_id }}"
                aria-expanded="false" aria-controls="{{ explanation_id }}">
         {% endif %}
+
         <span class="badge bg-secondary rounded-circle label-badge align-self-end"
               title="Click for explanation"
               data-bs-toggle="collapse" data-bs-target="#{{ explanation_id }}"
@@ -92,94 +131,51 @@
       </div>
 
       {% if condition != 'c2pa' %}
-      <div class="collapse" id="scoreExplanation">
-        <div class="card card-body border border-success rounded bg-light mb-3 py-3">
-          <strong>What is the Image Trust Score?</strong><br>
-          This score rates how transparent and trustworthy the image is — based on 7 criteria:
-          <ul class="mb-0 mt-2">
-            <li><strong>A</strong>: High transparency and verified information</li>
-            <li><strong>B–C</strong>: Some elements missing or unclear</li>
-            <li><strong>D–E</strong>: Poor or no transparency indicators</li>
-          </ul>
+        <div class="collapse" id="scoreExplanation">
+          <div class="card card-body border border-success rounded bg-light mb-3 py-3">
+            <strong>What is the Image Trust Score?</strong><br>
+            This score rates how transparent and trustworthy the image is — based on 7 criteria:
+            <ul class="mb-0 mt-2">
+              <li><strong>A</strong>: High transparency and verified information</li>
+              <li><strong>B–C</strong>: Some elements missing or unclear</li>
+              <li><strong>D–E</strong>: Poor or no transparency indicators</li>
+            </ul>
+          </div>
         </div>
-      </div>
       {% else %}
-      <div class="collapse" id="c2paExplanation">
-        <div class="card card-body border border-success rounded bg-light mb-3 py-3">
-          <strong>What does this label mean?</strong><br>
-          These Content Credentials present a "digital nutrition label", provided by the news source.
-          In a real-life setting, you could access verified details about the image by clicking on this label:
-          <ul class="mb-0 mt-2">
-            <li>the creator</li>
-            <li>creation date and time</li>
-            <li>location</li>
-            <li>edits made to the original</li>
-          </ul>
+        <div class="collapse" id="c2paExplanation">
+          <div class="card card-body border border-success rounded bg-light mb-3 py-3">
+            <strong>What does this label mean?</strong><br>
+            These Content Credentials present a "digital nutrition label", provided by the news source.
+            In a real-life setting, you could access verified details about the image by clicking on this label:
+            <ul class="mb-0 mt-2">
+              <li>the creator</li>
+              <li>creation date and time</li>
+              <li>location</li>
+              <li>edits made to the original</li>
+            </ul>
+          </div>
         </div>
-      </div>
       {% endif %}
     {% endif %}
 
-<!-- Improved article presentation -->
-<style>
-  .article_body {
-    font-family: 'Georgia', serif;
-    font-size: 1.15rem;
-    line-height: 1.8;
-    color: #1a1a1a;
-    margin-top: 2rem;
-  }
+    <div class="article_body">
+      <div class="article_metadata">
+        {{ article.get('Author', 'By Staff') }} | {{ article.get('Date', 'Published recently') }}
+      </div>
 
-  .article_body p {
-    margin-bottom: 1.5rem;
-    text-align: justify;
-  }
-
-  .article_body p:first-of-type::first-letter {
-    float: left;
-    font-size: 3rem;
-    font-weight: bold;
-    line-height: 1;
-    margin-right: 0.1em;
-    font-family: 'Times New Roman', Times, serif;
-  }
-
-  .article_quote {
-    border-left: 4px solid #ccc;
-    padding-left: 1rem;
-    margin: 1.5rem 0;
-    font-style: italic;
-    color: #444;
-    background: #f8f9fa;
-  }
-
-  .article_metadata {
-    color: #6c757d;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-    font-style: italic;
-  }
-</style>
-
-<div class="article_body">
-  <div class="article_metadata">
-    {{ article.get('Author', 'By Staff') }} | {{ article.get('Date', 'Published recently') }}
+      {% set paragraphs = article['Content'].split('\n\n') %}
+      {% for p in paragraphs %}
+        {% if p.startswith('"') or p.startswith('“') %}
+          <div class="article_quote">{{ p }}</div>
+        {% else %}
+          <p>{{ p }}</p>
+        {% endif %}
+      {% endfor %}
+    </div>
   </div>
 
-  {% set paragraphs = article['Content'].split('\n\n') %}
-  {% for p in paragraphs %}
-    {% if p.startswith('"') or p.startswith('“') %}
-      <div class="article_quote">{{ p }}</div>
-    {% else %}
-      <p>{{ p }}</p>
-    {% endif %}
-  {% endfor %}
-</div>
-
-
-
   <!-- Recommendations -->
-  <p></p>
   <h3>Recommended</h3>
   <form method="POST">
     <input type="hidden" name="label_explained" id="label_explained" value="false">
@@ -224,7 +220,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    const explanationId = '{{ explanation_id if (condition != "nolabel" and (round_number == 1 or show_label)) else "" }}';
+    const explanationId = '{{ explanation_id if (condition in ["color", "no_color", "c2pa"] and (round_number == 1 or show_label)) else "" }}';
     const collapseEl = document.getElementById(explanationId);
     const labelExplainedInput = document.getElementById('label_explained');
     if (collapseEl && labelExplainedInput) {
