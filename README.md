@@ -75,7 +75,3 @@ Add this as the redirect after the thank you page:
 ```
 https://app.prolific.com/submissions/complete?cc=CBRC2BEO
 ```
-
----
-
-Made for MediaFutures Research, 2025.
