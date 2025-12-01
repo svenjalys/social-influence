@@ -52,7 +52,7 @@
 
                 <!-- Country -->
                 <div class="mb-3">
-                    <label class="form-label">3. Which country do you live in?</label>
+                    <label class="form-label">3. Which region do you live in?</label>
                     <select name="country" id="country" class="form-select" required onchange="handleOther(this, 'country_other_wrapper')">
                         <option value="" disabled selected>Select...</option>
                         <option value="United States">United States</option>
@@ -84,6 +84,24 @@
                     </select>
                     <div id="education_other_wrapper" class="hidden mt-2">
                         <input type="text" name="other_education" id="education_other" class="form-control" placeholder="Please specify">
+                    </div>
+                </div>
+
+                <!-- Political leaning -->
+                <div class="mb-3">
+                    <label class="form-label">5. How would you describe your political leaning?</label>
+                    <select name="political_leaning" id="political_leaning" class="form-select" required onchange="handleOther(this, 'political_other_wrapper')">
+                        <option value="" disabled selected>Select...</option>
+                        <option value="Left">Left</option>
+                        <option value="Center-Left">Center-Left</option>
+                        <option value="Center">Center</option>
+                        <option value="Center-Right">Center-Right</option>
+                        <option value="Right">Right</option>
+                        <option value="Other">Other</option>
+                        <option value="Prefer not to say">Prefer not to say</option>
+                    </select>
+                    <div id="political_other_wrapper" class="hidden mt-2">
+                        <input type="text" name="political_leaning_other" id="political_other" class="form-control" placeholder="Please specify">
                     </div>
                 </div>
 
