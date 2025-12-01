@@ -156,6 +156,10 @@ def demographics():
         gender_final = gender_self if gender == 'Self-describe' else gender
         country_final = other_country if country == 'Other' else country
         education_final = other_education if education == 'Other' else education
+        # Political leaning question (new)
+        political_leaning = request.form.get('political_leaning')
+        political_leaning_other = request.form.get('political_leaning_other', '').strip()
+        political_final = political_leaning_other if political_leaning == 'Other' else political_leaning
 
         if age_group == '15 or younger':
             return render_template('thank_you.html', message="Sorry, you do not meet the age criteria for this study.")
@@ -164,7 +168,8 @@ def demographics():
             'gender': gender_final,
             'age_group': age_group,
             'country': country_final,
-            'education': education_final
+            'education': education_final,
+            'political_leaning': political_final
         })
 
         session['demographics_completed'] = True
