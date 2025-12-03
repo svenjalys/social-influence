@@ -209,20 +209,32 @@ def pre_questionnaire():
         if platform == 'Other' and platform_other:
             platform = f"Other: {platform_other}"
 
-        # News sources: Get all checked, including "Other"
-        sources = request.form.getlist('news_sources')
-        sources_other_checked = 'Other' in request.form.getlist('sources_other')  # checkbox for Other
-        sources_other_text = request.form.get('sources_other_text', '').strip()
-        if sources_other_checked and sources_other_text:
-            sources.append(f"Other: {sources_other_text}")
-
         data = {
             'news_frequency': request.form.get('news_frequency'),
             'devices': devices,                      # Now a list with "Other" replaced if present
             'platform': platform,                    # "Other: text" if "Other" was selected
-            'news_sources': sources,                 # List, with "Other: text" if "Other" checked
             'attention_check': request.form.get('attention_check'),
-            'trust_level': request.form.get('trust_level')
+            'trust_level': request.form.get('trust_level'),
+            'interest_topics': {
+                'sports': request.form.get('interest_sports'),
+                'business': request.form.get('interest_business'),
+                'entertainment': request.form.get('interest_entertainment'),
+                'politics': request.form.get('interest_politics'),
+                'science': request.form.get('interest_science'),
+                'local': request.form.get('interest_local'),
+                'crime': request.form.get('interest_crime'),
+                'international': request.form.get('interest_international')
+            },
+            'attention_topics': {
+                'sports': request.form.get('attention_sports'),
+                'business': request.form.get('attention_business'),
+                'entertainment': request.form.get('attention_entertainment'),
+                'politics': request.form.get('attention_politics'),
+                'science': request.form.get('attention_science'),
+                'local': request.form.get('attention_local'),
+                'crime': request.form.get('attention_crime'),
+                'international': request.form.get('attention_international')
+            }
         }
 
         update_participant_data('pre_questionnaire', data)
