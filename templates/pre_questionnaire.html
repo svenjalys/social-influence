@@ -123,6 +123,7 @@
         // Validation
         function validateForm() {
             let valid = true;
+            
             // validate device question
             const deviceCheckboxes = document.querySelectorAll('input[name="device"]');
             const deviceError = document.getElementById('deviceError');
@@ -133,15 +134,16 @@
             } else {
                 deviceError.classList.add('hidden');
             }
-            // validate source question
-            const newsCheckboxes = document.querySelectorAll('input[name="news_sources"]:checked, input[name="sources_other"]:checked');
-            const sourcesError = document.getElementById('sourcesError');
-            if (newsCheckboxes.length === 0) {
-                sourcesError.classList.remove('hidden');
+            
+            // validate if "Other" is checked but no text is provided
+            const otherCheckbox = document.getElementById('deviceOtherCheckbox');
+            const otherInput = document.querySelector('input[name="device_other"]');
+            if (otherCheckbox.checked && !otherInput.value.trim()) {
+                deviceError.classList.remove('hidden');
+                deviceError.textContent = 'Please specify what device you use.';
                 valid = false;
-            } else {
-                sourcesError.classList.add('hidden');
             }
+            
             return valid;
         }
         </script>
@@ -201,13 +203,12 @@
               <label class="form-check-label" for="deviceOtherCheckbox">Other</label>
             </div>
         
-            <!-- <input type="text" id="deviceOtherInput" class="form-control mt-2 d-none" name="device_other" placeholder="Please specify"> -->
             <div id="deviceOtherInput" class="hidden mt-2">
-                <input type="text" name="device_other" class="form-control" placeholder="Please specify">
+            <input type="text" name="device_other" class="form-control" placeholder="Please specify">
             </div>
 
             <div id="deviceError" class="text-danger mt-2 hidden">Please select at least one device.</div>
-          </div>
+        </div>
           
 
         <!-- 3. Place of news consumption -->
@@ -244,7 +245,10 @@
 
         <!-- 6. Trust statement likert redesign -->
         <div class="form-section">
-            <label class="form-label"><p>6. Please indicate how much you agree or disagree with the following statements:</p><em>I generally trust information from the news media in my country.</em></label>
+            <p>6. Please indicate how much you agree or disagree with the following statements:</p>
+            <label class="form-label">
+                <em>I generally trust information from the news media in my country.</em>
+            </label>
             <div class="likert-container">
                 <label for="trust_1" class="me-2">1</label>
                 <input type="radio" name="trust_level" value="1" id="trust_1" required>
@@ -264,15 +268,15 @@
 
         <!-- 7. News interest likert scale -->
         <div class="form-section">
-            <label class="form-label">
+            <label class="form-label d-flex justify-content-center">
                 <!-- <p>7. Please indicate how much you agree or disagree with the following statements:</p> -->
                 <em>I am interested in news about...</em>
             </label>
             
             <!-- a. Sports -->
             <div class="mb-3">
-                <label class="form-label ms-3">a. Sports</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>Sports</em></label>
+                <div class="likert-container">
                     <label for="interest_sports_1" class="me-2">1</label>
                     <input type="radio" name="interest_sports" value="1" id="interest_sports_1" required>
                     <input type="radio" name="interest_sports" value="2" id="interest_sports_2">
@@ -283,12 +287,16 @@
                     <input type="radio" name="interest_sports" value="7" id="interest_sports_7">
                     <label for="interest_sports_7" class="ms-2">7</label>
                 </div>
+                <div class="likert-labels">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
 
             <!-- b. Business/Economy -->
             <div class="mb-3">
-                <label class="form-label ms-3">b. Business/Economy</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>Business/Economy</em></label>
+                <div class="likert-container">
                     <label for="interest_business_1" class="me-2">1</label>
                     <input type="radio" name="interest_business" value="1" id="interest_business_1" required>
                     <input type="radio" name="interest_business" value="2" id="interest_business_2">
@@ -299,12 +307,16 @@
                     <input type="radio" name="interest_business" value="7" id="interest_business_7">
                     <label for="interest_business_7" class="ms-2">7</label>
                 </div>
+                <div class="likert-labels">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
 
             <!-- c. Entertainment/Culture -->
             <div class="mb-3">
-                <label class="form-label ms-3">c. Entertainment/Culture</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>Entertainment/Culture</em></label>
+                <div class="likert-container">
                     <label for="interest_entertainment_1" class="me-2">1</label>
                     <input type="radio" name="interest_entertainment" value="1" id="interest_entertainment_1" required>
                     <input type="radio" name="interest_entertainment" value="2" id="interest_entertainment_2">
@@ -315,12 +327,16 @@
                     <input type="radio" name="interest_entertainment" value="7" id="interest_entertainment_7">
                     <label for="interest_entertainment_7" class="ms-2">7</label>
                 </div>
+                <div class="likert-labels">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
 
             <!-- d. Politics/Public Affairs -->
             <div class="mb-3">
-                <label class="form-label ms-3">d. Politics/Public Affairs</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>Politics/Public Affairs</em></label>
+                <div class="likert-container">
                     <label for="interest_politics_1" class="me-2">1</label>
                     <input type="radio" name="interest_politics" value="1" id="interest_politics_1" required>
                     <input type="radio" name="interest_politics" value="2" id="interest_politics_2">
@@ -331,12 +347,16 @@
                     <input type="radio" name="interest_politics" value="7" id="interest_politics_7">
                     <label for="interest_politics_7" class="ms-2">7</label>
                 </div>
+                <div class="likert-labels">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
 
             <!-- e. Science/Technology -->
             <div class="mb-3">
-                <label class="form-label ms-3">e. Science/Technology</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>Science/Technology</em></label>
+                <div class="likert-container">
                     <label for="interest_science_1" class="me-2">1</label>
                     <input type="radio" name="interest_science" value="1" id="interest_science_1" required>
                     <input type="radio" name="interest_science" value="2" id="interest_science_2">
@@ -347,12 +367,16 @@
                     <input type="radio" name="interest_science" value="7" id="interest_science_7">
                     <label for="interest_science_7" class="ms-2">7</label>
                 </div>
+                <div class="likert-labels">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
 
             <!-- f. Local News -->
             <div class="mb-3">
-                <label class="form-label ms-3">f. Local News</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>Local News</em></label>
+                <div class="likert-container">
                     <label for="interest_local_1" class="me-2">1</label>
                     <input type="radio" name="interest_local" value="1" id="interest_local_1" required>
                     <input type="radio" name="interest_local" value="2" id="interest_local_2">
@@ -363,12 +387,16 @@
                     <input type="radio" name="interest_local" value="7" id="interest_local_7">
                     <label for="interest_local_7" class="ms-2">7</label>
                 </div>
+                <div class="likert-labels">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
 
             <!-- g. Crime/Justice -->
             <div class="mb-3">
-                <label class="form-label ms-3">g. Crime/Justice</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>Crime/Justice</em></label>
+                <div class="likert-container">
                     <label for="interest_crime_1" class="me-2">1</label>
                     <input type="radio" name="interest_crime" value="1" id="interest_crime_1" required>
                     <input type="radio" name="interest_crime" value="2" id="interest_crime_2">
@@ -379,12 +407,16 @@
                     <input type="radio" name="interest_crime" value="7" id="interest_crime_7">
                     <label for="interest_crime_7" class="ms-2">7</label>
                 </div>
+                <div class="likert-labels">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
 
             <!-- h. International News -->
             <div class="mb-3">
-                <label class="form-label ms-3">h. International News</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>International News</em></label>
+                <div class="likert-container">
                     <label for="interest_international_1" class="me-2">1</label>
                     <input type="radio" name="interest_international" value="1" id="interest_international_1" required>
                     <input type="radio" name="interest_international" value="2" id="interest_international_2">
@@ -395,11 +427,10 @@
                     <input type="radio" name="interest_international" value="7" id="interest_international_7">
                     <label for="interest_international_7" class="ms-2">7</label>
                 </div>
-            </div>
-
-            <div class="likert-labels ms-3">
-                <small class="text-start">Strongly disagree</small>
-                <small class="text-end">Strongly agree</small>
+                <div class="likert-labels">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
         </div>
 
@@ -412,8 +443,8 @@
             
             <!-- a. Sports -->
             <div class="mb-3">
-                <label class="form-label ms-3">a. Sports</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>Sports</em></label>
+                <div class="likert-container">
                     <label for="attention_sports_1" class="me-2">1</label>
                     <input type="radio" name="attention_sports" value="1" id="attention_sports_1" required>
                     <input type="radio" name="attention_sports" value="2" id="attention_sports_2">
@@ -424,12 +455,16 @@
                     <input type="radio" name="attention_sports" value="7" id="attention_sports_7">
                     <label for="attention_sports_7" class="ms-2">7</label>
                 </div>
+                <div class="likert-labels ms-3">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
 
             <!-- b. Business/Economy -->
             <div class="mb-3">
-                <label class="form-label ms-3">b. Business/Economy</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>Business/Economy</em></label>
+                <div class="likert-container">
                     <label for="attention_business_1" class="me-2">1</label>
                     <input type="radio" name="attention_business" value="1" id="attention_business_1" required>
                     <input type="radio" name="attention_business" value="2" id="attention_business_2">
@@ -440,12 +475,16 @@
                     <input type="radio" name="attention_business" value="7" id="attention_business_7">
                     <label for="attention_business_7" class="ms-2">7</label>
                 </div>
+                <div class="likert-labels ms-3">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
 
             <!-- c. Entertainment/Culture -->
             <div class="mb-3">
-                <label class="form-label ms-3">c. Entertainment/Culture</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>Entertainment/Culture</em></label>
+                <div class="likert-container">
                     <label for="attention_entertainment_1" class="me-2">1</label>
                     <input type="radio" name="attention_entertainment" value="1" id="attention_entertainment_1" required>
                     <input type="radio" name="attention_entertainment" value="2" id="attention_entertainment_2">
@@ -456,12 +495,16 @@
                     <input type="radio" name="attention_entertainment" value="7" id="attention_entertainment_7">
                     <label for="attention_entertainment_7" class="ms-2">7</label>
                 </div>
+                <div class="likert-labels ms-3">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
 
             <!-- d. Politics/Public Affairs -->
             <div class="mb-3">
-                <label class="form-label ms-3">d. Politics/Public Affairs</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>Politics/Public Affairs</em></label>
+                <div class="likert-container">
                     <label for="attention_politics_1" class="me-2">1</label>
                     <input type="radio" name="attention_politics" value="1" id="attention_politics_1" required>
                     <input type="radio" name="attention_politics" value="2" id="attention_politics_2">
@@ -472,12 +515,16 @@
                     <input type="radio" name="attention_politics" value="7" id="attention_politics_7">
                     <label for="attention_politics_7" class="ms-2">7</label>
                 </div>
+                <div class="likert-labels ms-3">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
 
             <!-- e. Science/Technology -->
             <div class="mb-3">
-                <label class="form-label ms-3">e. Science/Technology</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>Science/Technology</em></label>
+                <div class="likert-container">
                     <label for="attention_science_1" class="me-2">1</label>
                     <input type="radio" name="attention_science" value="1" id="attention_science_1" required>
                     <input type="radio" name="attention_science" value="2" id="attention_science_2">
@@ -488,12 +535,16 @@
                     <input type="radio" name="attention_science" value="7" id="attention_science_7">
                     <label for="attention_science_7" class="ms-2">7</label>
                 </div>
+                <div class="likert-labels ms-3">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
 
             <!-- f. Local News -->
             <div class="mb-3">
-                <label class="form-label ms-3">f. Local News</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>Local News</em></label>
+                <div class="likert-container">
                     <label for="attention_local_1" class="me-2">1</label>
                     <input type="radio" name="attention_local" value="1" id="attention_local_1" required>
                     <input type="radio" name="attention_local" value="2" id="attention_local_2">
@@ -504,12 +555,16 @@
                     <input type="radio" name="attention_local" value="7" id="attention_local_7">
                     <label for="attention_local_7" class="ms-2">7</label>
                 </div>
+                <div class="likert-labels ms-3">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
 
             <!-- g. Crime/Justice -->
             <div class="mb-3">
-                <label class="form-label ms-3">g. Crime/Justice</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>Crime/Justice</em></label>
+                <div class="likert-container">
                     <label for="attention_crime_1" class="me-2">1</label>
                     <input type="radio" name="attention_crime" value="1" id="attention_crime_1" required>
                     <input type="radio" name="attention_crime" value="2" id="attention_crime_2">
@@ -520,12 +575,16 @@
                     <input type="radio" name="attention_crime" value="7" id="attention_crime_7">
                     <label for="attention_crime_7" class="ms-2">7</label>
                 </div>
+                <div class="likert-labels ms-3">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
 
             <!-- h. International News -->
             <div class="mb-3">
-                <label class="form-label ms-3">h. International News</label>
-                <div class="likert-container ms-3">
+                <label class="form-label d-flex justify-content-center"><em>International News</em></label>
+                <div class="likert-container">
                     <label for="attention_international_1" class="me-2">1</label>
                     <input type="radio" name="attention_international" value="1" id="attention_international_1" required>
                     <input type="radio" name="attention_international" value="2" id="attention_international_2">
@@ -536,11 +595,10 @@
                     <input type="radio" name="attention_international" value="7" id="attention_international_7">
                     <label for="attention_international_7" class="ms-2">7</label>
                 </div>
-            </div>
-
-            <div class="likert-labels ms-3">
-                <small class="text-start">Strongly disagree</small>
-                <small class="text-end">Strongly agree</small>
+                <div class="likert-labels ms-3">
+                    <small class="text-start">Strongly disagree</small>
+                    <small class="text-end">Strongly agree</small>
+                </div>
             </div>
         </div>
 
