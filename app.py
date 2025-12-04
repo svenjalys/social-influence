@@ -239,65 +239,26 @@ def pre_questionnaire():
 
         update_participant_data('pre_questionnaire', data)
         session['pre_questionnaire_completed'] = True
-        return redirect(url_for('select_article'))
+        
+        # Select 4 articles from different categories
+        grouped = df.groupby(df['Category'].str.title())
+        selected_categories = random.sample(list(grouped.groups), k=min(4, len(grouped)))
+        selected_articles = [grouped.get_group(cat).sample(1).iloc[0] for cat in selected_categories]
+
+        condition = session.get('condition')
+        theme_articles = []
+        for a in selected_articles:
+            article_dict = a.to_dict()
+            article_dict['index'] = int(a['index'])
+            article_dict['show_label'] = condition != 'nolabel'
+            theme_articles.append(article_dict)
+
+        session['theme_articles'] = theme_articles
+        
+        # Redirect to first article
+        first_article_id = theme_articles[0]['index']
+        return redirect(url_for('article', article_id=first_article_id))
     return render_template('pre_questionnaire.html')
-
-@app.route('/select-article', methods=['GET', 'POST'])
-@require_previous_step('pre_questionnaire')
-def select_article():
-    if request.method == 'POST':
-        selected_article_id = int(request.form['selected_article_id'])
-        session['next_article'] = selected_article_id
-
-        theme_articles = session.get('theme_articles', [])
-        selected_article = next((a for a in theme_articles if a['index'] == selected_article_id), {})
-        session['last_article_had_label'] = selected_article.get('show_label', False)
-
-        article_row = df[df['index'] == selected_article_id]
-        if not article_row.empty:
-            article = article_row.iloc[0]
-            # selected_article_title = article_row.iloc[0]['Title']
-            # update_participant_data('theme_selection', {
-            #     'selected_article_id': selected_article_id,
-            #     'selected_article_title': article['Title'],
-            #     'selected_article_category': article['Category'],
-            #     'condition': session.get('condition', 'unknown')
-            # })
-            update_participant_data('round', {
-                'theme_selection': {
-                    'selected_article_id': selected_article_id,
-                    'selected_article_title': article['Title'],
-                    'selected_article_category': article['Category'],
-                    'condition': session.get('condition', 'unknown')
-                }
-            })
-        # else:
-        #     selected_article_title = ""
-
-        session['select_article_completed'] = True
-        session['seen_article_ids'] = [selected_article_id]  # Init seen
-        return redirect(url_for('article', article_id=selected_article_id))
-
-    # Select 4 articles from different categories
-    grouped = df.groupby(df['Category'].str.title())
-    selected_categories = random.sample(list(grouped.groups), k=min(4, len(grouped)))
-    selected_articles = [grouped.get_group(cat).sample(1).iloc[0] for cat in selected_categories]
-
-    condition = session.get('condition')
-    theme_articles = []
-    for a in selected_articles:
-        article_dict = a.to_dict()
-        article_dict['index'] = int(a['index'])
-        article_dict['show_label'] = condition != 'nolabel'
-        theme_articles.append(article_dict)
-
-    session['theme_articles'] = theme_articles
-
-    return render_template(
-        'select_article.html',
-        articles=theme_articles,
-        condition=condition
-    )
 
 
 from flask import render_template, request, redirect, url_for, session
@@ -305,7 +266,7 @@ from datetime import datetime, timedelta
 import random
 
 @app.route('/article/<int:article_id>', methods=['GET', 'POST'])
-@require_previous_step('select_article')
+@require_previous_step('pre_questionnaire')
 def article(article_id):
     if article_id not in df['index'].values:
         return redirect(url_for('select_article'))
