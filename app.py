@@ -71,8 +71,95 @@ def set_condition(cond):
         return f"Condition set to {cond}. <a href='/select-article'>Continue</a>"
     return "Invalid condition", 400
 
-df = pd.read_csv("articles.csv")
+raw_df = pd.read_csv("new_articles.csv", dtype=str, low_memory=False)
+# If pandas assigned generic 'fieldN' column names, try to use the first row as header
+if all(str(c).lower().startswith('field') for c in raw_df.columns):
+    potential_header = raw_df.iloc[0].astype(str).tolist()
+    raw_df = raw_df[1:].copy()
+    raw_df.columns = [h.strip() if isinstance(h, str) else str(h) for h in potential_header]
+
+# Normalize column names (strip)
+raw_df.columns = [str(c).strip() for c in raw_df.columns]
+
+# Pick topic/category column
+if 'topic' in raw_df.columns:
+    TOPIC_COL = 'topic'
+elif 'Category' in raw_df.columns:
+    TOPIC_COL = 'Category'
+elif '_cached_topics' in raw_df.columns:
+    TOPIC_COL = '_cached_topics'
+else:
+    nunique = raw_df.nunique(dropna=True)
+    small_cols = [c for c in raw_df.columns if 1 < nunique.get(c, 0) <= 50]
+    TOPIC_COL = small_cols[0] if small_cols else raw_df.columns[0]
+
+df = raw_df.reset_index(drop=True).copy()
 df.reset_index(inplace=True)
+app.logger.info("Loaded articles. Columns: %s", df.columns.tolist())
+app.logger.info("Using topic column: %s", TOPIC_COL)
+
+
+def normalize_article_row(row_dict):
+    """Map article row keys (from CSV) to the keys expected by templates.
+    Templates expect keys like 'Title', 'Content', 'Image URL', 'Author', 'Date', and 'index'.
+    This function is defensive about different column names and value formats.
+    """
+    out = {}
+    # index (ensure int where possible)
+    try:
+        out['index'] = int(row_dict.get('index', row_dict.get('Index', 0)))
+    except Exception:
+        out['index'] = row_dict.get('index', row_dict.get('Index', 0))
+
+    # Title
+    out['Title'] = row_dict.get('Title') or row_dict.get('title') or row_dict.get('headline') or ''
+
+    # Content / body
+    out['Content'] = row_dict.get('Content') or row_dict.get('content') or ''
+
+    # Image URL candidates: 'Image URL', 'image', 'media'
+    out['Image URL'] = row_dict.get('Image URL') or row_dict.get('image') or row_dict.get('media') or row_dict.get('image_url') or ''
+
+    # Author: try several fields and tidy lists stored as strings
+    author = row_dict.get('Author') or row_dict.get('author') or ''
+    if not author:
+        authors = row_dict.get('authors') or row_dict.get('journalists') or ''
+        if isinstance(authors, (list, tuple)):
+            author = ', '.join(authors)
+        elif isinstance(authors, str) and authors.startswith('[') and authors.endswith(']'):
+            try:
+                parsed = json.loads(authors)
+                if isinstance(parsed, list):
+                    author = ', '.join(parsed)
+                else:
+                    author = str(parsed)
+            except Exception:
+                author = authors
+    out['Author'] = author or None
+
+    # Date: prefer published_date then updated_date
+    out['Date'] = row_dict.get('Date') or row_dict.get('published_date') or row_dict.get('updated_date') or ''
+
+    # Keep any other original fields for debugging or downstream use
+    for k, v in row_dict.items():
+        if k not in out:
+            out[k] = v
+
+    return out
+
+
+@app.route('/debug-articles')
+def debug_articles():
+    """Quick diagnostics: returns detected columns, topic column, and a small sample of rows."""
+    try:
+        sample = df.head(5).to_dict(orient='records')
+    except Exception:
+        sample = []
+    return {
+        'columns': list(df.columns),
+        'topic_col': TOPIC_COL,
+        'sample_rows': sample
+    }
 
 def get_participant_id():
     return session.get('prolific_id')
@@ -181,21 +268,6 @@ def demographics():
 @app.route('/pre-questionnaire', methods=['GET', 'POST'])
 @require_previous_step('demographics')
 def pre_questionnaire():
-    # if request.method == 'POST':
-    #     data = {
-    #         'news_frequency': request.form.get('news_frequency'),
-    #         'device': request.form.get('device'),
-    #         'device_other': request.form.get('device_other') if request.form.get('device') == 'Other' else None,
-    #         'platform': request.form.get('platform'),
-    #         'platform_other': request.form.get('platform_other') if request.form.get('platform') == 'Other' else None,
-    #         'news_sources': request.form.get('news_sources'),
-    #         'attention_check': request.form.get('attention_check'),
-    #         'trust_level': request.form.get('trust_level')
-    #     }
-    #     update_participant_data('pre_questionnaire', data)
-    #     session['pre_questionnaire_completed'] = True
-    #     session['round'] = 1
-    #     return redirect(url_for('select_article'))
     if request.method == 'POST':
         # Devices: Get list of all checked devices, including "Other"
         devices = request.form.getlist('device')
@@ -211,8 +283,8 @@ def pre_questionnaire():
 
         data = {
             'news_frequency': request.form.get('news_frequency'),
-            'devices': devices,                      # Now a list with "Other" replaced if present
-            'platform': platform,                    # "Other: text" if "Other" was selected
+            'devices': devices,
+            'platform': platform,
             'attention_check': request.form.get('attention_check'),
             'trust_level': request.form.get('trust_level'),
             'interest_topics': {
@@ -240,24 +312,15 @@ def pre_questionnaire():
         update_participant_data('pre_questionnaire', data)
         session['pre_questionnaire_completed'] = True
         
-        # Select 4 articles from different categories
-        grouped = df.groupby(df['Category'].str.title())
+        # Select 4 articles from different categories (use detected topic column)
+        grouped = df.groupby(df[TOPIC_COL].astype(str).str.title())
         selected_categories = random.sample(list(grouped.groups), k=min(4, len(grouped)))
         selected_articles = [grouped.get_group(cat).sample(1).iloc[0] for cat in selected_categories]
 
-        condition = session.get('condition')
-        theme_articles = []
-        for a in selected_articles:
-            article_dict = a.to_dict()
-            article_dict['index'] = int(a['index'])
-            article_dict['show_label'] = condition != 'nolabel'
-            theme_articles.append(article_dict)
-
-        session['theme_articles'] = theme_articles
-        
-        # Redirect to first article
-        first_article_id = theme_articles[0]['index']
+        first_article_id = int(selected_articles[0]['index'])
+        session['round'] = 1
         return redirect(url_for('article', article_id=first_article_id))
+    
     return render_template('pre_questionnaire.html')
 
 
@@ -268,10 +331,12 @@ import random
 @app.route('/article/<int:article_id>', methods=['GET', 'POST'])
 @require_previous_step('pre_questionnaire')
 def article(article_id):
-    if article_id not in df['index'].values:
-        return redirect(url_for('select_article'))
+    # if article_id not in df['index'].values:
+    #     return redirect(url_for('select_article'))
 
     article_data = df[df['index'] == article_id].iloc[0].to_dict()
+    # Normalize keys to what templates expect (Title, Content, Image URL, Author, Date)
+    article_data = normalize_article_row(article_data)
     article_index = article_data['index']
     condition = session.get('condition')
     round_number = session.get('round', 1)
@@ -281,36 +346,52 @@ def article(article_id):
     seen_ids.add(article_index)
     session['seen_article_ids'] = list(seen_ids)
 
-    # Determine if label should be shown for this article
-    if round_number == 1:
-        theme_articles = session.get('theme_articles', [])
-        selected_article = next((a for a in theme_articles if a['index'] == article_index), {})
-        show_label = selected_article.get('show_label', False)
-    else:
-        recommendations_meta = session.get('recommendations_meta', {})
-        show_label = recommendations_meta.get(str(article_index), False)
+    # # Determine if label should be shown for this article
+    # if round_number == 1:
+    #     theme_articles = session.get('theme_articles', [])
+    #     selected_article = next((a for a in theme_articles if a['index'] == article_index), {})
+    #     show_label = selected_article.get('show_label', False)
+    # else:
+    #     recommendations_meta = session.get('recommendations_meta', {})
+    #     show_label = recommendations_meta.get(str(article_index), False)
 
-    session['last_article_had_label'] = show_label
+    # session['last_article_had_label'] = show_label
 
     # Generate recommendations (only on GET)
     if request.method == 'GET':
-        recommendations_df = df[
-            (df['Category'] == article_data['Category']) &
-            (~df['index'].isin(seen_ids))
-        ]
-        recommendations = recommendations_df.sample(n=min(4, len(recommendations_df))).to_dict(orient='records')
+        # Normalize the article topic value to string for comparison
+        art_topic_val = article_data.get(TOPIC_COL, '')
+        if isinstance(art_topic_val, (list, tuple)):
+            # take first element if stored as list
+            art_topic_val = art_topic_val[0] if art_topic_val else ''
+        art_topic_str = str(art_topic_val).strip().lower()
+
+        # Safely attempt to build recommendations; if topic column is missing or other
+        # error occurs, log and fall back to empty recommendations to avoid a 500.
+        try:
+            recommendations_df = df[
+                (df[TOPIC_COL].astype(str).str.strip().str.lower() == art_topic_str) &
+                (~df['index'].isin(seen_ids))
+            ]
+            sample_n = min(2, len(recommendations_df))
+            rec_records = recommendations_df.sample(n=sample_n).to_dict(orient='records') if sample_n > 0 else []
+            # Normalize each recommendation for template compatibility
+            recommendations = [normalize_article_row(rec) for rec in rec_records]
+        except Exception as e:
+            app.logger.exception('Failed to build recommendations: %s', e)
+            recommendations = []
 
         recommendations_meta = {}
         if condition in ['color', 'no_color', 'c2pa']:
             labeled_indices = random.sample(range(len(recommendations)), min(2, len(recommendations)))
-            for i, rec in enumerate(recommendations):
-                show = i in labeled_indices
-                rec['show_label'] = show
-                recommendations_meta[str(rec['index'])] = show
-        else:
-            for rec in recommendations:
-                rec['show_label'] = False
-                recommendations_meta[str(rec['index'])] = False
+        #     for i, rec in enumerate(recommendations):
+        #         show = i in labeled_indices
+        #         rec['show_label'] = show
+        #         recommendations_meta[str(rec['index'])] = show
+        # else:
+        #     for rec in recommendations:
+        #         rec['show_label'] = False
+        #         recommendations_meta[str(rec['index'])] = False
 
         session['current_recommendations'] = [rec['index'] for rec in recommendations]
         session['recommendations_meta'] = recommendations_meta
@@ -323,13 +404,13 @@ def article(article_id):
             row = df[df['index'] == rec_id]
             if not row.empty:
                 rec_data = row.iloc[0].to_dict()
-                rec_data['index'] = rec_id
-                rec_data['show_label'] = rec_meta.get(str(rec_id), False)
+                rec_data = normalize_article_row(rec_data)
+                # rec_data['show_label'] = rec_meta.get(str(rec_id), False)
                 recommendations.append(rec_data)
 
-    # Generate random C2PA badge if needed
-    cr_labels = ['cr1.png', 'cr2.png', 'cr3.png', 'cr4.png']
-    cr_label = random.choice(cr_labels) if condition == 'c2pa' else None
+    # # Generate random C2PA badge if needed
+    # cr_labels = ['cr1.png', 'cr2.png', 'cr3.png', 'cr4.png']
+    # cr_label = random.choice(cr_labels) if condition == 'c2pa' else None
 
     # Handle POST (article selection)
     if request.method == 'POST':
@@ -350,7 +431,7 @@ def article(article_id):
         # NEW: Get the article title from the DataFrame
         article_row = df[df['index'] == selected_article_id]
         if not article_row.empty:
-            selected_article_title = article_row.iloc[0]['Title']
+            selected_article_title = normalize_article_row(article_row.iloc[0].to_dict()).get('Title', '')
         else:
             selected_article_title = ""
 
@@ -389,8 +470,8 @@ def article(article_id):
         article=article_data,
         recommendations=recommendations,
         condition=condition,
-        cr_label=cr_label,
-        show_label=show_label,
+        # cr_label=cr_label,
+        # show_label=show_label,
         round_number=round_number,
         debug=False
     )
@@ -402,10 +483,10 @@ def article(article_id):
 def mid_questionnaire():
     article_id = session.get('next_article')
     article = df[df['index'] == article_id].iloc[0].to_dict()
-    article['index'] = article_id
+    article = normalize_article_row(article)
 
     condition = session.get('condition')
-    show_label = session.get('last_article_had_label', False)
+    # show_label = session.get('last_article_had_label', False)
 
     if request.method == 'POST':
         selected_elements = request.form.getlist('choice_elements')
@@ -437,7 +518,7 @@ def mid_questionnaire():
                     return render_template('mid_questionnaire.html',
                                         article=article,
                                         condition=condition,
-                                        show_label=show_label,
+                                        # show_label=show_label,
                                         error="Please specify what 'Other' means.")
             else:
                 selected_elements_out.append(el)
@@ -446,13 +527,13 @@ def mid_questionnaire():
             return render_template('mid_questionnaire.html',
                                 article=article,
                                 condition=condition,
-                                show_label=show_label,
+                                # show_label=show_label,
                                 error="'Don't know' cannot be combined.")
 
         update_participant_data('round', {
             'round': session.get('round', 1),
             'article_id': article_id,
-            'selected_article_had_label': show_label,
+            # 'selected_article_had_label': show_label,
             'mid_questionnaire': {
                 'selected_elements': selected_elements_out,
                 'trust_article': trust_article,
@@ -471,7 +552,7 @@ def mid_questionnaire():
         'mid_questionnaire.html',
         article=article,
         condition=condition,
-        show_label=show_label,
+        # show_label=show_label,
         debug=False
     )
 

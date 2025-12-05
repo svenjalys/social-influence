@@ -185,7 +185,7 @@
     <div class="vstack gap-3">
       {% for rec in recommendations %}
       <div class="card text-start py-3 px-3 border-0 shadow-sm text-decoration-none text-body recommendation-card"
-           onclick="submitSelection({{ rec['index'] }}, {{ 'true' if rec.get('show_label') else 'false' }})">
+           onclick="submitSelection()">
         <div class="row g-3 align-items-center">
           <div class="col-md-8">
             <h3 class="mb-0 fw-bold" style="font-size: 1.5rem;">{{ rec['Title'] }}</h3>
