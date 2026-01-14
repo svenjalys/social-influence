@@ -34,15 +34,34 @@
             <li>Any data published or shared with others outside the research team will be fully anonymized and untraceable to you.</li>
         </ul>
 
-        <p class="alert alert-primary mb-2 px-3 py-2"><strong>Disclaimer:</strong> Please refrain from using your browser’s Back button during the study. Navigating backward can cause data loss and incomplete submissions, which may impact your compensation.</p>
+        <p class="alert alert-primary mb-2 px-3 py-2"><strong>Disclaimer:</strong> Please refrain from using your browser's Back button during the study. Navigating backward can cause data loss and incomplete submissions, which may impact your compensation.</p>
         <br>
         <div class="text-center">By clicking the button below, you confirm that you have read this information and voluntarily agree to participate 
             in the study.</div>
 
         <div class="text-center mt-4">
-            <a href="{{ url_for('demographics') }}" class="btn btn-primary btn-lg">I Agree – Start the Study</a>
+            <form id="startForm" method="GET" action="{{ url_for('demographics') }}">
+                <input type="hidden" id="prolificId" name="PROLIFIC_PID" value="">
+                <button type="button" class="btn btn-primary btn-lg" onclick="startStudy()">I Agree – Start the Study</button>
+            </form>
         </div>
     </div>
     <br><br><br>
+
+    <script>
+    function startStudy() {
+        // Check if PROLIFIC_PID is in the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        let prolificId = urlParams.get('PROLIFIC_PID');
+        
+        // If not present, generate a fallback ID (for local testing)
+        if (!prolificId) {
+            prolificId = 'TEST_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        }
+        
+        document.getElementById('prolificId').value = prolificId;
+        document.getElementById('startForm').submit();
+    }
+    </script>
 </body>
 </html>
