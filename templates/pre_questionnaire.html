@@ -180,7 +180,7 @@
             </select>
             <input type="text" id="deviceOther" class="form-control mt-2 hidden" name="device_other" placeholder="Please specify if other">
         </div> -->
-        <div class="form-section">
+        <!-- <div class="form-section">
             <label class="form-label">2. Which device(s) do you typically use when looking at news on the internet?</label>
         
             <div class="form-check">
@@ -208,12 +208,12 @@
             </div>
 
             <div id="deviceError" class="text-danger mt-2 hidden">Please select at least one device.</div>
-        </div>
+        </div> -->
           
 
         <!-- 3. Place of news consumption -->
         <div class="form-section">
-            <label class="form-label">3. Where do you usually consume news?</label>
+            <label class="form-label">3. Where do you mostly consume news?</label>
             <select class="form-select" name="platform" onchange="toggleSelectOther(this, 'platformOtherInput')" required>
                 <option disabled selected value>Select</option>
                 <option>News websites</option>
@@ -228,23 +228,8 @@
             <!-- <input type="text" id="platformOther" class="form-control mt-2 hidden" name="platform_other" placeholder="Please specify"> -->
         </div>
 
-
-        <!-- 5. Attention check -->
-        <div class="form-section">
-            <label class="form-label">5. Among the following answers, please select “BBC”. This is an attention check.</label>
-            <select class="form-select" name="attention_check" required>
-                <option disabled selected value>Select</option>
-                <option>New York Times</option>
-                <option>CBS</option>
-                <option>BBC</option>
-                <option>The Guardian</option>
-                <option>Washington Post</option>
-                <option>Fox News</option>
-            </select>
-        </div>
-
         <!-- 6. Trust statement likert redesign -->
-        <div class="form-section">
+        <!-- <div class="form-section">
             <p>6. Please indicate how much you agree or disagree with the following statements:</p>
             <label class="form-label">
                 <em>I generally trust information from the news media in my country.</em>
@@ -264,16 +249,15 @@
                 <small class="text-start">Strongly disagree</small>
                 <small class="text-end">Strongly agree</small>
             </div>
-        </div>
+        </div> -->
 
         <!-- 7. News interest likert scale -->
-        <div class="form-section">
+        <!-- <div class="form-section">
             <label class="form-label d-flex justify-content-center">
-                <!-- <p>7. Please indicate how much you agree or disagree with the following statements:</p> -->
+                <p>7. Please indicate how much you agree or disagree with the following statements:</p>
                 <em>I am interested in news about...</em>
             </label>
             
-            <!-- a. Sports -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>Sports</em></label>
                 <div class="likert-container">
@@ -292,8 +276,6 @@
                     <small class="text-end">Strongly agree</small>
                 </div>
             </div>
-
-            <!-- b. Business/Economy -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>Business/Economy</em></label>
                 <div class="likert-container">
@@ -313,7 +295,6 @@
                 </div>
             </div>
 
-            <!-- c. Entertainment/Culture -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>Entertainment/Culture</em></label>
                 <div class="likert-container">
@@ -333,7 +314,6 @@
                 </div>
             </div>
 
-            <!-- d. Politics/Public Affairs -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>Politics/Public Affairs</em></label>
                 <div class="likert-container">
@@ -353,7 +333,6 @@
                 </div>
             </div>
 
-            <!-- e. Science/Technology -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>Science/Technology</em></label>
                 <div class="likert-container">
@@ -373,7 +352,6 @@
                 </div>
             </div>
 
-            <!-- f. Local News -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>Local News</em></label>
                 <div class="likert-container">
@@ -393,7 +371,6 @@
                 </div>
             </div>
 
-            <!-- g. Crime/Justice -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>Crime/Justice</em></label>
                 <div class="likert-container">
@@ -413,7 +390,6 @@
                 </div>
             </div>
 
-            <!-- h. International News -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>International News</em></label>
                 <div class="likert-container">
@@ -433,15 +409,12 @@
                 </div>
             </div>
         </div>
-
-        <!-- 8. News attention likert scale -->
         <div class="form-section">
             <label class="form-label">
-                <!-- <p>8. Please indicate how much you agree or disagree with the following statements:</p> -->
+                <p>8. Please indicate how much you agree or disagree with the following statements:</p>
                 <em>When looking at news, I pay attention to...</em>
             </label>
             
-            <!-- a. Sports -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>Sports</em></label>
                 <div class="likert-container">
@@ -461,7 +434,6 @@
                 </div>
             </div>
 
-            <!-- b. Business/Economy -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>Business/Economy</em></label>
                 <div class="likert-container">
@@ -480,8 +452,6 @@
                     <small class="text-end">Strongly agree</small>
                 </div>
             </div>
-
-            <!-- c. Entertainment/Culture -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>Entertainment/Culture</em></label>
                 <div class="likert-container">
@@ -501,7 +471,6 @@
                 </div>
             </div>
 
-            <!-- d. Politics/Public Affairs -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>Politics/Public Affairs</em></label>
                 <div class="likert-container">
@@ -521,7 +490,6 @@
                 </div>
             </div>
 
-            <!-- e. Science/Technology -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>Science/Technology</em></label>
                 <div class="likert-container">
@@ -541,7 +509,6 @@
                 </div>
             </div>
 
-            <!-- f. Local News -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>Local News</em></label>
                 <div class="likert-container">
@@ -561,7 +528,6 @@
                 </div>
             </div>
 
-            <!-- g. Crime/Justice -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>Crime/Justice</em></label>
                 <div class="likert-container">
@@ -581,7 +547,6 @@
                 </div>
             </div>
 
-            <!-- h. International News -->
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em>International News</em></label>
                 <div class="likert-container">
@@ -600,6 +565,20 @@
                     <small class="text-end">Strongly agree</small>
                 </div>
             </div>
+        </div> -->
+
+                <!-- Attention check -->
+        <div class="form-section">
+            <label class="form-label">Among the following answers, please select “BBC”. This is an attention check.</label>
+            <select class="form-select" name="attention_check" required>
+                <option disabled selected value>Select</option>
+                <option>New York Times</option>
+                <option>CBS</option>
+                <option>BBC</option>
+                <option>The Guardian</option>
+                <option>Washington Post</option>
+                <option>Fox News</option>
+            </select>
         </div>
 
         <!-- Submit button -->
