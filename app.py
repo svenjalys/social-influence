@@ -283,10 +283,14 @@ def pre_questionnaire():
 
         data = {
             'news_frequency': request.form.get('news_frequency'),
-            'devices': devices,
+            # 'devices': devices,
             'platform': platform,
+            'favourite_topic_1': request.form.get('favourite_topic_1'),
+            'least_favourite_topic_1': request.form.get('least_favourite_topic_1'),
+            'favourite_topic_2': request.form.get('favourite_topic_2'),
+            'least_favourite_topic_2': request.form.get('least_favourite_topic_2'),
             'attention_check': request.form.get('attention_check'),
-            'trust_level': request.form.get('trust_level'),
+            # 'trust_level': request.form.get('trust_level'),
             'interest_topics': {
                 'sports': request.form.get('interest_sports'),
                 'business': request.form.get('interest_business'),

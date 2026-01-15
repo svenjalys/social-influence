@@ -213,7 +213,7 @@
 
         <!-- 3. Place of news consumption -->
         <div class="form-section">
-            <label class="form-label">3. Where do you mostly consume news?</label>
+            <label class="form-label">2. Where do you mostly consume news?</label>
             <select class="form-select" name="platform" onchange="toggleSelectOther(this, 'platformOtherInput')" required>
                 <option disabled selected value>Select</option>
                 <option>News websites</option>
@@ -228,9 +228,131 @@
             <!-- <input type="text" id="platformOther" class="form-control mt-2 hidden" name="platform_other" placeholder="Please specify"> -->
         </div>
 
-        <!-- 6. Trust statement likert redesign -->
+        <!-- 3. Favourite topic from list A -->
+        <div class="form-section">
+            <label class="form-label">3. Please select your favourite news topic from the following list.</label>
+            <div id="favouriteListA">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="favourite_topic_1" value="Business & Economics" id="favA1" required>
+                    <label class="form-check-label" for="favA1">Business & Economics</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="favourite_topic_1" value="International News" id="favA2">
+                    <label class="form-check-label" for="favA2">International News</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="favourite_topic_1" value="Crime" id="favA3">
+                    <label class="form-check-label" for="favA3">Crime</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="favourite_topic_1" value="Finance" id="favA4">
+                    <label class="form-check-label" for="favA4">Finance</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="favourite_topic_1" value="Politics" id="favA5">
+                    <label class="form-check-label" for="favA5">Politics</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="favourite_topic_1" value="Public Health & Health Policy" id="favA6">
+                    <label class="form-check-label" for="favA6">Public Health & Health Policy</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Least favourite topic from list A -->
+        <div class="form-section">
+            <label class="form-label">4. Please select your <u>least</u> favourite news topic from the following list.</label>
+            <div id="leastFavouriteListA">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="least_favourite_topic_1" value="Business & Economics" id="leastFavA1" required>
+                    <label class="form-check-label" for="leastFavA1">Business & Economics</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="least_favourite_topic_1" value="International News" id="leastFavA2">
+                    <label class="form-check-label" for="leastFavA2">International News</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="least_favourite_topic_1" value="Crime" id="leastFavA3">
+                    <label class="form-check-label" for="leastFavA3">Crime</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="least_favourite_topic_1" value="Finance" id="leastFavA4">
+                    <label class="form-check-label" for="leastFavA4">Finance</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="least_favourite_topic_1" value="Politics" id="leastFavA5">
+                    <label class="form-check-label" for="leastFavA5">Politics</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="least_favourite_topic_1" value="Public Health & Health Policy" id="leastFavA6">
+                    <label class="form-check-label" for="leastFavA6">Public Health & Health Policy</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Favourite topic from list B -->
+        <div class="form-section">
+            <label class="form-label">5. Please select your favourite news topic from the following list.</label>
+            <div id="favouriteListB">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="favourite_topic_2" value="Lifestyle" id="favB1" required>
+                    <label class="form-check-label" for="favB1">Lifestyle</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="favourite_topic_2" value="Entertainment" id="favB2">
+                    <label class="form-check-label" for="favB2">Entertainment</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="favourite_topic_2" value="Science" id="favB3">
+                    <label class="form-check-label" for="favB3">Science</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="favourite_topic_2" value="Tech" id="favB4">
+                    <label class="form-check-label" for="favB4">Tech</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="favourite_topic_2" value="Sports" id="favB5">
+                    <label class="form-check-label" for="favB5">Sports</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="favourite_topic_2" value="Personal Health & Wellbeing" id="favB6">
+                    <label class="form-check-label" for="favB6">Personal Health & Wellbeing</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Least favourite topic from list B -->
+        <div class="form-section">
+            <label class="form-label">6. Please select your <u>least</u> favourite news topic from the following list.</label>
+            <div id="leastFavouriteListB">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="least_favourite_topic_2" value="Lifestyle" id="leastFavB1" required>
+                    <label class="form-check-label" for="leastFavB1">Lifestyle</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="least_favourite_topic_2" value="Entertainment" id="leastFavB2">
+                    <label class="form-check-label" for="leastFavB2">Entertainment</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="least_favourite_topic_2" value="Science" id="leastFavB3">
+                    <label class="form-check-label" for="leastFavB3">Science</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="least_favourite_topic_2" value="Tech" id="leastFavB4">
+                    <label class="form-check-label" for="leastFavB4">Tech</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="least_favourite_topic_2" value="Sports" id="leastFavB5">
+                    <label class="form-check-label" for="leastFavB5">Sports</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="least_favourite_topic_2" value="Personal Health & Wellbeing" id="leastFavB6">
+                    <label class="form-check-label" for="leastFavB6">Personal Health & Wellbeing</label>
+                </div>
+            </div>
+        </div>
         <!-- <div class="form-section">
-            <p>6. Please indicate how much you agree or disagree with the following statements:</p>
+            <p>10. Please indicate how much you agree or disagree with the following statements:</p>
             <label class="form-label">
                 <em>I generally trust information from the news media in my country.</em>
             </label>
@@ -254,7 +376,7 @@
         <!-- 7. News interest likert scale -->
         <!-- <div class="form-section">
             <label class="form-label d-flex justify-content-center">
-                <p>7. Please indicate how much you agree or disagree with the following statements:</p>
+                <p>11. Please indicate how much you agree or disagree with the following statements:</p>
                 <em>I am interested in news about...</em>
             </label>
             
@@ -411,7 +533,7 @@
         </div>
         <div class="form-section">
             <label class="form-label">
-                <p>8. Please indicate how much you agree or disagree with the following statements:</p>
+                <p>12. Please indicate how much you agree or disagree with the following statements:</p>
                 <em>When looking at news, I pay attention to...</em>
             </label>
             
@@ -587,5 +709,28 @@
         </div>
     </form>
 </div>
+
+<script>
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function shuffleOptions(containerId) {
+    const container = document.getElementById(containerId);
+    const options = Array.from(container.children);
+    shuffleArray(options);
+    options.forEach(option => container.appendChild(option));
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    shuffleOptions('favouriteListA');
+    shuffleOptions('leastFavouriteListA');
+    shuffleOptions('favouriteListB');
+    shuffleOptions('leastFavouriteListB');
+});
+</script>
 </body>
 </html>
