@@ -289,6 +289,10 @@ def pre_questionnaire():
             'least_favourite_topic_1': request.form.get('least_favourite_topic_1'),
             'favourite_topic_2': request.form.get('favourite_topic_2'),
             'least_favourite_topic_2': request.form.get('least_favourite_topic_2'),
+            'enjoy_topic_1': request.form.get('enjoy_topic_1'),
+            'enjoy_topic_2': request.form.get('enjoy_topic_2'),
+            'avoid_topic_1': request.form.get('avoid_topic_1'),
+            'avoid_topic_2': request.form.get('avoid_topic_2'),
             'attention_check': request.form.get('attention_check'),
             # 'trust_level': request.form.get('trust_level'),
             'interest_topics': {
