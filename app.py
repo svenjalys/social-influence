@@ -447,9 +447,9 @@ def article(article_id):
         update_participant_data('round', {
             'article': {
                 'selected_article_id': selected_article_id,
-                'selected_article_title': selected_article_title,
-                'selected_article_had_label': selected_article_had_label,
-                'label_explained': label_explained
+                'selected_article_title': selected_article_title
+                # 'selected_article_had_label': selected_article_had_label,
+                # 'label_explained': label_explained
             }
         })
 

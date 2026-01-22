@@ -45,21 +45,12 @@
       font-size: 1.15rem;
       line-height: 1.8;
       color: #1a1a1a;
-      margin-top: 2rem;
+      /* margin-top: 2rem; */
     }
 
     .article_body p {
       margin-bottom: 1.5rem;
       text-align: justify;
-    }
-
-    .article_body p:first-of-type::first-letter {
-      float: left;
-      font-size: 3rem;
-      font-weight: bold;
-      line-height: 1;
-      margin-right: 0.1em;
-      font-family: 'Times New Roman', Times, serif;
     }
 
     .article_quote {
@@ -103,17 +94,21 @@
 
     <div class="article_body">
       <div class="article_metadata">
-        {{ article.get('Author', 'By Staff') }} | {{ article.get('Date', 'Published recently') }}
+        {{ article.get('Author', 'By Staff') }} | {{ article.get('Date', 'Published recently').split()[0] }}
       </div>
 
-      {% set paragraphs = article['Content'].split('\n\n') %}
-      {% for p in paragraphs %}
-        {% if p.startswith('"') or p.startswith('“') %}
-          <div class="article_quote">{{ p }}</div>
-        {% else %}
-          <p>{{ p }}</p>
-        {% endif %}
+      {% set lines = article['Content'].split('\n') %}
+      {% for line in lines[:8] %}
+        <p>{{ line }}</p>
       {% endfor %}
+      {% if lines|length > 8 %}
+        <div id="moreContent" class="collapse">
+          {% for line in lines[8:] %}
+            <p>{{ line }}</p>
+          {% endfor %}
+        </div>
+        <button class="btn btn-outline-primary btn-sm mt-2" type="button" id="toggleBtn" onclick="toggleContent()">Show more</button>
+      {% endif %}
     </div>
   </div>
 
@@ -165,6 +160,18 @@
   function submitSelection(articleId, hasLabel) {
     document.getElementById('selected_article_id').value = articleId;
     document.querySelector('form').submit();
+  }
+
+  function toggleContent() {
+    const content = document.getElementById('moreContent');
+    const btn = document.getElementById('toggleBtn');
+    if (content.classList.contains('show')) {
+      content.classList.remove('show');
+      btn.textContent = 'Show more';
+    } else {
+      content.classList.add('show');
+      btn.textContent = 'Show less';
+    }
   }
 </script>
 </body>
