@@ -335,10 +335,20 @@ def pre_questionnaire():
         selected_articles = [grouped.get_group(cat).sample(1).iloc[0] for cat in selected_categories]
 
         first_article_id = int(selected_articles[0]['index'])
+        session['first_article_id'] = first_article_id
         session['round'] = 1
-        return redirect(url_for('article', article_id=first_article_id))
+        return redirect(url_for('instructions'))
     
     return render_template('pre_questionnaire.html')
+
+
+@app.route('/instructions', methods=['GET', 'POST'])
+@require_previous_step('pre_questionnaire')
+def instructions():
+    if request.method == 'POST':
+        session['instructions_completed'] = True
+        return redirect(url_for('article', article_id=session['first_article_id']))
+    return render_template('instructions.html')
 
 
 from flask import render_template, request, redirect, url_for, session
@@ -346,7 +356,7 @@ from datetime import datetime, timedelta
 import random
 
 @app.route('/article/<int:article_id>', methods=['GET', 'POST'])
-@require_previous_step('pre_questionnaire')
+@require_previous_step('instructions')
 def article(article_id):
     # if article_id not in df['index'].values:
     #     return redirect(url_for('select_article'))
