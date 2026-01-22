@@ -294,6 +294,11 @@ def pre_questionnaire():
             'avoid_topic_1': request.form.get('avoid_topic_1'),
             'avoid_topic_2': request.form.get('avoid_topic_2'),
             'attention_check': request.form.get('attention_check'),
+            'avoid_news': request.form.get('avoid_news'),
+            'avoid_reasons': request.form.getlist('avoid_reasons'),
+            'avoid_other': request.form.get('avoid_other'),
+            # 'reason_rank_1': request.form.get('reason_rank_1'),
+            # 'reason_rank_2': request.form.get('reason_rank_2'),
             # 'trust_level': request.form.get('trust_level'),
             'interest_topics': {
                 'sports': request.form.get('interest_sports'),
@@ -316,6 +321,10 @@ def pre_questionnaire():
                 'international': request.form.get('attention_international')
             }
         }
+
+        # Process avoid_reasons to replace 'other' with the specified text
+        if 'other' in data['avoid_reasons'] and data['avoid_other']:
+            data['avoid_reasons'] = [r if r != 'other' else f"other: {data['avoid_other']}" for r in data['avoid_reasons']]
 
         update_participant_data('pre_questionnaire', data)
         session['pre_questionnaire_completed'] = True

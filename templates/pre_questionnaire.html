@@ -149,6 +149,19 @@
             
             return valid;
         }
+
+        function toggleOtherInput(checkbox, wrapperId) {
+            const wrapper = document.getElementById(wrapperId);
+            const input = wrapper.querySelector('input');
+            if (checkbox.checked) {
+                wrapper.classList.remove('hidden');
+                input.required = true;
+            } else {
+                wrapper.classList.add('hidden');
+                input.required = false;
+                input.value = '';
+            }
+        }
         </script>
 </head>
 <body>
@@ -375,7 +388,7 @@
                     <input type="radio" name="enjoy_topic_1" value="7" id="enjoy_topic_1_7" class="form-check-input">
                 </div>
             </div>
-
+<br>
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em id="enjoyLabel2">I enjoy reading news about this topic.</em></label>
                 <div class="likert-labels mb-2">
@@ -392,7 +405,7 @@
                     <input type="radio" name="enjoy_topic_2" value="7" id="enjoy_topic_2_7" class="form-check-input">
                 </div>
             </div>
-
+<br>
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em id="avoidLabel1">I usually avoid reading news about this topic.</em></label>
                 <div class="likert-labels mb-2">
@@ -409,7 +422,7 @@
                     <input type="radio" name="avoid_topic_1" value="7" id="avoid_topic_1_7" class="form-check-input">
                 </div>
             </div>
-
+<br>
             <div class="mb-3">
                 <label class="form-label d-flex justify-content-center"><em id="avoidLabel2">I usually avoid reading news about this topic.</em></label>
                 <div class="likert-labels mb-2">
@@ -778,6 +791,55 @@
                 <option>Washington Post</option>
                 <option>Fox News</option>
             </select>
+        </div>
+
+        <!-- 9. Avoid news question -->
+        <div class="form-section">
+            <label class="form-label">9. Do you ever avoid the news?</label>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="avoid_news" value="no" id="avoid_no" required>
+                <label class="form-check-label" for="avoid_no">No</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="avoid_news" value="occasionally" id="avoid_occasionally">
+                <label class="form-check-label" for="avoid_occasionally">Yes, occasionally</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="avoid_news" value="regularly" id="avoid_regularly">
+                <label class="form-check-label" for="avoid_regularly">Yes, regularly</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="avoid_news" value="particular_topics" id="avoid_particular">
+                <label class="form-check-label" for="avoid_particular">Yes, but only particular topics</label>
+            </div>
+        </div>
+
+        <!-- 10. Reasons for avoiding news -->
+        <div class="form-section">
+            <label class="form-label">10. What are your main reasons for avoiding the news? Please select up to 2 answers from the list below.</label>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="avoid_reasons" value="negative_mood" id="reason_negative">
+                <label class="form-check-label" for="reason_negative">The news feels too negative and has an effect on my mood.</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="avoid_reasons" value="too_much" id="reason_too_much">
+                <label class="form-check-label" for="reason_too_much">The news feels too much or is too exhausting to follow.</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="avoid_reasons" value="not_relevant" id="reason_not_relevant">
+                <label class="form-check-label" for="reason_not_relevant">The news does not feel relevant to me.</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="avoid_reasons" value="not_trust" id="reason_not_trust">
+                <label class="form-check-label" for="reason_not_trust">I don't trust the news enough/it feels biased.</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="avoid_reasons" value="other" id="reason_other" onchange="toggleOtherInput(this, 'other_reason_wrapper');">
+                <label class="form-check-label" for="reason_other">Other (please specify)</label>
+                <div id="other_reason_wrapper" class="hidden mt-2">
+                    <input type="text" class="form-control" name="avoid_other" placeholder="Please specify">
+                </div>
+            </div>
         </div>
 
         <!-- Submit button -->
