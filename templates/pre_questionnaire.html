@@ -162,6 +162,22 @@
                 input.value = '';
             }
         }
+
+        function limitCheckboxes() {
+            const checkboxes = document.querySelectorAll('input[name="avoid_reasons"]');
+            const checked = document.querySelectorAll('input[name="avoid_reasons"]:checked');
+            if (checked.length >= 2) {
+                checkboxes.forEach(cb => {
+                    if (!cb.checked) {
+                        cb.disabled = true;
+                    }
+                });
+            } else {
+                checkboxes.forEach(cb => {
+                    cb.disabled = false;
+                });
+            }
+        }
         </script>
 </head>
 <body>
@@ -818,23 +834,23 @@
         <div class="form-section">
             <label class="form-label">10. What are your main reasons for avoiding the news? Please select up to 2 answers from the list below.</label>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="avoid_reasons" value="negative_mood" id="reason_negative">
+                <input class="form-check-input" type="checkbox" name="avoid_reasons" value="negative_mood" id="reason_negative" onchange="limitCheckboxes()">
                 <label class="form-check-label" for="reason_negative">The news feels too negative and has an effect on my mood.</label>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="avoid_reasons" value="too_much" id="reason_too_much">
+                <input class="form-check-input" type="checkbox" name="avoid_reasons" value="too_much" id="reason_too_much" onchange="limitCheckboxes()">
                 <label class="form-check-label" for="reason_too_much">The news feels too much or is too exhausting to follow.</label>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="avoid_reasons" value="not_relevant" id="reason_not_relevant">
+                <input class="form-check-input" type="checkbox" name="avoid_reasons" value="not_relevant" id="reason_not_relevant" onchange="limitCheckboxes()">
                 <label class="form-check-label" for="reason_not_relevant">The news does not feel relevant to me.</label>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="avoid_reasons" value="not_trust" id="reason_not_trust">
+                <input class="form-check-input" type="checkbox" name="avoid_reasons" value="not_trust" id="reason_not_trust" onchange="limitCheckboxes()">
                 <label class="form-check-label" for="reason_not_trust">I don't trust the news enough/it feels biased.</label>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="avoid_reasons" value="other" id="reason_other" onchange="toggleOtherInput(this, 'other_reason_wrapper');">
+                <input class="form-check-input" type="checkbox" name="avoid_reasons" value="other" id="reason_other" onchange="toggleOtherInput(this, 'other_reason_wrapper'); limitCheckboxes();">
                 <label class="form-check-label" for="reason_other">Other (please specify)</label>
                 <div id="other_reason_wrapper" class="hidden mt-2">
                     <input type="text" class="form-control" name="avoid_other" placeholder="Please specify">
