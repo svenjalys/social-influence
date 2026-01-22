@@ -174,15 +174,8 @@ def update_participant_data(section, data):
         # Get or create participant
         participant = Participant.query.filter_by(prolific_id=pid).first()
         if not participant:
-            # Assign condition in 4-person full cycle based on current count
-            all_conditions = ['color', 'no_color', 'c2pa', 'nolabel']
-            total = Participant.query.count()
-            assigned_condition = all_conditions[total % 4]
-            session['condition'] = assigned_condition
-
             participant = Participant(
                 prolific_id=pid,
-                condition=assigned_condition,
                 timestamp_start=datetime.utcnow()
             )
             db.session.add(participant)
@@ -365,7 +358,6 @@ def article(article_id):
     # Normalize keys to what templates expect (Title, Content, Image URL, Author, Date)
     article_data = normalize_article_row(article_data)
     article_index = article_data['index']
-    condition = session.get('condition')
     round_number = session.get('round', 1)
 
     # Track seen articles
@@ -409,16 +401,7 @@ def article(article_id):
             recommendations = []
 
         recommendations_meta = {}
-        if condition in ['color', 'no_color', 'c2pa']:
-            labeled_indices = random.sample(range(len(recommendations)), min(2, len(recommendations)))
-        #     for i, rec in enumerate(recommendations):
-        #         show = i in labeled_indices
-        #         rec['show_label'] = show
-        #         recommendations_meta[str(rec['index'])] = show
-        # else:
-        #     for rec in recommendations:
-        #         rec['show_label'] = False
-        #         recommendations_meta[str(rec['index'])] = False
+        # Removed condition-based labeling
 
         session['current_recommendations'] = [rec['index'] for rec in recommendations]
         session['recommendations_meta'] = recommendations_meta
@@ -442,16 +425,8 @@ def article(article_id):
     # Handle POST (article selection)
     if request.method == 'POST':
         selected_article_id = int(request.form['selected_article_id'])
-        # selected_article_title = request.form.get('selected_article_title')
-        selected_article_had_label = request.form.get('selected_article_had_label') == 'true'
-        label_explained = request.form.get('label_explained') == 'true'
-
-        # Save label state for selected article
-        recommendations_meta = session.get('recommendations_meta', {})
-        session['selected_from_meta'] = recommendations_meta.get(str(selected_article_id), False)
 
         session['next_article'] = selected_article_id
-        session['last_article_had_label'] = selected_article_had_label
         seen_ids.add(selected_article_id)
         session['seen_article_ids'] = list(seen_ids)
 
@@ -496,9 +471,6 @@ def article(article_id):
         'article.html',
         article=article_data,
         recommendations=recommendations,
-        condition=condition,
-        # cr_label=cr_label,
-        # show_label=show_label,
         round_number=round_number,
         debug=False
     )
