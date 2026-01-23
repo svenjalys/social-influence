@@ -144,8 +144,8 @@
 
     <div class="vstack gap-3">
       {% for rec in recommendations %}
-      <div class="card text-start py-3 px-3 border-0 shadow-sm text-decoration-none text-body recommendation-card"
-           onclick="submitSelection()" data-article-id="{{ rec['index'] }}">
+       <div class="card text-start py-3 px-3 border-0 shadow text-decoration-none text-body recommendation-card"
+         data-article-id="{{ rec['index'] }}">
         <div class="row g-3 align-items-center">
           <div class="col-md-8">
             <h3 class="mb-0 fw-bold" style="font-size: 1.5rem;">{{ rec['Title'] }}</h3>
@@ -344,6 +344,7 @@
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         document.getElementById('ratingBox').classList.remove('d-none');
+        positionBox();
       }
     });
   });
@@ -368,15 +369,18 @@
       });
     }
     if (activeCard) {
+      box.classList.remove('d-none');
       const rect = activeCard.getBoundingClientRect();
       box.style.left = `${rect.right + 20}px`;
       box.style.top = `${rect.top}px`;
       // Ensure the box doesn't extend below the viewport
       const boxHeight = box.offsetHeight || 400;
       const currentTop = parseInt(box.style.top);
-      if (currentTop + boxHeight > window.innerHeight) {
+      if (currentTop + boxHeight > window.innerHeight - 10) {
         box.style.top = `${window.innerHeight - boxHeight - 10}px`;
       }
+    } else {
+      box.classList.add('d-none');
     }
   }
 
@@ -385,10 +389,8 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     buildRatingContent();
-    if (recommendations.length > 0) {
-      document.getElementById('ratingBox').classList.remove('d-none');
-      positionBox();
-    }
+    // Do not show the box on load; IntersectionObserver will handle showing it
+    document.getElementById('ratingBox').classList.add('d-none');
   });
 </script>
 </body>
