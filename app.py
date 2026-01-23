@@ -437,6 +437,16 @@ def article(article_id):
         else:
             selected_article_title = ""
 
+        # Collect ratings
+        recommendations_ids = session.get('current_recommendations', [])
+        ratings = {}
+        for i, rec_id in enumerate(recommendations_ids):
+            ratings[f'likelihood_{i}'] = request.form.get(f'likelihood_{i}_hidden', '')
+            for stmt in ['constructive', 'understandable', 'trustworthy', 'relevant']:
+                ratings[f'{stmt}_{i}'] = request.form.get(f'{stmt}_{i}_hidden', '')
+        for stmt in ['label_understandable', 'label_useful', 'label_influenced', 'label_attention', 'label_more']:
+            ratings[stmt] = request.form.get(f'{stmt}_hidden', '')
+
         # update_participant_data('round', {
         #     'round': round_number,
         #     'selected_article_id': selected_article_id,
@@ -447,7 +457,8 @@ def article(article_id):
         update_participant_data('round', {
             'article': {
                 'selected_article_id': selected_article_id,
-                'selected_article_title': selected_article_title
+                'selected_article_title': selected_article_title,
+                'ratings': ratings
                 # 'selected_article_had_label': selected_article_had_label,
                 # 'label_explained': label_explained
             }
