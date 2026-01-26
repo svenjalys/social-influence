@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy #for sqlite
 import pandas as pd
+import sqlite3
 import json
 import os
 import random
@@ -71,15 +72,18 @@ def set_condition(cond):
         return f"Condition set to {cond}. <a href='/select-article'>Continue</a>"
     return "Invalid condition", 400
 
-raw_df = pd.read_csv("new_articles.csv", dtype=str, low_memory=False)
-# If pandas assigned generic 'fieldN' column names, try to use the first row as header
-if all(str(c).lower().startswith('field') for c in raw_df.columns):
-    potential_header = raw_df.iloc[0].astype(str).tolist()
-    raw_df = raw_df[1:].copy()
-    raw_df.columns = [h.strip() if isinstance(h, str) else str(h) for h in potential_header]
 
-# Normalize column names (strip)
-raw_df.columns = [str(c).strip() for c in raw_df.columns]
+# Load articles from SQLite database
+
+ARTICLES_DB_PATH = "articles_cleaned.db"
+conn = sqlite3.connect(ARTICLES_DB_PATH)
+raw_df = pd.read_sql_query("SELECT * FROM new_articles", conn)
+conn.close()
+
+# The first row contains the actual headers
+headers = list(raw_df.iloc[0])
+raw_df = raw_df[1:].copy()
+raw_df.columns = [str(h).strip() for h in headers]
 
 # Pick topic/category column
 if 'topic' in raw_df.columns:
@@ -95,7 +99,7 @@ else:
 
 df = raw_df.reset_index(drop=True).copy()
 df.reset_index(inplace=True)
-app.logger.info("Loaded articles. Columns: %s", df.columns.tolist())
+app.logger.info("Loaded articles from DB. Columns: %s", df.columns.tolist())
 app.logger.info("Using topic column: %s", TOPIC_COL)
 
 
