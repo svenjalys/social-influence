@@ -36,6 +36,32 @@ class Round(db.Model):
     article = db.Column(db.JSON)
     mid_questionnaire = db.Column(db.JSON)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Flattened rating-box fields (2 recommendations)
+    main_article_stable_id = db.Column(db.String)
+    main_article_title = db.Column(db.String)
+
+    rec0_stable_id = db.Column(db.String)
+    rec0_title = db.Column(db.String)
+    rec0_likelihood = db.Column(db.Integer)
+    rec0_constructive = db.Column(db.Integer)
+    rec0_understandable = db.Column(db.Integer)
+    rec0_trustworthy = db.Column(db.Integer)
+    rec0_relevant = db.Column(db.Integer)
+
+    rec1_stable_id = db.Column(db.String)
+    rec1_title = db.Column(db.String)
+    rec1_likelihood = db.Column(db.Integer)
+    rec1_constructive = db.Column(db.Integer)
+    rec1_understandable = db.Column(db.Integer)
+    rec1_trustworthy = db.Column(db.Integer)
+    rec1_relevant = db.Column(db.Integer)
+
+    label_understandable = db.Column(db.Integer)
+    label_useful = db.Column(db.Integer)
+    label_influenced = db.Column(db.Integer)
+    label_attention = db.Column(db.Integer)
+    label_more = db.Column(db.Integer)
 ###
 
 
@@ -43,6 +69,57 @@ class Round(db.Model):
 # Must be called after models are declared.
 with app.app_context():
     db.create_all()
+
+
+def _ensure_round_flat_columns():
+    """Lightweight SQLite migration: add missing flattened columns to `round`.
+
+    SQLite doesn't support full ALTER COLUMN migrations, but it *does* support
+    `ALTER TABLE ... ADD COLUMN ...`, which is enough for our appended columns.
+    """
+    engine = db.engine
+    with engine.connect() as conn:
+        try:
+            existing_cols = {
+                row[1]
+                for row in conn.exec_driver_sql('PRAGMA table_info("round")').all()
+            }
+        except Exception:
+            # If the table doesn't exist yet, create_all() above will handle it.
+            return
+
+        desired_cols = {
+            'main_article_stable_id': 'TEXT',
+            'main_article_title': 'TEXT',
+            'rec0_stable_id': 'TEXT',
+            'rec0_title': 'TEXT',
+            'rec0_likelihood': 'INTEGER',
+            'rec0_constructive': 'INTEGER',
+            'rec0_understandable': 'INTEGER',
+            'rec0_trustworthy': 'INTEGER',
+            'rec0_relevant': 'INTEGER',
+            'rec1_stable_id': 'TEXT',
+            'rec1_title': 'TEXT',
+            'rec1_likelihood': 'INTEGER',
+            'rec1_constructive': 'INTEGER',
+            'rec1_understandable': 'INTEGER',
+            'rec1_trustworthy': 'INTEGER',
+            'rec1_relevant': 'INTEGER',
+            'label_understandable': 'INTEGER',
+            'label_useful': 'INTEGER',
+            'label_influenced': 'INTEGER',
+            'label_attention': 'INTEGER',
+            'label_more': 'INTEGER',
+        }
+
+        for col_name, col_type in desired_cols.items():
+            if col_name in existing_cols:
+                continue
+            conn.exec_driver_sql(f'ALTER TABLE "round" ADD COLUMN {col_name} {col_type}')
+
+
+with app.app_context():
+    _ensure_round_flat_columns()
 
 
 RESPONSES_DIR = "responses"
@@ -296,6 +373,92 @@ def debug_rounds():
         'rounds': [_to_dict_round(r) for r in rounds],
     }
 
+
+@app.route('/debug-backfill-flat')
+def debug_backfill_flat():
+    """Diagnostics: backfill flattened round columns from stored JSON.
+
+    Usage:
+    - Backfill all rounds: /debug-backfill-flat
+    - Backfill only one participant: /debug-backfill-flat?pid=PROLIFIC_PID
+    """
+    pid = request.args.get('pid')
+    q = Round.query
+    participant = None
+    if pid:
+        participant = Participant.query.filter_by(prolific_id=pid).first()
+        if not participant:
+            return {'error': 'Unknown pid', 'pid': pid}, 404
+        q = q.filter_by(participant_id=participant.id)
+
+    rounds = q.order_by(Round.id.asc()).all()
+    updated = 0
+
+    def _to_int(val):
+        if val is None:
+            return None
+        if isinstance(val, int):
+            return val
+        try:
+            s = str(val).strip()
+            return int(s) if s else None
+        except Exception:
+            return None
+
+    for r in rounds:
+        payload = r.article if isinstance(r.article, dict) else None
+        if not isinstance(payload, dict):
+            continue
+
+        r.main_article_stable_id = payload.get('main_article_stable_id')
+        r.main_article_title = payload.get('main_article_title')
+
+        rec_ids = payload.get('recommendations') or []
+        rec_stable_ids = payload.get('recommendations_stable_ids') or []
+        rec_titles = payload.get('recommendations_titles') or []
+        ratings = payload.get('ratings') or {}
+
+        def _rating_for_rec(rec_pos: int, key_prefix: str):
+            rec_id = rec_ids[rec_pos] if len(rec_ids) > rec_pos else None
+            if rec_id is not None:
+                v = ratings.get(f'{key_prefix}_{rec_id}')
+                if v not in (None, ''):
+                    return v
+            return ratings.get(f'{key_prefix}_{rec_pos}')
+
+        r.rec0_stable_id = rec_stable_ids[0] if len(rec_stable_ids) > 0 else None
+        r.rec0_title = rec_titles[0] if len(rec_titles) > 0 else None
+        r.rec0_likelihood = _to_int(_rating_for_rec(0, 'likelihood'))
+        r.rec0_constructive = _to_int(_rating_for_rec(0, 'constructive'))
+        r.rec0_understandable = _to_int(_rating_for_rec(0, 'understandable'))
+        r.rec0_trustworthy = _to_int(_rating_for_rec(0, 'trustworthy'))
+        r.rec0_relevant = _to_int(_rating_for_rec(0, 'relevant'))
+
+        r.rec1_stable_id = rec_stable_ids[1] if len(rec_stable_ids) > 1 else None
+        r.rec1_title = rec_titles[1] if len(rec_titles) > 1 else None
+        r.rec1_likelihood = _to_int(_rating_for_rec(1, 'likelihood'))
+        r.rec1_constructive = _to_int(_rating_for_rec(1, 'constructive'))
+        r.rec1_understandable = _to_int(_rating_for_rec(1, 'understandable'))
+        r.rec1_trustworthy = _to_int(_rating_for_rec(1, 'trustworthy'))
+        r.rec1_relevant = _to_int(_rating_for_rec(1, 'relevant'))
+
+        r.label_understandable = _to_int(ratings.get('label_understandable'))
+        r.label_useful = _to_int(ratings.get('label_useful'))
+        r.label_influenced = _to_int(ratings.get('label_influenced'))
+        r.label_attention = _to_int(ratings.get('label_attention'))
+        r.label_more = _to_int(ratings.get('label_more'))
+
+        updated += 1
+
+    db.session.commit()
+    return {
+        'pid': pid,
+        'participant_id': participant.id if participant else None,
+        'rounds_seen': len(rounds),
+        'rounds_updated': updated,
+        'hint': 'Now query flattened columns from the `round` table.'
+    }
+
 def get_participant_id():
     return session.get('prolific_id')
 
@@ -334,6 +497,66 @@ def update_participant_data(section, data):
                 )
                 db.session.add(existing_round)
                 db.session.flush()
+
+            def _to_int(val):
+                if val is None:
+                    return None
+                if isinstance(val, int):
+                    return val
+                try:
+                    s = str(val).strip()
+                    return int(s) if s else None
+                except Exception:
+                    return None
+
+            # Flatten rating-box data (if present)
+            article_payload = data.get('article') if isinstance(data, dict) else None
+            if isinstance(article_payload, dict):
+                existing_round.main_article_stable_id = article_payload.get('main_article_stable_id')
+                existing_round.main_article_title = article_payload.get('main_article_title')
+
+                rec_stable_ids = article_payload.get('recommendations_stable_ids') or []
+                rec_titles = article_payload.get('recommendations_titles') or []
+                rec_ids = article_payload.get('recommendations') or []
+                ratings = article_payload.get('ratings') or {}
+
+                def _rating_for_rec(rec_pos: int, key_prefix: str):
+                    """Get a rating value for a recommendation.
+
+                    New data uses keys like: `${key_prefix}_${rec_id}` (because the form
+                    names are based on rec.index). Some older code used `${key_prefix}_${pos}`.
+                    """
+                    rec_id = rec_ids[rec_pos] if len(rec_ids) > rec_pos else None
+                    if rec_id is not None:
+                        v = ratings.get(f'{key_prefix}_{rec_id}')
+                        if v not in (None, ''):
+                            return v
+                    return ratings.get(f'{key_prefix}_{rec_pos}')
+
+                # Recommendation 0
+                existing_round.rec0_stable_id = rec_stable_ids[0] if len(rec_stable_ids) > 0 else None
+                existing_round.rec0_title = rec_titles[0] if len(rec_titles) > 0 else None
+                existing_round.rec0_likelihood = _to_int(_rating_for_rec(0, 'likelihood'))
+                existing_round.rec0_constructive = _to_int(_rating_for_rec(0, 'constructive'))
+                existing_round.rec0_understandable = _to_int(_rating_for_rec(0, 'understandable'))
+                existing_round.rec0_trustworthy = _to_int(_rating_for_rec(0, 'trustworthy'))
+                existing_round.rec0_relevant = _to_int(_rating_for_rec(0, 'relevant'))
+
+                # Recommendation 1
+                existing_round.rec1_stable_id = rec_stable_ids[1] if len(rec_stable_ids) > 1 else None
+                existing_round.rec1_title = rec_titles[1] if len(rec_titles) > 1 else None
+                existing_round.rec1_likelihood = _to_int(_rating_for_rec(1, 'likelihood'))
+                existing_round.rec1_constructive = _to_int(_rating_for_rec(1, 'constructive'))
+                existing_round.rec1_understandable = _to_int(_rating_for_rec(1, 'understandable'))
+                existing_round.rec1_trustworthy = _to_int(_rating_for_rec(1, 'trustworthy'))
+                existing_round.rec1_relevant = _to_int(_rating_for_rec(1, 'relevant'))
+
+                # Label items (shared)
+                existing_round.label_understandable = _to_int(ratings.get('label_understandable'))
+                existing_round.label_useful = _to_int(ratings.get('label_useful'))
+                existing_round.label_influenced = _to_int(ratings.get('label_influenced'))
+                existing_round.label_attention = _to_int(ratings.get('label_attention'))
+                existing_round.label_more = _to_int(ratings.get('label_more'))
             for k in ['theme_selection', 'article', 'mid_questionnaire']:
                 if k in data:
                     val = getattr(existing_round, k)
@@ -566,13 +789,41 @@ def article(article_id):
             recommendation_stable_ids.append(get_stable_article_id(rec_record))
             recommendation_titles.append(rec_record.get('Title', None))
 
+        # Collect ratings
+        # IMPORTANT: the actual form fields are hidden inputs named like
+        # `likelihood_<rec_id>` and `label_more` (no `_hidden` suffix).
+        # The `_hidden` inputs are created dynamically in the rating wizard HTML,
+        # but they are not part of the <form> element and therefore are not submitted.
         ratings = {}
+
+        def _pick_rating_value(*field_names: str) -> str:
+            for name in field_names:
+                if not name:
+                    continue
+                v = request.form.get(name)
+                if v is not None:
+                    return v
+            return ''
+
         for i, rec_id in enumerate(recommendations_ids):
-            ratings[f'likelihood_{i}'] = request.form.get(f'likelihood_{i}_hidden', '')
+            # Prefer the stable naming scheme used by the hidden inputs in the form:
+            # e.g. likelihood_891, constructive_891, ...
+            ratings[f'likelihood_{rec_id}'] = _pick_rating_value(
+                f'likelihood_{rec_id}',
+                f'likelihood_{i}',
+                f'likelihood_{rec_id}_hidden',
+                f'likelihood_{i}_hidden',
+            )
             for stmt in ['constructive', 'understandable', 'trustworthy', 'relevant']:
-                ratings[f'{stmt}_{i}'] = request.form.get(f'{stmt}_{i}_hidden', '')
+                ratings[f'{stmt}_{rec_id}'] = _pick_rating_value(
+                    f'{stmt}_{rec_id}',
+                    f'{stmt}_{i}',
+                    f'{stmt}_{rec_id}_hidden',
+                    f'{stmt}_{i}_hidden',
+                )
+
         for stmt in ['label_understandable', 'label_useful', 'label_influenced', 'label_attention', 'label_more']:
-            ratings[stmt] = request.form.get(f'{stmt}_hidden', '')
+            ratings[stmt] = _pick_rating_value(stmt, f'{stmt}_hidden')
 
         # update_participant_data('round', {
         #     'round': round_number,

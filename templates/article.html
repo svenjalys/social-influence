@@ -233,11 +233,18 @@
   }
 
   function updateHidden(radio) {
+    // The form contains hidden inputs with ids/names matching the radio group name,
+    // e.g. `likelihood_2553` or `label_more`. Those are what get submitted.
+    const submittedHidden = document.getElementById(radio.name);
+    if (submittedHidden) {
+      submittedHidden.value = radio.value;
+      return;
+    }
+
+    // Fallback: if a hidden input exists (e.g. dynamically created), update it too.
     const hiddenName = radio.name + '_hidden';
     const hidden = document.querySelector(`input[name="${hiddenName}"]`);
-    if (hidden) {
-      hidden.value = radio.value;
-    }
+    if (hidden) hidden.value = radio.value;
   }
 
   function showStep(stepIndex) {
