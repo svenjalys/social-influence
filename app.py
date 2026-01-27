@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy #for sqlite
+from sqlalchemy.exc import OperationalError
 import pandas as pd
 import sqlite3
 import json
@@ -36,6 +37,12 @@ class Round(db.Model):
     mid_questionnaire = db.Column(db.JSON)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 ###
+
+
+# Ensure response tables exist (responses.db) without requiring manual migrations.
+# Must be called after models are declared.
+with app.app_context():
+    db.create_all()
 
 
 RESPONSES_DIR = "responses"
@@ -75,7 +82,7 @@ def set_condition(cond):
 
 # Load articles from SQLite database
 
-ARTICLES_DB_PATH = "articles_cleaned.db"
+ARTICLES_DB_PATH = "articles_cleaned_new.db"
 conn = sqlite3.connect(ARTICLES_DB_PATH)
 raw_df = pd.read_sql_query("SELECT * FROM new_articles", conn)
 conn.close()
@@ -152,6 +159,46 @@ def normalize_article_row(row_dict):
     return out
 
 
+def get_stable_article_id(article_row: dict):
+    """Return a stable identifier from the articles DB row.
+
+    The `new_articles` table uses generic column names (field1, field2, ...),
+    but the first data-row is treated as headers in this app.
+    We prefer `internal_id` if present, otherwise fall back to `field1`.
+    """
+    if not isinstance(article_row, dict):
+        return None
+    return article_row.get('internal_id') or article_row.get('Internal ID') or article_row.get('field1')
+
+
+@app.route('/debug-init-db')
+def debug_init_db():
+    """Diagnostics: initialize responses DB tables and report status."""
+    with app.app_context():
+        db.create_all()
+
+    try:
+        engine = db.engine
+        db_path = None
+        try:
+            db_path = engine.url.database
+        except Exception:
+            db_path = None
+
+        with engine.connect() as conn:
+            rows = conn.exec_driver_sql("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all()
+        tables = [r[0] for r in rows]
+    except Exception as e:
+        return {'error': 'Failed to inspect DB', 'details': str(e)}, 500
+
+    return {
+        'db_uri': app.config.get('SQLALCHEMY_DATABASE_URI'),
+        'db_path': db_path,
+        'tables': tables,
+        'hint': 'Expect to see participant and round tables.'
+    }
+
+
 @app.route('/debug-articles')
 def debug_articles():
     """Quick diagnostics: returns detected columns, topic column, and a small sample of rows."""
@@ -163,6 +210,90 @@ def debug_articles():
         'columns': list(df.columns),
         'topic_col': TOPIC_COL,
         'sample_rows': sample
+    }
+
+
+@app.route('/debug-article/<int:article_id>')
+def debug_article(article_id: int):
+    """Diagnostics: look up a single article by its internal id (df['index']).
+
+    This is the same id saved in responses under:
+    - round.article.main_article_id
+    - round.article.recommendations[]
+    """
+    row = df[df['index'] == article_id]
+    if row.empty:
+        return {
+            'found': False,
+            'article_id': article_id,
+            'hint': "This app uses df['index'] (after reset_index) as the article id.",
+        }, 404
+
+    record = normalize_article_row(row.iloc[0].to_dict())
+    return {
+        'found': True,
+        'article_id': int(record.get('index')),
+        'stable_id': get_stable_article_id(record),
+        'title': record.get('Title'),
+        'author': record.get('Author'),
+        'date': record.get('Date'),
+        'topic_col': TOPIC_COL,
+        'topic_value': record.get(TOPIC_COL),
+    }
+
+
+@app.route('/debug-rounds')
+def debug_rounds():
+    """Diagnostics: return participant + rounds saved so far.
+
+    Usage:
+    - Visit after or during a session: /debug-rounds
+    - Or specify a pid: /debug-rounds?pid=PROLIFIC_PID
+    """
+    pid = request.args.get('pid') or session.get('prolific_id')
+    if not pid:
+        return {'error': 'No pid provided and no session prolific_id.'}, 400
+
+    try:
+        participant = Participant.query.filter_by(prolific_id=pid).first()
+        if not participant:
+            return {'pid': pid, 'participant': None, 'rounds': []}
+
+        rounds = (
+            Round.query.filter_by(participant_id=participant.id)
+            .order_by(Round.round_number.asc())
+            .all()
+        )
+    except OperationalError as e:
+        # Typically indicates tables were never created ("no such table: participant").
+        return {
+            'error': 'Responses database tables are not initialized.',
+            'hint': 'Restart the server after enabling db.create_all(), or delete responses.db to re-create it.',
+            'details': str(e),
+        }, 500
+
+    def _to_dict_round(r: Round):
+        return {
+            'id': r.id,
+            'round_number': r.round_number,
+            'theme_selection': r.theme_selection,
+            'article': r.article,
+            'mid_questionnaire': r.mid_questionnaire,
+            'timestamp': r.timestamp.isoformat() if r.timestamp else None,
+        }
+
+    return {
+        'pid': pid,
+        'participant': {
+            'id': participant.id,
+            'prolific_id': participant.prolific_id,
+            'condition': participant.condition,
+            'timestamp_start': participant.timestamp_start.isoformat() if participant.timestamp_start else None,
+            'demographics': participant.demographics,
+            'pre_questionnaire': participant.pre_questionnaire,
+            'post_questionnaire': participant.post_questionnaire,
+        },
+        'rounds': [_to_dict_round(r) for r in rounds],
     }
 
 def get_participant_id():
@@ -297,26 +428,6 @@ def pre_questionnaire():
             # 'reason_rank_1': request.form.get('reason_rank_1'),
             # 'reason_rank_2': request.form.get('reason_rank_2'),
             # 'trust_level': request.form.get('trust_level'),
-            'interest_topics': {
-                'sports': request.form.get('interest_sports'),
-                'business': request.form.get('interest_business'),
-                'entertainment': request.form.get('interest_entertainment'),
-                'politics': request.form.get('interest_politics'),
-                'science': request.form.get('interest_science'),
-                'local': request.form.get('interest_local'),
-                'crime': request.form.get('interest_crime'),
-                'international': request.form.get('interest_international')
-            },
-            'attention_topics': {
-                'sports': request.form.get('attention_sports'),
-                'business': request.form.get('attention_business'),
-                'entertainment': request.form.get('attention_entertainment'),
-                'politics': request.form.get('attention_politics'),
-                'science': request.form.get('attention_science'),
-                'local': request.form.get('attention_local'),
-                'crime': request.form.get('attention_crime'),
-                'international': request.form.get('attention_international')
-            }
         }
 
         # Process avoid_reasons to replace 'other' with the specified text
@@ -358,10 +469,17 @@ def article(article_id):
     # if article_id not in df['index'].values:
     #     return redirect(url_for('select_article'))
 
-    article_data = df[df['index'] == article_id].iloc[0].to_dict()
+    row = df[df['index'] == article_id]
+    if row.empty:
+        # If an invalid/unknown article_id is requested, fall back to a random known article.
+        fallback_row = df.sample(1).iloc[0]
+        return redirect(url_for('article', article_id=int(fallback_row['index'])))
+
+    article_data = row.iloc[0].to_dict()
     # Normalize keys to what templates expect (Title, Content, Image URL, Author, Date)
     article_data = normalize_article_row(article_data)
     article_index = article_data['index']
+    main_article_stable_id = get_stable_article_id(article_data)
     round_number = session.get('round', 1)
 
     # Track seen articles
@@ -426,23 +544,28 @@ def article(article_id):
     # cr_labels = ['cr1.png', 'cr2.png', 'cr3.png', 'cr4.png']
     # cr_label = random.choice(cr_labels) if condition == 'c2pa' else None
 
-    # Handle POST (article selection)
+    # Handle POST (ratings finished / continue)
     if request.method == 'POST':
-        selected_article_id = int(request.form['selected_article_id'])
-
-        session['next_article'] = selected_article_id
-        seen_ids.add(selected_article_id)
-        session['seen_article_ids'] = list(seen_ids)
-
-        # NEW: Get the article title from the DataFrame
-        article_row = df[df['index'] == selected_article_id]
-        if not article_row.empty:
-            selected_article_title = normalize_article_row(article_row.iloc[0].to_dict()).get('Title', '')
-        else:
-            selected_article_title = ""
+        # We no longer let users click-select a recommended article.
+        # The current main article is the unit of a round.
+        selected_article_id = None
+        selected_article_title = ""
 
         # Collect ratings
         recommendations_ids = session.get('current_recommendations', [])
+
+        recommendation_stable_ids = []
+        recommendation_titles = []
+        for rec_id in recommendations_ids:
+            rec_row = df[df['index'] == rec_id]
+            if rec_row.empty:
+                recommendation_stable_ids.append(None)
+                recommendation_titles.append(None)
+                continue
+            rec_record = normalize_article_row(rec_row.iloc[0].to_dict())
+            recommendation_stable_ids.append(get_stable_article_id(rec_record))
+            recommendation_titles.append(rec_record.get('Title', None))
+
         ratings = {}
         for i, rec_id in enumerate(recommendations_ids):
             ratings[f'likelihood_{i}'] = request.form.get(f'likelihood_{i}_hidden', '')
@@ -459,17 +582,41 @@ def article(article_id):
         #     'label_explained': label_explained
         # })
         update_participant_data('round', {
+            'round': round_number,
+            'article_id': article_index,
+            'article_stable_id': main_article_stable_id,
             'article': {
-                'selected_article_id': selected_article_id,
-                'selected_article_title': selected_article_title,
+                'main_article_id': article_index,
+                'main_article_stable_id': main_article_stable_id,
+                'main_article_title': article_data.get('Title', ''),
+                'recommendations': session.get('current_recommendations', []),
+                'recommendations_stable_ids': recommendation_stable_ids,
+                'recommendations_titles': recommendation_titles,
                 'ratings': ratings
-                # 'selected_article_had_label': selected_article_had_label,
-                # 'label_explained': label_explained
             }
         })
 
+        # Advance to next round/article (6 rounds total)
+        total_rounds = 6
+        if round_number < total_rounds:
+            session['round'] = round_number + 1
+            # pick a new main article not seen yet
+            remaining = df[~df['index'].isin(seen_ids)]
+            if remaining.empty:
+                # if we run out, allow repeats (shouldn't happen normally)
+                next_row = df.sample(1).iloc[0]
+            else:
+                next_row = remaining.sample(1).iloc[0]
+            next_id = int(next_row['index'])
+            session['next_article'] = next_id
+            seen_ids.add(next_id)
+            session['seen_article_ids'] = list(seen_ids)
+            return redirect(url_for('article', article_id=next_id))
+
+        # After final round, go to post-questionnaire
         session['article_completed'] = True
-        return redirect(url_for('mid_questionnaire'))
+        session['mid_questionnaire_completed'] = True
+        return redirect(url_for('post_questionnaire'))
 
     # Add random metadata if missing
     if 'Author' not in article_data or not article_data['Author']:
@@ -556,11 +703,10 @@ def mid_questionnaire():
         })
 
         session['mid_questionnaire_completed'] = True
-        if session.get('round', 1) < 3:
+        if session.get('round', 1) < 6:
             session['round'] += 1
             return redirect(url_for('article', article_id=session.get('next_article')))
-        else:
-            return redirect(url_for('post_questionnaire'))
+        return redirect(url_for('post_questionnaire'))
 
     return render_template(
         'mid_questionnaire.html',
@@ -719,4 +865,4 @@ def reset_db():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

@@ -5,3 +5,7 @@ venv/
 .DS_Store
 instance/responses.db
 *.db-journal
+responses.db
+social_influence/instance/responses.db-*
+.venv
+__pycache__

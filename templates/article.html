@@ -246,7 +246,7 @@
     const step = steps[stepIndex];
     container.innerHTML = step.html;
     if (stepIndex === steps.length - 1) {
-      button.textContent = 'Finish and go to next article';
+      button.textContent = 'Continue to next round';
     } else {
       button.textContent = 'Continue';
     }
@@ -335,7 +335,8 @@
       currentStep++;
       showStep(currentStep);
     } else {
-      alert('All ratings completed. You can now select an article.');
+      // Finished all questions for this round -> submit the form to load the next round/article
+      document.querySelector('form').submit();
     }
   }
 
