@@ -102,6 +102,14 @@
   <strong>DEBUG:</strong><br>
   article_id: {{ article['index'] }}<br>
   round: {{ round_number }}
+  <hr class="my-2">
+  topic_col: {{ topic_col }}<br>
+  topic_start_list: {{ topic_start_list }}<br>
+  topic_list_for_round: {{ topic_list }}<br>
+  fav_topic_mapped: {{ fav_topic }}<br>
+  least_topic_mapped: {{ least_topic }}<br>
+  main_article_topic: {{ article.get(topic_col) }}<br>
+  rec_topics: {% for rec in recommendations %}{{ rec.get(topic_col) }}{% if not loop.last %}, {% endif %}{% endfor %}
 </div>
 {% endif %}
 
@@ -149,6 +157,11 @@
         <div class="row g-3 align-items-center">
           <div class="col-md-8">
             <h3 class="mb-0 fw-bold" style="font-size: 1.5rem;">{{ rec['Title'] }}</h3>
+            {% if debug %}
+              <div class="text-muted" style="font-size: 0.8rem; margin-top: 6px;">
+                topic ({{ topic_col }}): {{ rec.get(topic_col) }}
+              </div>
+            {% endif %}
           </div>
           <div class="col-md-4">
             <img src="{{ rec['Image URL'] or 'https://placehold.co/300x180?text=No+Image' }}"

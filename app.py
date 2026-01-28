@@ -170,7 +170,10 @@ raw_df = raw_df[1:].copy()
 raw_df.columns = [str(h).strip() for h in headers]
 
 # Pick topic/category column
-if 'topic' in raw_df.columns:
+if 'field20' in raw_df.columns:
+    # Study uses field20 as the canonical topic column.
+    TOPIC_COL = 'field20'
+elif 'topic' in raw_df.columns:
     TOPIC_COL = 'topic'
 elif 'Category' in raw_df.columns:
     TOPIC_COL = 'Category'
@@ -185,6 +188,56 @@ df = raw_df.reset_index(drop=True).copy()
 df.reset_index(inplace=True)
 app.logger.info("Loaded articles from DB. Columns: %s", df.columns.tolist())
 app.logger.info("Using topic column: %s", TOPIC_COL)
+
+
+TOPIC_MAP_LIST_A = {
+    'Business & Economics': 'Economics',
+    'International News': 'International',
+    'Crime': 'Crime',
+    'Finance': 'Finance',
+    'Politics': 'Politics',
+    'Public Health & Health Policy': 'Health',
+}
+
+TOPIC_MAP_LIST_B = {
+    'Lifestyle': 'Lifestyle',
+    'Entertainment': 'Entertainment',
+    'Science': 'Science',
+    'Tech': 'Tech',
+    'Sports': 'Sports',
+    'Personal Health & Wellbeing': 'Health',
+}
+
+
+def _map_list_topic(list_name: str, selection: str | None) -> str | None:
+    if not selection:
+        return None
+    mapping = TOPIC_MAP_LIST_A if list_name == 'A' else TOPIC_MAP_LIST_B
+    return mapping.get(selection)
+
+
+def _ensure_topic_start_list():
+    """Pick and persist which list starts round 1 (A or B)."""
+    if session.get('topic_start_list') in ('A', 'B'):
+        return
+    session['topic_start_list'] = random.choice(['A', 'B'])
+
+
+def _list_for_round(round_number: int) -> str:
+    """Alternate lists A/B by round, starting from randomized start list."""
+    _ensure_topic_start_list()
+    start = session.get('topic_start_list', 'A')
+    if round_number % 2 == 1:
+        return start
+    return 'B' if start == 'A' else 'A'
+
+
+def _normalize_topic_value(val) -> str:
+    if val is None:
+        return ''
+    if isinstance(val, (list, tuple)):
+        val = val[0] if val else ''
+    return str(val).strip().lower()
 
 
 def normalize_article_row(row_dict):
@@ -658,16 +711,29 @@ def pre_questionnaire():
             data['avoid_reasons'] = [r if r != 'other' else f"other: {data['avoid_other']}" for r in data['avoid_reasons']]
 
         update_participant_data('pre_questionnaire', data)
+        session['pre_questionnaire_data'] = data
         session['pre_questionnaire_completed'] = True
-        
-        # Select 4 articles from different categories (use detected topic column)
-        grouped = df.groupby(df[TOPIC_COL].astype(str).str.title())
-        selected_categories = random.sample(list(grouped.groups), k=min(4, len(grouped)))
-        selected_articles = [grouped.get_group(cat).sample(1).iloc[0] for cat in selected_categories]
 
-        first_article_id = int(selected_articles[0]['index'])
+        # Persist which topic list (A/B) round 1 starts with.
+        _ensure_topic_start_list()
+
+        # Pick the first article from the participant's favourite topic of that list.
+        round_number = 1
+        list_name = _list_for_round(round_number)
+        fav_selection = data.get('favourite_topic_1') if list_name == 'A' else data.get('favourite_topic_2')
+        fav_topic = _map_list_topic(list_name, fav_selection)
+
+        if fav_topic:
+            candidates = df[df[TOPIC_COL].astype(str).str.strip().str.lower() == fav_topic.strip().lower()]
+        else:
+            candidates = df
+
+        first_row = candidates.sample(1).iloc[0] if not candidates.empty else df.sample(1).iloc[0]
+        first_article_id = int(first_row['index'])
+
         session['first_article_id'] = first_article_id
         session['round'] = 1
+        session['seen_article_ids'] = [first_article_id]
         return redirect(url_for('instructions'))
     
     return render_template('pre_questionnaire.html')
@@ -705,6 +771,22 @@ def article(article_id):
     main_article_stable_id = get_stable_article_id(article_data)
     round_number = session.get('round', 1)
 
+    # Enable debug panel via query param: /article/<id>?debug=1
+    debug_flag = str(request.args.get('debug', '')).strip().lower() in ('1', 'true', 'yes', 'on')
+
+    # Determine which topic list (A/B) applies to this round and the participant's
+    # favourite/least favourite topics for that list.
+    _ensure_topic_start_list()
+    list_name = _list_for_round(int(round_number))
+    pq = session.get('pre_questionnaire_data') or {}
+    if not isinstance(pq, dict):
+        pq = {}
+
+    fav_selection = pq.get('favourite_topic_1') if list_name == 'A' else pq.get('favourite_topic_2')
+    least_selection = pq.get('least_favourite_topic_1') if list_name == 'A' else pq.get('least_favourite_topic_2')
+    fav_topic = _map_list_topic(list_name, fav_selection)
+    least_topic = _map_list_topic(list_name, least_selection)
+
     # Track seen articles
     seen_ids = set(session.get('seen_article_ids', []))
     seen_ids.add(article_index)
@@ -723,24 +805,92 @@ def article(article_id):
 
     # Generate recommendations (only on GET)
     if request.method == 'GET':
-        # Normalize the article topic value to string for comparison
-        art_topic_val = article_data.get(TOPIC_COL, '')
-        if isinstance(art_topic_val, (list, tuple)):
-            # take first element if stored as list
-            art_topic_val = art_topic_val[0] if art_topic_val else ''
-        art_topic_str = str(art_topic_val).strip().lower()
+        # Ensure main article matches the favourite topic for this round's list.
+        # If not, pick a fresh main article from the correct topic.
+        if fav_topic:
+            current_topic_str = _normalize_topic_value(article_data.get(TOPIC_COL, ''))
+            fav_topic_str = _normalize_topic_value(fav_topic)
+            if current_topic_str != fav_topic_str:
+                main_candidates = df[
+                    (df[TOPIC_COL].astype(str).str.strip().str.lower() == fav_topic_str) &
+                    (~df['index'].isin(seen_ids))
+                ]
+                if main_candidates.empty:
+                    main_candidates = df[df[TOPIC_COL].astype(str).str.strip().str.lower() == fav_topic_str]
+                if not main_candidates.empty:
+                    new_row = main_candidates.sample(1).iloc[0]
+                    return redirect(url_for('article', article_id=int(new_row['index'])))
 
-        # Safely attempt to build recommendations; if topic column is missing or other
-        # error occurs, log and fall back to empty recommendations to avoid a 500.
+        # Build exactly two recommendations:
+        # - one from favourite topic
+        # - one from least favourite topic
+        # in random order.
         try:
-            recommendations_df = df[
-                (df[TOPIC_COL].astype(str).str.strip().str.lower() == art_topic_str) &
-                (~df['index'].isin(seen_ids))
-            ]
-            sample_n = min(2, len(recommendations_df))
-            rec_records = recommendations_df.sample(n=sample_n).to_dict(orient='records') if sample_n > 0 else []
+            rec_records = []
+
+            def _topic_mask(topic_value: str | None):
+                if not topic_value:
+                    return None
+                topic_str = _normalize_topic_value(topic_value)
+                return df[TOPIC_COL].astype(str).str.strip().str.lower() == topic_str
+
+            def _pick_one_from_topic(topic_value: str | None):
+                if not topic_value:
+                    return None
+                mask = _topic_mask(topic_value)
+                if mask is None:
+                    return None
+
+                # Prefer unseen and not-the-main-article.
+                candidates = df[mask & (~df['index'].isin(seen_ids)) & (df['index'] != article_index)]
+                if not candidates.empty:
+                    return candidates.sample(1).iloc[0].to_dict()
+
+                # Next allow seen, but still avoid main article.
+                candidates = df[mask & (df['index'] != article_index)]
+                if not candidates.empty:
+                    return candidates.sample(1).iloc[0].to_dict()
+
+                # Finally, allow even the main article (duplicate main+rec is acceptable).
+                candidates = df[mask]
+                if not candidates.empty:
+                    return candidates.sample(1).iloc[0].to_dict()
+
+                return None
+
+            rec_fav = _pick_one_from_topic(fav_topic)
+            rec_least = _pick_one_from_topic(least_topic)
+
+            # Fallback policy (per study requirement): never sample random topics.
+            # If least-topic (or fav-topic) candidates are missing, duplicate within allowed topics.
+            if rec_fav is None and fav_topic:
+                rec_fav = _pick_one_from_topic(fav_topic)
+
+            if rec_least is None:
+                # Prefer duplicating the favourite-topic recommendation.
+                if fav_topic:
+                    rec_least = _pick_one_from_topic(fav_topic)
+                # If we still have nothing, try least_topic again (may be None).
+                if rec_least is None and least_topic:
+                    rec_least = _pick_one_from_topic(least_topic)
+
+            if rec_fav is not None:
+                rec_records.append(rec_fav)
+            if rec_least is not None:
+                rec_records.append(rec_least)
+
+            # Ensure we have two recommendations when possible (duplicates allowed).
+            if len(rec_records) == 1:
+                # Duplicate the one we have.
+                rec_records.append(rec_records[0])
+            elif len(rec_records) == 0:
+                # Absolute last resort: duplicate the current article.
+                rec_records = [article_data, article_data]
+
+            random.shuffle(rec_records)
+
             # Normalize each recommendation for template compatibility
-            recommendations = [normalize_article_row(rec) for rec in rec_records]
+            recommendations = [normalize_article_row(rec) for rec in rec_records[:2]]
         except Exception as e:
             app.logger.exception('Failed to build recommendations: %s', e)
             recommendations = []
@@ -887,7 +1037,12 @@ def article(article_id):
         recommendations=recommendations,
         round_number=round_number,
         total_rounds=6,
-        debug=False
+        debug=debug_flag,
+        topic_col=TOPIC_COL,
+        topic_start_list=session.get('topic_start_list'),
+        topic_list=list_name,
+        fav_topic=fav_topic,
+        least_topic=least_topic,
     )
 
 
