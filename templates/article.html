@@ -152,8 +152,14 @@
 
     <div class="vstack gap-3">
       {% for rec in recommendations %}
+      {% set rec_label = (rec_labels or {}).get(rec['index']|string, '') %}
        <div class="card text-start py-3 px-3 border-0 shadow text-decoration-none text-body recommendation-card"
          data-article-id="{{ rec['index'] }}">
+        {% if rec_label %}
+          <div class="mb-2" style="font-size: 0.95rem; font-weight: 600; color: #0d6efd;">
+            {{ rec_label }}
+          </div>
+        {% endif %}
         <div class="row g-3 align-items-center">
           <div class="col-md-8">
             <h3 class="mb-0 fw-bold" style="font-size: 1.5rem;">{{ rec['Title'] }}</h3>

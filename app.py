@@ -41,6 +41,9 @@ class Round(db.Model):
     main_article_stable_id = db.Column(db.String)
     main_article_title = db.Column(db.String)
 
+    # Main article topic (for analysis convenience)
+    main_topic = db.Column(db.String)
+
     rec0_stable_id = db.Column(db.String)
     rec0_title = db.Column(db.String)
     rec0_likelihood = db.Column(db.Integer)
@@ -56,6 +59,12 @@ class Round(db.Model):
     rec1_understandable = db.Column(db.Integer)
     rec1_trustworthy = db.Column(db.Integer)
     rec1_relevant = db.Column(db.Integer)
+
+    # Recommendation topics + shown labels (for analysis convenience)
+    rec0_topic = db.Column(db.String)
+    rec1_topic = db.Column(db.String)
+    rec0_label_text = db.Column(db.String)
+    rec1_label_text = db.Column(db.String)
 
     label_understandable = db.Column(db.Integer)
     label_useful = db.Column(db.Integer)
@@ -91,6 +100,7 @@ def _ensure_round_flat_columns():
         desired_cols = {
             'main_article_stable_id': 'TEXT',
             'main_article_title': 'TEXT',
+            'main_topic': 'TEXT',
             'rec0_stable_id': 'TEXT',
             'rec0_title': 'TEXT',
             'rec0_likelihood': 'INTEGER',
@@ -110,6 +120,10 @@ def _ensure_round_flat_columns():
             'label_influenced': 'INTEGER',
             'label_attention': 'INTEGER',
             'label_more': 'INTEGER',
+            'rec0_topic': 'TEXT',
+            'rec1_topic': 'TEXT',
+            'rec0_label_text': 'TEXT',
+            'rec1_label_text': 'TEXT',
         }
 
         for col_name, col_type in desired_cols.items():
@@ -190,6 +204,17 @@ app.logger.info("Loaded articles from DB. Columns: %s", df.columns.tolist())
 app.logger.info("Using topic column: %s", TOPIC_COL)
 
 
+# Social-influence labels shown above recommendation cards.
+FAV_REC_LABEL = "Recommended to you:"
+LEAST_REC_LABELS = [
+    "The information in this article has been fact-checked for accuracy.",
+    "This article is recommended by 82% of readers your age in your region.",
+    "This article breaks the topic into key points without unnecessary details.",
+    "This article focuses on solutions and constructive ways forward.",
+    "This article is trending right now.",
+]
+
+
 TOPIC_MAP_LIST_A = {
     'Business & Economics': 'Economics',
     'International News': 'International',
@@ -221,6 +246,23 @@ def _ensure_topic_start_list():
     if session.get('topic_start_list') in ('A', 'B'):
         return
     session['topic_start_list'] = random.choice(['A', 'B'])
+
+
+def _ensure_least_rec_label_order(total_rounds: int = 6):
+    """Create a per-participant randomized order of least-topic labels.
+
+    Requirement: least-topic recommendation shows one of the provided labels,
+    different in each round, in randomized order.
+    """
+    order = session.get('least_rec_label_order')
+    if isinstance(order, list) and order:
+        return
+    order = LEAST_REC_LABELS[:]
+    random.shuffle(order)
+    # If there are more rounds than labels, cycle (but for this study it's 6 vs 5).
+    if total_rounds > len(order):
+        order = (order * ((total_rounds // len(order)) + 1))[:total_rounds]
+    session['least_rec_label_order'] = order
 
 
 def _list_for_round(round_number: int) -> str:
@@ -466,9 +508,20 @@ def debug_backfill_flat():
         r.main_article_stable_id = payload.get('main_article_stable_id')
         r.main_article_title = payload.get('main_article_title')
 
+        main_id = payload.get('main_article_id')
+        if main_id is not None and main_id in df['index'].values:
+            try:
+                main_row = df[df['index'] == main_id].iloc[0].to_dict()
+                r.main_topic = normalize_article_row(main_row).get(TOPIC_COL)
+            except Exception:
+                r.main_topic = None
+        else:
+            r.main_topic = None
+
         rec_ids = payload.get('recommendations') or []
         rec_stable_ids = payload.get('recommendations_stable_ids') or []
         rec_titles = payload.get('recommendations_titles') or []
+        rec_labels = payload.get('recommendations_labels') or {}
         ratings = payload.get('ratings') or {}
 
         def _rating_for_rec(rec_pos: int, key_prefix: str):
@@ -481,6 +534,16 @@ def debug_backfill_flat():
 
         r.rec0_stable_id = rec_stable_ids[0] if len(rec_stable_ids) > 0 else None
         r.rec0_title = rec_titles[0] if len(rec_titles) > 0 else None
+        rec0_id = rec_ids[0] if len(rec_ids) > 0 else None
+        if rec0_id is not None and rec0_id in df['index'].values:
+            try:
+                rec0_row = df[df['index'] == rec0_id].iloc[0].to_dict()
+                r.rec0_topic = normalize_article_row(rec0_row).get(TOPIC_COL)
+            except Exception:
+                r.rec0_topic = None
+        else:
+            r.rec0_topic = None
+        r.rec0_label_text = rec_labels.get(str(rec0_id)) if rec0_id is not None else None
         r.rec0_likelihood = _to_int(_rating_for_rec(0, 'likelihood'))
         r.rec0_constructive = _to_int(_rating_for_rec(0, 'constructive'))
         r.rec0_understandable = _to_int(_rating_for_rec(0, 'understandable'))
@@ -489,6 +552,16 @@ def debug_backfill_flat():
 
         r.rec1_stable_id = rec_stable_ids[1] if len(rec_stable_ids) > 1 else None
         r.rec1_title = rec_titles[1] if len(rec_titles) > 1 else None
+        rec1_id = rec_ids[1] if len(rec_ids) > 1 else None
+        if rec1_id is not None and rec1_id in df['index'].values:
+            try:
+                rec1_row = df[df['index'] == rec1_id].iloc[0].to_dict()
+                r.rec1_topic = normalize_article_row(rec1_row).get(TOPIC_COL)
+            except Exception:
+                r.rec1_topic = None
+        else:
+            r.rec1_topic = None
+        r.rec1_label_text = rec_labels.get(str(rec1_id)) if rec1_id is not None else None
         r.rec1_likelihood = _to_int(_rating_for_rec(1, 'likelihood'))
         r.rec1_constructive = _to_int(_rating_for_rec(1, 'constructive'))
         r.rec1_understandable = _to_int(_rating_for_rec(1, 'understandable'))
@@ -568,9 +641,20 @@ def update_participant_data(section, data):
                 existing_round.main_article_stable_id = article_payload.get('main_article_stable_id')
                 existing_round.main_article_title = article_payload.get('main_article_title')
 
+                main_id = article_payload.get('main_article_id')
+                if main_id is not None and main_id in df['index'].values:
+                    try:
+                        main_row = df[df['index'] == main_id].iloc[0].to_dict()
+                        existing_round.main_topic = normalize_article_row(main_row).get(TOPIC_COL)
+                    except Exception:
+                        existing_round.main_topic = None
+                else:
+                    existing_round.main_topic = None
+
                 rec_stable_ids = article_payload.get('recommendations_stable_ids') or []
                 rec_titles = article_payload.get('recommendations_titles') or []
                 rec_ids = article_payload.get('recommendations') or []
+                rec_labels = article_payload.get('recommendations_labels') or {}
                 ratings = article_payload.get('ratings') or {}
 
                 def _rating_for_rec(rec_pos: int, key_prefix: str):
@@ -589,6 +673,16 @@ def update_participant_data(section, data):
                 # Recommendation 0
                 existing_round.rec0_stable_id = rec_stable_ids[0] if len(rec_stable_ids) > 0 else None
                 existing_round.rec0_title = rec_titles[0] if len(rec_titles) > 0 else None
+                rec0_id = rec_ids[0] if len(rec_ids) > 0 else None
+                if rec0_id is not None and rec0_id in df['index'].values:
+                    try:
+                        rec0_row = df[df['index'] == rec0_id].iloc[0].to_dict()
+                        existing_round.rec0_topic = normalize_article_row(rec0_row).get(TOPIC_COL)
+                    except Exception:
+                        existing_round.rec0_topic = None
+                else:
+                    existing_round.rec0_topic = None
+                existing_round.rec0_label_text = rec_labels.get(str(rec0_id)) if rec0_id is not None else None
                 existing_round.rec0_likelihood = _to_int(_rating_for_rec(0, 'likelihood'))
                 existing_round.rec0_constructive = _to_int(_rating_for_rec(0, 'constructive'))
                 existing_round.rec0_understandable = _to_int(_rating_for_rec(0, 'understandable'))
@@ -598,6 +692,16 @@ def update_participant_data(section, data):
                 # Recommendation 1
                 existing_round.rec1_stable_id = rec_stable_ids[1] if len(rec_stable_ids) > 1 else None
                 existing_round.rec1_title = rec_titles[1] if len(rec_titles) > 1 else None
+                rec1_id = rec_ids[1] if len(rec_ids) > 1 else None
+                if rec1_id is not None and rec1_id in df['index'].values:
+                    try:
+                        rec1_row = df[df['index'] == rec1_id].iloc[0].to_dict()
+                        existing_round.rec1_topic = normalize_article_row(rec1_row).get(TOPIC_COL)
+                    except Exception:
+                        existing_round.rec1_topic = None
+                else:
+                    existing_round.rec1_topic = None
+                existing_round.rec1_label_text = rec_labels.get(str(rec1_id)) if rec1_id is not None else None
                 existing_round.rec1_likelihood = _to_int(_rating_for_rec(1, 'likelihood'))
                 existing_round.rec1_constructive = _to_int(_rating_for_rec(1, 'constructive'))
                 existing_round.rec1_understandable = _to_int(_rating_for_rec(1, 'understandable'))
@@ -805,6 +909,9 @@ def article(article_id):
 
     # Generate recommendations (only on GET)
     if request.method == 'GET':
+        # Ensure per-participant randomized label order exists.
+        _ensure_least_rec_label_order(total_rounds=6)
+
         # Ensure main article matches the favourite topic for this round's list.
         # If not, pick a fresh main article from the correct topic.
         if fav_topic:
@@ -895,22 +1002,46 @@ def article(article_id):
             app.logger.exception('Failed to build recommendations: %s', e)
             recommendations = []
 
-        recommendations_meta = {}
-        # Removed condition-based labeling
+        # Assign recommendation labels:
+        # - favourite-topic rec: fixed label
+        # - least-topic rec: rotating label (random order per participant), different each round
+        rec_labels_by_id: dict[str, str] = {}
+        least_label_order = session.get('least_rec_label_order') or []
+        least_label_for_round = None
+        if isinstance(least_label_order, list) and least_label_order:
+            try:
+                least_label_for_round = least_label_order[int(round_number) - 1]
+            except Exception:
+                least_label_for_round = least_label_order[0]
+
+        fav_topic_str = _normalize_topic_value(fav_topic)
+        least_topic_str = _normalize_topic_value(least_topic)
+        for rec in recommendations:
+            rec_topic_str = _normalize_topic_value(rec.get(TOPIC_COL))
+            rec_id = str(rec.get('index'))
+
+            if fav_topic_str and rec_topic_str == fav_topic_str:
+                rec_labels_by_id[rec_id] = FAV_REC_LABEL
+            elif least_topic_str and rec_topic_str == least_topic_str:
+                rec_labels_by_id[rec_id] = least_label_for_round or ''
+            else:
+                # If topics are missing (e.g., duplicates), assign remaining slot deterministically.
+                if FAV_REC_LABEL not in rec_labels_by_id.values():
+                    rec_labels_by_id[rec_id] = FAV_REC_LABEL
+                else:
+                    rec_labels_by_id[rec_id] = least_label_for_round or ''
 
         session['current_recommendations'] = [rec['index'] for rec in recommendations]
-        session['recommendations_meta'] = recommendations_meta
+        session['current_recommendations_labels'] = rec_labels_by_id
     else:
         # On POST restore previous recommendations from session
         recommendations = []
         ids = session.get('current_recommendations', [])
-        rec_meta = session.get('recommendations_meta', {})
         for rec_id in ids:
             row = df[df['index'] == rec_id]
             if not row.empty:
                 rec_data = row.iloc[0].to_dict()
                 rec_data = normalize_article_row(rec_data)
-                # rec_data['show_label'] = rec_meta.get(str(rec_id), False)
                 recommendations.append(rec_data)
 
     # # Generate random C2PA badge if needed
@@ -991,6 +1122,7 @@ def article(article_id):
                 'main_article_stable_id': main_article_stable_id,
                 'main_article_title': article_data.get('Title', ''),
                 'recommendations': session.get('current_recommendations', []),
+                'recommendations_labels': session.get('current_recommendations_labels', {}),
                 'recommendations_stable_ids': recommendation_stable_ids,
                 'recommendations_titles': recommendation_titles,
                 'ratings': ratings
@@ -1038,6 +1170,7 @@ def article(article_id):
         round_number=round_number,
         total_rounds=6,
         debug=debug_flag,
+        rec_labels=session.get('current_recommendations_labels', {}),
         topic_col=TOPIC_COL,
         topic_start_list=session.get('topic_start_list'),
         topic_list=list_name,
