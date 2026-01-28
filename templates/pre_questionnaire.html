@@ -178,6 +178,47 @@
                 });
             }
         }
+
+        // Prevent selecting the same topic in Q3 vs Q4 and Q5 vs Q6.
+        function enforceMutualExclusion(nameA, nameB) {
+            const groupA = Array.from(document.querySelectorAll(`input[type="radio"][name="${nameA}"]`));
+            const groupB = Array.from(document.querySelectorAll(`input[type="radio"][name="${nameB}"]`));
+            if (!groupA.length || !groupB.length) return;
+
+            function sync() {
+                const selectedA = groupA.find(r => r.checked)?.value;
+                const selectedB = groupB.find(r => r.checked)?.value;
+
+                // Re-enable everything first
+                groupA.forEach(r => r.disabled = false);
+                groupB.forEach(r => r.disabled = false);
+
+                // Disable A's selected value in B (unless B already chose it)
+                if (selectedA) {
+                    groupB.forEach(r => {
+                        if (r.value === selectedA && !r.checked) r.disabled = true;
+                    });
+                }
+
+                // Disable B's selected value in A (unless A already chose it)
+                if (selectedB) {
+                    groupA.forEach(r => {
+                        if (r.value === selectedB && !r.checked) r.disabled = true;
+                    });
+                }
+            }
+
+            groupA.forEach(r => r.addEventListener('change', sync));
+            groupB.forEach(r => r.addEventListener('change', sync));
+            sync();
+        }
+
+        // Q3/Q4 (List A) and Q5/Q6 (List B)
+        // Run after DOM is ready so the radio inputs exist.
+        document.addEventListener('DOMContentLoaded', () => {
+            enforceMutualExclusion('favourite_topic_1', 'least_favourite_topic_1');
+            enforceMutualExclusion('favourite_topic_2', 'least_favourite_topic_2');
+        });
         </script>
 </head>
 <body>
