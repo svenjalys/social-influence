@@ -864,10 +864,11 @@ def article(article_id):
             session['seen_article_ids'] = list(seen_ids)
             return redirect(url_for('article', article_id=next_id))
 
-        # After final round, go to post-questionnaire
+        # After final round, finish the study (post-questionnaire not used in this prototype)
         session['article_completed'] = True
         session['mid_questionnaire_completed'] = True
-        return redirect(url_for('post_questionnaire'))
+        session['post_questionnaire_completed'] = True
+        return redirect(url_for('thank_you'))
 
     # Add random metadata if missing
     if 'Author' not in article_data or not article_data['Author']:
@@ -885,6 +886,7 @@ def article(article_id):
         article=article_data,
         recommendations=recommendations,
         round_number=round_number,
+        total_rounds=6,
         debug=False
     )
 
