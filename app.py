@@ -743,7 +743,7 @@ def demographics():
     if request.method == 'POST':
         gender = request.form.get('gender')
         gender_self = request.form.get('gender_self_describe', '').strip()
-        age_group = request.form.get('age_group')
+        age_raw = request.form.get('age', '').strip()
         country = request.form.get('country')
         other_country = request.form.get('other_country', '').strip()
         education = request.form.get('education')
@@ -757,11 +757,39 @@ def demographics():
         political_leaning_other = request.form.get('political_leaning_other', '').strip()
         political_final = political_leaning_other if political_leaning == 'Other' else political_leaning
 
-        if age_group == '15 or younger':
-            return render_template('thank_you.html', message="Sorry, you do not meet the age criteria for this study.")
+        # Validate age as a whole number in [18, 110]. Do NOT proceed when invalid.
+        age = None
+        if age_raw and age_raw.isdigit():
+            try:
+                age = int(age_raw)
+            except Exception:
+                age = None
+
+        if age is None or age < 18 or age > 110:
+            return render_template(
+                'demographics.html',
+                error="Please enter a valid age as a whole number between 18 and 110.",
+                form_data=request.form.to_dict(flat=True),
+            )
+
+        def _derive_age_group(age_value: int) -> str:
+            if age_value <= 24:
+                return '16–24'
+            if age_value <= 34:
+                return '25–34'
+            if age_value <= 44:
+                return '35–44'
+            if age_value <= 54:
+                return '45–54'
+            if age_value <= 64:
+                return '55–64'
+            return '65 or older'
+
+        age_group = _derive_age_group(age)
 
         update_participant_data('demographics', {
             'gender': gender_final,
+            'age': age,
             'age_group': age_group,
             'country': country_final,
             'education': education_final,

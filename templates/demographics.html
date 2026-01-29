@@ -37,17 +37,22 @@
 
                 <!-- Age -->
                 <div class="mb-3">
-                    <label class="form-label">2. What is your age?</label>
-                    <select name="age_group" class="form-select" required>
-                        <option value="" disabled selected>Select...</option>
-                        <option value="15 or younger">15 or younger</option>
-                        <option value="16–24">16–24</option>
-                        <option value="25–34">25–34</option>
-                        <option value="35–44">35–44</option>
-                        <option value="45–54">45–54</option>
-                        <option value="55–64">55–64</option>
-                        <option value="65 or older">65 or older</option>
-                    </select>
+                    <label class="form-label">2. How old are you?</label>
+                    <input
+                        type="number"
+                        name="age"
+                        id="age"
+                        class="form-control"
+                        inputmode="numeric"
+                        min="18"
+                        max="110"
+                        step="1"
+                        required
+                        value="{{ form_data.get('age', '') if form_data else '' }}"
+                        aria-describedby="ageHelp"
+                    >
+                    <!-- <div id="ageHelp" class="form-text">Please enter a whole number between 18 and 110.</div> -->
+                    <div id="ageError" class="invalid-feedback">Please enter a valid age (18–110).</div>
                 </div>
 
                 <!-- Country -->
@@ -162,6 +167,13 @@
 </div>
 
 <script>
+// Server-provided form values (used when re-rendering after validation errors).
+// Kept in a non-JS script tag so editors/linters don't try to parse Jinja.
+</script>
+
+<script id="formDataJson" type="application/json">{{ (form_data | tojson) if form_data else '{}' }}</script>
+
+<script>
 function handleOther(selectElement, wrapperId) {
     const wrapper = document.getElementById(wrapperId);
     const input = wrapper.querySelector('input');
@@ -176,6 +188,69 @@ function handleOther(selectElement, wrapperId) {
         input.value = "";
     }
 }
+
+// Client-side validation + repopulate fields when server re-renders with an error.
+document.addEventListener('DOMContentLoaded', () => {
+    let formData = {};
+    try {
+        const raw = document.getElementById('formDataJson')?.textContent || '{}';
+        formData = JSON.parse(raw);
+    } catch (e) {
+        formData = {};
+    }
+
+    const setValueIfPresent = (id, key) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const v = formData[key];
+        if (v !== undefined && v !== null && String(v).length > 0) {
+            el.value = v;
+        }
+    };
+
+    // Restore selections/inputs if we came back with an error.
+    setValueIfPresent('gender', 'gender');
+    setValueIfPresent('gender_other', 'gender_self_describe');
+    setValueIfPresent('country', 'country');
+    setValueIfPresent('country_other', 'other_country');
+    setValueIfPresent('education', 'education');
+    setValueIfPresent('education_other', 'other_education');
+
+    // Ensure “Other” textboxes show if relevant.
+    const genderEl = document.getElementById('gender');
+    if (genderEl) handleOther(genderEl, 'gender_other_wrapper');
+    const countryEl = document.getElementById('country');
+    if (countryEl) handleOther(countryEl, 'country_other_wrapper');
+    const eduEl = document.getElementById('education');
+    if (eduEl) handleOther(eduEl, 'education_other_wrapper');
+
+    // Age validation.
+    const ageInput = document.getElementById('age');
+    const form = document.querySelector('form');
+
+    const validateAge = () => {
+        if (!ageInput) return true;
+        const raw = (ageInput.value ?? '').trim();
+        const isWholeNumber = /^\d+$/.test(raw);
+        const age = Number(raw);
+        const ok = isWholeNumber && Number.isInteger(age) && age >= 18 && age <= 110;
+        ageInput.classList.toggle('is-invalid', !ok);
+        return ok;
+    };
+
+    if (ageInput) {
+        ageInput.addEventListener('input', validateAge);
+        ageInput.addEventListener('blur', validateAge);
+    }
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            if (!validateAge()) {
+                e.preventDefault();
+                ageInput?.focus();
+            }
+        });
+    }
+});
 </script>
 </body>
 </html>
