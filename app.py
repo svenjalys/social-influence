@@ -26,6 +26,31 @@ class Participant(db.Model):
     demographics = db.Column(db.JSON)
     pre_questionnaire = db.Column(db.JSON)
     post_questionnaire = db.Column(db.JSON)
+
+    # Flattened demographics (for analysis convenience)
+    demo_gender = db.Column(db.String)
+    demo_age = db.Column(db.Integer)
+    demo_age_group = db.Column(db.String)
+    demo_country = db.Column(db.String)
+    demo_education = db.Column(db.String)
+    demo_political_leaning = db.Column(db.String)
+
+    # Flattened pre-questionnaire (for analysis convenience)
+    pre_news_frequency = db.Column(db.String)
+    pre_platform = db.Column(db.String)
+    pre_favourite_topic_1 = db.Column(db.String)
+    pre_least_favourite_topic_1 = db.Column(db.String)
+    pre_favourite_topic_2 = db.Column(db.String)
+    pre_least_favourite_topic_2 = db.Column(db.String)
+    pre_enjoy_topic_1 = db.Column(db.String)
+    pre_enjoy_topic_2 = db.Column(db.String)
+    pre_avoid_topic_1 = db.Column(db.String)
+    pre_avoid_topic_2 = db.Column(db.String)
+    pre_attention_check = db.Column(db.String)
+    pre_avoid_news = db.Column(db.String)
+    pre_avoid_reasons = db.Column(db.String)
+    pre_avoid_other = db.Column(db.String)
+
     rounds = db.relationship('Round', backref='participant', lazy=True)
 
 class Round(db.Model):
@@ -136,6 +161,116 @@ with app.app_context():
     _ensure_round_flat_columns()
 
 
+def _ensure_participant_flat_columns():
+    """Lightweight SQLite migration: add missing flattened columns to `participant`."""
+    engine = db.engine
+    with engine.connect() as conn:
+        try:
+            existing_cols = {
+                row[1]
+                for row in conn.exec_driver_sql('PRAGMA table_info("participant")').all()
+            }
+        except Exception:
+            return
+
+        desired_cols = {
+            # demographics
+            'demo_gender': 'TEXT',
+            'demo_age': 'INTEGER',
+            'demo_age_group': 'TEXT',
+            'demo_country': 'TEXT',
+            'demo_education': 'TEXT',
+            'demo_political_leaning': 'TEXT',
+            # pre-questionnaire
+            'pre_news_frequency': 'TEXT',
+            'pre_platform': 'TEXT',
+            'pre_favourite_topic_1': 'TEXT',
+            'pre_least_favourite_topic_1': 'TEXT',
+            'pre_favourite_topic_2': 'TEXT',
+            'pre_least_favourite_topic_2': 'TEXT',
+            'pre_enjoy_topic_1': 'TEXT',
+            'pre_enjoy_topic_2': 'TEXT',
+            'pre_avoid_topic_1': 'TEXT',
+            'pre_avoid_topic_2': 'TEXT',
+            'pre_attention_check': 'TEXT',
+            'pre_avoid_news': 'TEXT',
+            'pre_avoid_reasons': 'TEXT',
+            'pre_avoid_other': 'TEXT',
+        }
+
+        for col_name, col_type in desired_cols.items():
+            if col_name in existing_cols:
+                continue
+            conn.exec_driver_sql(f'ALTER TABLE "participant" ADD COLUMN {col_name} {col_type}')
+
+
+def _sync_participant_flat_columns(participant: Participant, section: str, data: dict):
+    """Keep flattened participant columns in sync with stored JSON payloads."""
+    if not participant or not isinstance(data, dict):
+        return
+
+    def _as_text(v):
+        if v is None:
+            return None
+        s = str(v).strip()
+        return s if s else None
+
+    if section == 'demographics':
+        participant.demo_gender = _as_text(data.get('gender'))
+        participant.demo_age = data.get('age') if isinstance(data.get('age'), int) else None
+        participant.demo_age_group = _as_text(data.get('age_group'))
+        participant.demo_country = _as_text(data.get('country'))
+        participant.demo_education = _as_text(data.get('education'))
+        participant.demo_political_leaning = _as_text(data.get('political_leaning'))
+
+    if section == 'pre_questionnaire':
+        participant.pre_news_frequency = _as_text(data.get('news_frequency'))
+        participant.pre_platform = _as_text(data.get('platform'))
+        participant.pre_favourite_topic_1 = _as_text(data.get('favourite_topic_1'))
+        participant.pre_least_favourite_topic_1 = _as_text(data.get('least_favourite_topic_1'))
+        participant.pre_favourite_topic_2 = _as_text(data.get('favourite_topic_2'))
+        participant.pre_least_favourite_topic_2 = _as_text(data.get('least_favourite_topic_2'))
+        participant.pre_enjoy_topic_1 = _as_text(data.get('enjoy_topic_1'))
+        participant.pre_enjoy_topic_2 = _as_text(data.get('enjoy_topic_2'))
+        participant.pre_avoid_topic_1 = _as_text(data.get('avoid_topic_1'))
+        participant.pre_avoid_topic_2 = _as_text(data.get('avoid_topic_2'))
+        participant.pre_attention_check = _as_text(data.get('attention_check'))
+        participant.pre_avoid_news = _as_text(data.get('avoid_news'))
+
+        reasons = data.get('avoid_reasons')
+        if isinstance(reasons, list):
+            participant.pre_avoid_reasons = json.dumps(reasons, ensure_ascii=False)
+        else:
+            participant.pre_avoid_reasons = _as_text(reasons)
+
+        participant.pre_avoid_other = _as_text(data.get('avoid_other'))
+
+
+def _backfill_participant_flat_columns():
+    """Backfill flattened participant columns from existing JSON payloads."""
+    try:
+        participants = Participant.query.all()
+    except Exception:
+        return
+
+    updated = 0
+    for p in participants:
+        if isinstance(p.demographics, dict):
+            _sync_participant_flat_columns(p, 'demographics', p.demographics)
+            updated += 1
+        if isinstance(p.pre_questionnaire, dict):
+            _sync_participant_flat_columns(p, 'pre_questionnaire', p.pre_questionnaire)
+            updated += 1
+
+    if updated:
+        db.session.commit()
+
+
+with app.app_context():
+    _ensure_participant_flat_columns()
+    _backfill_participant_flat_columns()
+
+
 RESPONSES_DIR = "responses"
 os.makedirs(RESPONSES_DIR, exist_ok=True)
 
@@ -210,7 +345,7 @@ LEAST_REC_LABELS = [
     "The information in this article has been fact-checked for accuracy:",
     "This article is recommended by 82% of readers your age in your region:",
     "This article breaks the topic into key points without unnecessary details:",
-    "This article focuses on solutions and constructive ways forward:",
+    "This article's content focuses on solutions and constructive ways forward:",
     "This article is trending right now:",
     "Other story:",
 ]
@@ -609,8 +744,10 @@ def update_participant_data(section, data):
         # Save section data
         if section == 'demographics':
             participant.demographics = data
+            _sync_participant_flat_columns(participant, 'demographics', data)
         elif section == 'pre_questionnaire':
             participant.pre_questionnaire = data
+            _sync_participant_flat_columns(participant, 'pre_questionnaire', data)
         elif section == 'post_questionnaire':
             participant.post_questionnaire = data
         elif section == 'round':
