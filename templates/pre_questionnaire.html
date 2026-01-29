@@ -600,18 +600,56 @@ function shuffleArray(array) {
     }
 }
 
-function shuffleOptions(containerId) {
-    const container = document.getElementById(containerId);
-    const options = Array.from(container.children);
-    shuffleArray(options);
-    options.forEach(option => container.appendChild(option));
+function _topicValuesFromContainer(container) {
+    return Array.from(container.querySelectorAll('input[type="radio"]'))
+        .map((el) => el.value)
+        .filter((v) => v !== undefined && v !== null && String(v).length > 0);
+}
+
+function _reorderContainerByValue(container, valuesInOrder) {
+    const items = Array.from(container.children);
+    const valueToItem = new Map();
+    const leftovers = [];
+
+    for (const item of items) {
+        const input = item.querySelector('input[type="radio"]');
+        const v = input?.value;
+        if (v) valueToItem.set(v, item);
+        else leftovers.push(item);
+    }
+
+    const used = new Set();
+    for (const v of valuesInOrder) {
+        const item = valueToItem.get(v);
+        if (item) {
+            container.appendChild(item);
+            used.add(v);
+        }
+    }
+
+    // Append any items not covered by valuesInOrder (defensive).
+    for (const [v, item] of valueToItem.entries()) {
+        if (!used.has(v)) container.appendChild(item);
+    }
+    leftovers.forEach((item) => container.appendChild(item));
+}
+
+function applySharedRandomOrder(containerIdA, containerIdB) {
+    const containerA = document.getElementById(containerIdA);
+    const containerB = document.getElementById(containerIdB);
+    if (!containerA || !containerB) return;
+
+    // Shuffle once based on the topic values from A, then apply that order to both.
+    const values = _topicValuesFromContainer(containerA);
+    shuffleArray(values);
+    _reorderContainerByValue(containerA, values);
+    _reorderContainerByValue(containerB, values);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    shuffleOptions('favouriteListA');
-    shuffleOptions('leastFavouriteListA');
-    shuffleOptions('favouriteListB');
-    shuffleOptions('leastFavouriteListB');
+    // Q3/Q4 share order (List A); Q5/Q6 share order (List B)
+    applySharedRandomOrder('favouriteListA', 'leastFavouriteListA');
+    applySharedRandomOrder('favouriteListB', 'leastFavouriteListB');
 
     // Update labels dynamically
     function updateLabels() {
