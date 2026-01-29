@@ -205,13 +205,14 @@ app.logger.info("Using topic column: %s", TOPIC_COL)
 
 
 # Social-influence labels shown above recommendation cards.
-FAV_REC_LABEL = "Recommended to you:"
+FAV_REC_LABEL = "Other story:"
 LEAST_REC_LABELS = [
-    "The information in this article has been fact-checked for accuracy.",
-    "This article is recommended by 82% of readers your age in your region.",
-    "This article breaks the topic into key points without unnecessary details.",
-    "This article focuses on solutions and constructive ways forward.",
-    "This article is trending right now.",
+    "The information in this article has been fact-checked for accuracy:",
+    "This article is recommended by 82% of readers your age in your region:",
+    "This article breaks the topic into key points without unnecessary details:",
+    "This article focuses on solutions and constructive ways forward:",
+    "This article is trending right now:",
+    "Other story:",
 ]
 
 
