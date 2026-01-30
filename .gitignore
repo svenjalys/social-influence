@@ -9,3 +9,8 @@ responses.db
 social_influence/instance/responses.db-*
 .venv
 __pycache__
+
+# Large local data artifacts (do not commit)
+articles_cleaned.db
+articles_cleaned_new.db
+new_articles.csv
