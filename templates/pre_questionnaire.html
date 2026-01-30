@@ -130,21 +130,51 @@
             // validate device question
             const deviceCheckboxes = document.querySelectorAll('input[name="device"]');
             const deviceError = document.getElementById('deviceError');
-            const anyDeviceChecked = Array.from(deviceCheckboxes).some(cb => cb.checked);
-            if (!anyDeviceChecked) {
-                deviceError.classList.remove('hidden');
-                valid = false;
-            } else {
-                deviceError.classList.add('hidden');
+            if (deviceCheckboxes.length && deviceError) {
+                const anyDeviceChecked = Array.from(deviceCheckboxes).some(cb => cb.checked);
+                if (!anyDeviceChecked) {
+                    deviceError.classList.remove('hidden');
+                    valid = false;
+                } else {
+                    deviceError.classList.add('hidden');
+                }
             }
             
             // validate if "Other" is checked but no text is provided
             const otherCheckbox = document.getElementById('deviceOtherCheckbox');
             const otherInput = document.querySelector('input[name="device_other"]');
-            if (otherCheckbox.checked && !otherInput.value.trim()) {
-                deviceError.classList.remove('hidden');
-                deviceError.textContent = 'Please specify what device you use.';
-                valid = false;
+            if (otherCheckbox && otherInput && deviceError) {
+                if (otherCheckbox.checked && !otherInput.value.trim()) {
+                    deviceError.classList.remove('hidden');
+                    deviceError.textContent = 'Please specify what device you use.';
+                    valid = false;
+                }
+            }
+
+            // validate last question (avoid_reasons): require 1-2 selections
+            const avoidError = document.getElementById('avoidReasonsError');
+            const avoidChecks = Array.from(document.querySelectorAll('input[name="avoid_reasons"]'));
+            if (avoidChecks.length && avoidError) {
+                const checked = avoidChecks.filter(cb => cb.checked);
+                const otherReasonChecked = document.getElementById('reason_other')?.checked;
+                const avoidOtherInput = document.querySelector('input[name="avoid_other"]');
+
+                let msg = '';
+                if (checked.length < 1) {
+                    msg = 'Please select at least 1 reason.';
+                } else if (checked.length > 2) {
+                    msg = 'Please select no more than 2 reasons.';
+                } else if (otherReasonChecked && avoidOtherInput && !avoidOtherInput.value.trim()) {
+                    msg = 'Please specify your other reason.';
+                }
+
+                if (msg) {
+                    avoidError.textContent = msg;
+                    avoidError.classList.remove('hidden');
+                    valid = false;
+                } else {
+                    avoidError.classList.add('hidden');
+                }
             }
             
             return valid;
@@ -583,6 +613,8 @@
                     <input type="text" class="form-control" name="avoid_other" placeholder="Please specify">
                 </div>
             </div>
+
+            <div id="avoidReasonsError" class="text-danger mt-2 hidden">Please select at least 1 reason.</div>
         </div>
 
         <!-- Submit button -->
@@ -678,6 +710,19 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('input[name="favourite_topic_1"], input[name="favourite_topic_2"], input[name="least_favourite_topic_1"], input[name="least_favourite_topic_2"]').forEach(radio => {
         radio.addEventListener('change', updateLabels);
     });
+
+    // Keep last-question validation responsive
+    document.querySelectorAll('input[name="avoid_reasons"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            limitCheckboxes();
+            // Re-run validation to hide/show error immediately
+            validateForm();
+        });
+    });
+    const avoidOther = document.querySelector('input[name="avoid_other"]');
+    if (avoidOther) {
+        avoidOther.addEventListener('input', () => validateForm());
+    }
 });
 </script>
 </body>
