@@ -404,8 +404,12 @@
     }
 
     const rect = stack.getBoundingClientRect();
+    const firstCard = stack.querySelector('.recommendation-card');
+    const firstCardRect = firstCard ? firstCard.getBoundingClientRect() : null;
     const headingRect = heading.getBoundingClientRect();
-    const isVisible = headingRect.bottom > 0 && headingRect.top < window.innerHeight;
+
+    const visibleRect = firstCardRect || headingRect;
+    const isVisible = visibleRect.bottom > 0 && visibleRect.top < window.innerHeight;
     if (!isVisible) {
       box.classList.add('d-none');
       return;
@@ -419,8 +423,8 @@
     let left = rect.left - boxWidth - 20;
     if (left < 10) left = 10;
 
-    // Align the top of the callout with the "Recommended articles" heading.
-    let top = headingRect.top;
+    // Align the top of the callout with the top of the first recommended article card.
+    let top = (firstCardRect ? firstCardRect.top : headingRect.top);
     if (top < 10) top = 10;
     if (top + boxHeight > window.innerHeight - 10) {
       top = window.innerHeight - boxHeight - 10;
@@ -533,14 +537,14 @@
 
     // Label questions
     const labelStatements = [
-      {key: 'label_understandable', text: 'The label is easy to understand.'},
-      {key: 'label_useful', text: 'The label is useful.'},
-      {key: 'label_influenced', text: 'The label influenced my choice.'},
-      {key: 'label_attention', text: 'The label grabbed my attention.'},
-      {key: 'label_more', text: 'I would like to see more labels like this for recommended news articles.'}
+      {key: 'label_understandable', text: 'The explanation is easy to understand.'},
+      {key: 'label_useful', text: 'The explanation is useful.'},
+      {key: 'label_influenced', text: 'The explanation influenced my choice.'},
+      {key: 'label_attention', text: 'The explanation grabbed my attention.'},
+      {key: 'label_more', text: 'I would like to see more explanations like this for recommended news articles.'}
     ];
     labelStatements.forEach(stmt => {
-      let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">the article label</span>?</h6>`;
+      let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">the article explanation</span>?</h6>`;
       html += `<p class="mb-1">${stmt.text}</p>`;
       html += '<div class="d-flex justify-content-between align-items-center mb-2">';
       html += '<span style="font-size: 0.75rem;">Strongly disagree</span>';
@@ -555,7 +559,7 @@
 
     // Debug aid: confirm that label steps are included.
     try {
-      const labelStepCount = steps.filter(s => (s?.html || '').includes('the article label')).length;
+      const labelStepCount = steps.filter(s => (s?.html || '').includes('the article explanation')).length;
       console.log('[ratingBox] steps=', steps.length, 'labelSteps=', labelStepCount);
     } catch (e) {}
 
