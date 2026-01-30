@@ -1216,13 +1216,34 @@ def article(article_id):
 
     # Handle POST (ratings finished / continue)
     if request.method == 'POST':
-        # We no longer let users click-select a recommended article.
-        # The current main article is the unit of a round.
+        # User-selected recommendation (required by UI). Store it for analysis.
+        selected_article_raw = (request.form.get('selected_article_id') or '').strip()
         selected_article_id = None
-        selected_article_title = ""
+        try:
+            if selected_article_raw != '':
+                selected_article_id = int(selected_article_raw)
+        except Exception:
+            selected_article_id = None
 
         # Collect ratings
         recommendations_ids = session.get('current_recommendations', [])
+
+        if selected_article_id is None or selected_article_id not in recommendations_ids:
+            return render_template(
+                'article.html',
+                article=article_data,
+                recommendations=recommendations,
+                round_number=round_number,
+                total_rounds=6,
+                debug=debug_flag,
+                rec_labels=session.get('current_recommendations_labels', {}),
+                topic_col=TOPIC_COL,
+                topic_start_list=session.get('topic_start_list'),
+                topic_list=list_name,
+                fav_topic=fav_topic,
+                least_topic=least_topic,
+                selection_error="Please select and confirm one of the recommended articles before continuing.",
+            )
 
         recommendation_stable_ids = []
         recommendation_titles = []
@@ -1235,6 +1256,18 @@ def article(article_id):
             rec_record = normalize_article_row(rec_row.iloc[0].to_dict())
             recommendation_stable_ids.append(get_stable_article_id(rec_record))
             recommendation_titles.append(rec_record.get('Title', None))
+
+        selected_rec_title = None
+        selected_rec_stable_id = None
+        try:
+            selected_row = df[df['index'] == selected_article_id]
+            if not selected_row.empty:
+                selected_rec_record = normalize_article_row(selected_row.iloc[0].to_dict())
+                selected_rec_title = selected_rec_record.get('Title', None)
+                selected_rec_stable_id = get_stable_article_id(selected_rec_record)
+        except Exception:
+            selected_rec_title = None
+            selected_rec_stable_id = None
 
         # Collect ratings
         # IMPORTANT: the actual form fields are hidden inputs named like
@@ -1287,6 +1320,9 @@ def article(article_id):
                 'main_article_id': article_index,
                 'main_article_stable_id': main_article_stable_id,
                 'main_article_title': article_data.get('Title', ''),
+                'selected_recommendation_id': selected_article_id,
+                'selected_recommendation_stable_id': selected_rec_stable_id,
+                'selected_recommendation_title': selected_rec_title,
                 'recommendations': session.get('current_recommendations', []),
                 'recommendations_labels': session.get('current_recommendations_labels', {}),
                 'recommendations_stable_ids': recommendation_stable_ids,
