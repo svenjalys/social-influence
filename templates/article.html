@@ -146,6 +146,11 @@
   least_topic_mapped: {{ least_topic }}<br>
   main_article_topic: {{ article.get(topic_col) }}<br>
   rec_topics: {% for rec in recommendations %}{{ rec.get(topic_col) }}{% if not loop.last %}, {% endif %}{% endfor %}
+  <hr class="my-2">
+  rec_kinds:
+  {% for rec in recommendations %}
+    [{{ rec['index'] }} → {{ (rec_kinds or {}).get(rec['index']|string, 'MISSING') }}]{% if not loop.last %}, {% endif %}
+  {% endfor %}
 </div>
 {% endif %}
 
@@ -193,6 +198,7 @@
 
   <!-- Recommendations -->
   <h3 id="recommendedHeading">Recommended articles</h3>
+  <br>
   <form method="POST">
     <input type="hidden" name="selected_article_id" id="selected_article_id" value="">
 
@@ -302,6 +308,9 @@
 
 <script id="pageConfigJson" type="application/json">{{ {
   'recommendations': recommendations,
+  'rec_labels': (rec_labels or {}),
+  'rec_kinds': (rec_kinds or {}),
+  'fav_rec_label': (fav_rec_label or ''),
   'round_number': round_number,
   'total_rounds': total_rounds
 } | tojson }}</script>
@@ -316,6 +325,9 @@
   }
 
   var recommendations = __pageConfig.recommendations || [];
+  const REC_LABELS = __pageConfig.rec_labels || {};
+  const REC_KINDS = __pageConfig.rec_kinds || {};
+  const FAV_REC_LABEL = (__pageConfig.fav_rec_label || '').trim();
   const ROUND_NUMBER = __pageConfig.round_number;
   const TOTAL_ROUNDS = __pageConfig.total_rounds;
   let steps = [];
@@ -444,7 +456,8 @@
     const container = document.getElementById('questionContent');
     const button = document.querySelector('#ratingBox .btn-primary');
     const step = steps[stepIndex];
-    container.innerHTML = step.html;
+    const progressHtml = `<div class="text-muted mb-2" style="font-size: 0.8rem;">Question ${stepIndex + 1} of ${steps.length}</div>`;
+    container.innerHTML = progressHtml + (step?.html || '');
     if (stepIndex === steps.length - 1) {
       const isFinalRound = (ROUND_NUMBER === TOTAL_ROUNDS);
       button.textContent = isFinalRound ? 'Finish' : 'Continue to next round';
@@ -478,8 +491,11 @@
       steps.push({html: html, recIndex: index});
     });
 
-    // Statements for all recommendations
+    // Statements only for the least-favourite-topic recommendation.
     recommendations.forEach((rec, index) => {
+      const recKind = String(REC_KINDS[String(rec.index)] || '').trim();
+      if (recKind !== 'least') return;
+
       const statements = [
         {key: 'constructive', text: 'The article seems constructive.'},
         {key: 'understandable', text: 'The article seems easy to understand.'},
@@ -522,6 +538,12 @@
       html += `<input type="hidden" name="${stmt.key}_hidden" value="">`;
       steps.push({html: html});
     });
+
+    // Debug aid: confirm that label steps are included.
+    try {
+      const labelStepCount = steps.filter(s => (s?.html || '').includes('the article label')).length;
+      console.log('[ratingBox] steps=', steps.length, 'labelSteps=', labelStepCount);
+    } catch (e) {}
 
     currentStep = 0;
     showStep(currentStep);

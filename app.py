@@ -308,7 +308,8 @@ def set_condition(cond):
 
 # Load articles from SQLite database
 
-ARTICLES_DB_PATH = "articles_cleaned_new.db"
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ARTICLES_DB_PATH = os.path.join(_BASE_DIR, "articles_cleaned_new.db")
 conn = sqlite3.connect(ARTICLES_DB_PATH)
 raw_df = pd.read_sql_query("SELECT * FROM new_articles", conn)
 conn.close()
@@ -340,14 +341,14 @@ app.logger.info("Using topic column: %s", TOPIC_COL)
 
 
 # Social-influence labels shown above recommendation cards.
-FAV_REC_LABEL = "Other story:"
+FAV_REC_LABEL = "Another story:"
 LEAST_REC_LABELS = [
     "The information in this article has been fact-checked for accuracy:",
     "This article is recommended by 82% of readers your age in your region:",
     "This article breaks the topic into key points without unnecessary details:",
     "This article's content focuses on solutions and constructive ways forward:",
     "This article is trending right now:",
-    "Other story:",
+    "Another story:",
 ]
 
 
@@ -1172,6 +1173,7 @@ def article(article_id):
         # - favourite-topic rec: fixed label
         # - least-topic rec: rotating label (random order per participant), different each round
         rec_labels_by_id: dict[str, str] = {}
+        rec_kinds_by_id: dict[str, str] = {}
         least_label_order = session.get('least_rec_label_order') or []
         least_label_for_round = None
         if isinstance(least_label_order, list) and least_label_order:
@@ -1188,17 +1190,22 @@ def article(article_id):
 
             if fav_topic_str and rec_topic_str == fav_topic_str:
                 rec_labels_by_id[rec_id] = FAV_REC_LABEL
+                rec_kinds_by_id[rec_id] = 'fav'
             elif least_topic_str and rec_topic_str == least_topic_str:
                 rec_labels_by_id[rec_id] = least_label_for_round or ''
+                rec_kinds_by_id[rec_id] = 'least'
             else:
                 # If topics are missing (e.g., duplicates), assign remaining slot deterministically.
                 if FAV_REC_LABEL not in rec_labels_by_id.values():
                     rec_labels_by_id[rec_id] = FAV_REC_LABEL
+                    rec_kinds_by_id[rec_id] = 'fav'
                 else:
                     rec_labels_by_id[rec_id] = least_label_for_round or ''
+                    rec_kinds_by_id[rec_id] = 'least'
 
         session['current_recommendations'] = [rec['index'] for rec in recommendations]
         session['current_recommendations_labels'] = rec_labels_by_id
+        session['current_recommendations_kinds'] = rec_kinds_by_id
     else:
         # On POST restore previous recommendations from session
         recommendations = []
@@ -1237,6 +1244,8 @@ def article(article_id):
                 total_rounds=6,
                 debug=debug_flag,
                 rec_labels=session.get('current_recommendations_labels', {}),
+                rec_kinds=session.get('current_recommendations_kinds', {}),
+                fav_rec_label=FAV_REC_LABEL,
                 topic_col=TOPIC_COL,
                 topic_start_list=session.get('topic_start_list'),
                 topic_list=list_name,
@@ -1373,6 +1382,8 @@ def article(article_id):
         total_rounds=6,
         debug=debug_flag,
         rec_labels=session.get('current_recommendations_labels', {}),
+        rec_kinds=session.get('current_recommendations_kinds', {}),
+        fav_rec_label=FAV_REC_LABEL,
         topic_col=TOPIC_COL,
         topic_start_list=session.get('topic_start_list'),
         topic_list=list_name,
