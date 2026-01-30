@@ -353,14 +353,20 @@
     choiceConfirmed = true;
     _setConfirmEnabled(false);
 
+    // Hide the confirm button after confirming.
+    const confirmBtn = document.getElementById('confirmChoiceBtn');
+    if (confirmBtn) confirmBtn.classList.add('d-none');
+
     // Hide the helper once the choice is locked in.
     const nextBox = document.getElementById('nextBox');
     if (nextBox) nextBox.classList.add('d-none');
 
-    // Lock selection UI
+    // Clear visual selection and restore cards to their normal look.
+    // (Selection is still locked because selectRecommendationCard() no-ops when choiceConfirmed is true.)
     document.querySelectorAll('.recommendation-card').forEach((c) => {
-      c.classList.add('disabled');
-      c.style.pointerEvents = 'none';
+      c.classList.remove('selected');
+      c.classList.remove('disabled');
+      c.style.pointerEvents = '';
     });
 
     // Start questionnaire
