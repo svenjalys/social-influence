@@ -30,46 +30,10 @@
     <div class="container">
         <div class="card shadow p-5">
             <h1 class="mb-4 text-left">Thank you for your participation!</h1>
-            <p class="lead">We sincerely appreciate your time and input in this study where we aimed to explore how people perceive and engage with transparency information.</p>
-            <div class="text-start">
-            {% if condition in ['color', 'no_color', 'c2pa'] %}
-                <p>Throughout the experiment, you were shown several news articles. Some of those included an <span class="highlight">image label</span>. 
-                    This label was designed to help you assess how trustworthy and verifiable the images in the news articles are.</p>
-                <p>Using a variety of labels for different groups of participants helped us test how design and presentation affect understanding and choices.</p>
-                <p>You may have seen the label below in an <strong>expanded version</strong> (left icon) when reading the article and in a <strong>collapsed version</strong> (right icon) next to the recommended articles.</p>
-                    {% if condition == 'color' %}
-                    <div class="d-flex justify-content-center gap-3 mb-4">
-                        <img src="{{ url_for('static', filename='images/imagetrustscoreCOLOUR.png') }}" class="transp-label" alt="Label: Color expanded">
-                        <img src="{{ url_for('static', filename='images/itsCOLOUR.png') }}" class="transp-label" alt="Label: Color collapsed"> 
-                    </div>
-                    <p>The transparency score was based on factors such as:</p>
-                    <ul>
-                        <li>Whether the <strong>image’s author</strong> is known,</li>
-                        <li>If the image includes <strong>verifiable metadata</strong> (e.g., location, time, edits),</li>
-                        <li>And whether there's a clear <strong>edit history</strong> or usage trace.</li>
-                    </ul>
-                    {% elif condition == 'no_color' %}
-                    <div class="d-flex justify-content-center gap-3 mb-4">
-                        <img src="{{ url_for('static', filename='images/imagetrustscoreBW.png') }}" class="transp-label" alt="Label: No Color expanded">
-                        <img src="{{ url_for('static', filename='images/itsBW.png') }}" class="transp-label" alt="Label: No Color collapsed">
-                    </div>
-                        <p>The transparency score was based on factors such as:</p>
-                        <ul>
-                            <li>Whether the <strong>image’s author</strong> is known,</li>
-                            <li>If the image includes <strong>verifiable metadata</strong> (e.g., location, time, edits),</li>
-                            <li>And whether there's a clear <strong>edit history</strong> or usage trace.</li>
-                        </ul>
-                    {% elif condition == 'c2pa' %}
-                        <div class="d-flex justify-content-center gap-3 mb-4">
-                            <img src="{{ url_for('static', filename='images/cr1.png') }}" class="transp-label" style="max-height: 80px; border: 2px solid grey; border-radius: 15px;" alt="Label: C2PA">
-                            <img src="{{ url_for('static', filename='images/cr_logo.png') }}" class="transp-label" alt="Label: C2PA">
-                        </div>
-                    {% endif %}
-                <p class="mt-4">Thank you again - your contribution helps us build better tools for transparency and trust in digital media.</p>
-            {% elif condition == 'nolabel' %}
-            <p class="lead">Your contribution helps us build better tools for transparency and trust in digital media.</p>
-            {% endif %}
-            <p><a href="https://app.prolific.com/submissions/complete?cc=C18C2ZY2">Please click here to be redirected to Prolific.</a></p>
+            <p class="lead">You have now completed the study. We sincerely appreciate your time and input.</p>
+            <p class="lead">
+                <a href="https://app.prolific.com/submissions/complete?cc=C18C2ZY2">Click here to return to Prolific and complete your submission.</a>
+            </p>
         </div>
     </div>
 </body>
