@@ -309,7 +309,7 @@ def set_condition(cond):
 # Load articles from SQLite database
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ARTICLES_DB_PATH = os.path.join(_BASE_DIR, "articles_cleaned_new.db")
+ARTICLES_DB_PATH = os.path.join(_BASE_DIR, "vacuumed_articles.db")
 conn = sqlite3.connect(ARTICLES_DB_PATH)
 raw_df = pd.read_sql_query("SELECT * FROM new_articles", conn)
 conn.close()
