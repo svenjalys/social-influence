@@ -134,6 +134,14 @@
       border-bottom: 19px solid transparent;
       border-left: 19px solid white;
     }
+
+    #ratingBox {
+      box-sizing: border-box;
+    }
+
+    #nextBox {
+      box-sizing: border-box;
+    }
   </style>
 </head>
 <body class="container mt-5">
@@ -297,7 +305,7 @@
   </div>
 
   <!-- Rating Box -->
-  <div id="ratingBox" class="card position-fixed d-none shadow-lg" style="right: 20px; width: 320px; z-index: 1000; max-height: 70vh; overflow: visible;">
+  <div id="ratingBox" class="card position-fixed d-none shadow-lg" style="width: 320px; z-index: 1000; max-height: 70vh; overflow: visible;">
     <div class="card-body p-3">
       <div id="questionContent">
         <!-- Questions loaded by JS -->
@@ -418,11 +426,19 @@
 
     box.classList.remove('d-none');
 
-    const boxWidth = box.offsetWidth || 280;
+    // Keep default width unless the available space to the left is smaller.
+    const DEFAULT_WIDTH = 280;
+    const LEFT_GAP = 5;     // min distance to viewport left
+    const CARD_GAP = 20;    // gap between box and recommendation stack
+    const available = Math.max(0, rect.left - CARD_GAP - LEFT_GAP);
+    const boxWidth = Math.min(DEFAULT_WIDTH, available);
+
+    box.style.width = `${boxWidth}px`;
+
     const boxHeight = box.offsetHeight || 140;
 
-    let left = rect.left - boxWidth - 20;
-    if (left < 10) left = 10;
+    let left = rect.left - CARD_GAP - boxWidth;
+    if (left < LEFT_GAP) left = LEFT_GAP;
 
     // Align the top of the callout with the top of the first recommended article card.
     let top = (firstCardRect ? firstCardRect.top : headingRect.top);
@@ -620,8 +636,35 @@
     }
     if (activeCard) {
       const rect = activeCard.getBoundingClientRect();
-      box.style.left = `${rect.right + 20}px`;
+      // Horizontal positioning: keep next to the active card, but shrink/clamp
+      // so the box stays fully visible with at least 5px gap to the viewport.
+      const H_GAP = 20;       // gap between card and box
+      const RIGHT_GAP = 5;    // minimum distance to viewport right
+      const LEFT_GAP = 5;     // minimum distance to viewport left (fallback)
+      const DEFAULT_WIDTH = 320;
+      const MIN_USABLE_WIDTH = 220;
+
+      // Prefer placing the box directly to the right of the card.
+      const desiredLeft = rect.right + H_GAP;
+
+      // Keep the default width unless the space between the card and the viewport edge is smaller.
+      let left = desiredLeft;
+      let available = window.innerWidth - RIGHT_GAP - left;
+      let width = Math.min(DEFAULT_WIDTH, Math.max(0, available));
+
+      // Fallback: if there's not even a usable width next to the card, pin the box inside
+      // the viewport (still keeping vertical position unchanged).
+      if (width < MIN_USABLE_WIDTH) {
+        left = LEFT_GAP;
+        available = window.innerWidth - RIGHT_GAP - left;
+        width = Math.min(DEFAULT_WIDTH, Math.max(0, available));
+      }
+
+      box.style.right = 'auto';
+      box.style.left = `${left}px`;
+      box.style.width = `${width}px`;
       box.style.top = `${rect.top}px`;
+
       // Ensure the box doesn't extend below the viewport
       const boxHeight = box.offsetHeight || 400;
       const currentTop = parseInt(box.style.top);
@@ -633,6 +676,7 @@
 
   // Position the box next to the current visible recommendation
   window.addEventListener('scroll', positionBox);
+  window.addEventListener('resize', positionBox);
   window.addEventListener('scroll', positionNextBox);
   window.addEventListener('resize', positionNextBox);
 
