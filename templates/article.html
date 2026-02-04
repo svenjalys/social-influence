@@ -56,6 +56,22 @@
       font-weight: 700;
     }
 
+    .rec-explanation {
+      border-left: 3px solid #0d6efd;
+      background: #eef6ff;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.4rem;
+      color: #1f2a37;
+      line-height: 1.35;
+    }
+
+    .rec-explanation-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #0d6efd;
+      margin-bottom: 0.15rem;
+    }
+
     .article_body {
       font-family: 'Georgia', serif;
       font-size: 1.15rem;
@@ -225,8 +241,15 @@
        <div class="card text-start py-3 px-3 border-0 shadow text-decoration-none text-body recommendation-card"
          data-article-id="{{ rec['index'] }}">
         {% if rec_label %}
-          <div class="mb-2" style="font-size: 0.95rem; font-weight: 600; color: #0d6efd;">
-            {{ rec_label }}
+          <div class="rec-explanation mb-3">
+            <div class="d-flex gap-2 align-items-start">
+              <div class="flex-shrink-0" style="line-height: 0.5; margin-top: 0.5px;">
+                <i class="bi bi-info-circle-fill text-primary" aria-hidden="true"></i>
+              </div>
+              <div>
+                <div class="rec-explanation-title">{{ rec_label }}</div>
+              </div>
+            </div>
           </div>
         {% endif %}
         <div class="row g-3 align-items-center">
