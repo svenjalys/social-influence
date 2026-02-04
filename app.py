@@ -72,6 +72,7 @@ class Round(db.Model):
     rec0_stable_id = db.Column(db.String)
     rec0_title = db.Column(db.String)
     rec0_likelihood = db.Column(db.Integer)
+    rec0_preference_fit = db.Column(db.Integer)
     rec0_constructive = db.Column(db.Integer)
     rec0_understandable = db.Column(db.Integer)
     rec0_trustworthy = db.Column(db.Integer)
@@ -80,6 +81,7 @@ class Round(db.Model):
     rec1_stable_id = db.Column(db.String)
     rec1_title = db.Column(db.String)
     rec1_likelihood = db.Column(db.Integer)
+    rec1_preference_fit = db.Column(db.Integer)
     rec1_constructive = db.Column(db.Integer)
     rec1_understandable = db.Column(db.Integer)
     rec1_trustworthy = db.Column(db.Integer)
@@ -129,6 +131,7 @@ def _ensure_round_flat_columns():
             'rec0_stable_id': 'TEXT',
             'rec0_title': 'TEXT',
             'rec0_likelihood': 'INTEGER',
+            'rec0_preference_fit': 'INTEGER',
             'rec0_constructive': 'INTEGER',
             'rec0_understandable': 'INTEGER',
             'rec0_trustworthy': 'INTEGER',
@@ -136,6 +139,7 @@ def _ensure_round_flat_columns():
             'rec1_stable_id': 'TEXT',
             'rec1_title': 'TEXT',
             'rec1_likelihood': 'INTEGER',
+            'rec1_preference_fit': 'INTEGER',
             'rec1_constructive': 'INTEGER',
             'rec1_understandable': 'INTEGER',
             'rec1_trustworthy': 'INTEGER',
@@ -682,6 +686,7 @@ def debug_backfill_flat():
             r.rec0_topic = None
         r.rec0_label_text = rec_labels.get(str(rec0_id)) if rec0_id is not None else None
         r.rec0_likelihood = _to_int(_rating_for_rec(0, 'likelihood'))
+        r.rec0_preference_fit = _to_int(_rating_for_rec(0, 'preference_fit'))
         r.rec0_constructive = _to_int(_rating_for_rec(0, 'constructive'))
         r.rec0_understandable = _to_int(_rating_for_rec(0, 'understandable'))
         r.rec0_trustworthy = _to_int(_rating_for_rec(0, 'trustworthy'))
@@ -700,6 +705,7 @@ def debug_backfill_flat():
             r.rec1_topic = None
         r.rec1_label_text = rec_labels.get(str(rec1_id)) if rec1_id is not None else None
         r.rec1_likelihood = _to_int(_rating_for_rec(1, 'likelihood'))
+        r.rec1_preference_fit = _to_int(_rating_for_rec(1, 'preference_fit'))
         r.rec1_constructive = _to_int(_rating_for_rec(1, 'constructive'))
         r.rec1_understandable = _to_int(_rating_for_rec(1, 'understandable'))
         r.rec1_trustworthy = _to_int(_rating_for_rec(1, 'trustworthy'))
@@ -823,6 +829,7 @@ def update_participant_data(section, data):
                     existing_round.rec0_topic = None
                 existing_round.rec0_label_text = rec_labels.get(str(rec0_id)) if rec0_id is not None else None
                 existing_round.rec0_likelihood = _to_int(_rating_for_rec(0, 'likelihood'))
+                existing_round.rec0_preference_fit = _to_int(_rating_for_rec(0, 'preference_fit'))
                 existing_round.rec0_constructive = _to_int(_rating_for_rec(0, 'constructive'))
                 existing_round.rec0_understandable = _to_int(_rating_for_rec(0, 'understandable'))
                 existing_round.rec0_trustworthy = _to_int(_rating_for_rec(0, 'trustworthy'))
@@ -842,6 +849,7 @@ def update_participant_data(section, data):
                     existing_round.rec1_topic = None
                 existing_round.rec1_label_text = rec_labels.get(str(rec1_id)) if rec1_id is not None else None
                 existing_round.rec1_likelihood = _to_int(_rating_for_rec(1, 'likelihood'))
+                existing_round.rec1_preference_fit = _to_int(_rating_for_rec(1, 'preference_fit'))
                 existing_round.rec1_constructive = _to_int(_rating_for_rec(1, 'constructive'))
                 existing_round.rec1_understandable = _to_int(_rating_for_rec(1, 'understandable'))
                 existing_round.rec1_trustworthy = _to_int(_rating_for_rec(1, 'trustworthy'))
@@ -1302,6 +1310,13 @@ def article(article_id):
                 f'likelihood_{i}',
                 f'likelihood_{rec_id}_hidden',
                 f'likelihood_{i}_hidden',
+            )
+
+            ratings[f'preference_fit_{rec_id}'] = _pick_rating_value(
+                f'preference_fit_{rec_id}',
+                f'preference_fit_{i}',
+                f'preference_fit_{rec_id}_hidden',
+                f'preference_fit_{i}_hidden',
             )
             for stmt in ['constructive', 'understandable', 'trustworthy', 'relevant']:
                 ratings[f'{stmt}_{rec_id}'] = _pick_rating_value(

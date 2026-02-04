@@ -165,7 +165,7 @@
       <div>
         <div class="h5 mb-1"><strong>Your task:</strong></div>
         <div class="text-body" style="font-size: 0.98rem;">
-          From the two recommended articles below, select the one you prefer. <br>Afterwards, complete the appearing questionnaire before going to the next page.
+          1. From the two recommended articles below, select the one you prefer. <br>2. Afterwards, complete the appearing questionnaire before going to the next page.
         </div>
       </div>
       <!-- <div class="text-body-secondary" style="font-size: 0.9rem;">
@@ -268,6 +268,7 @@
     <!-- Hidden inputs for ratings -->
     {% for rec in recommendations %}
     <input type="hidden" name="likelihood_{{ rec['index'] }}" id="likelihood_{{ rec['index'] }}" value="">
+    <input type="hidden" name="preference_fit_{{ rec['index'] }}" id="preference_fit_{{ rec['index'] }}" value="">
     <input type="hidden" name="constructive_{{ rec['index'] }}" id="constructive_{{ rec['index'] }}" value="">
     <input type="hidden" name="understandable_{{ rec['index'] }}" id="understandable_{{ rec['index'] }}" value="">
     <input type="hidden" name="trustworthy_{{ rec['index'] }}" id="trustworthy_{{ rec['index'] }}" value="">
@@ -288,7 +289,7 @@
           <i class="bi bi-info-circle text-primary" aria-hidden="true"></i>
         </div>
         <div style="font-size: 0.95rem;">
-          Select the article you prefer and confirm to start the questionnaire.
+          Select and confirm the recommended article you prefer among the two.
         </div>
       </div>
     </div>
@@ -506,6 +507,20 @@
       html += '<span style="font-size: 0.75rem;">Very likely</span>';
       html += '</div>';
       html += `<input type="hidden" name="likelihood_${rec.index}_hidden" value="">`;
+      steps.push({html: html, recIndex: index});
+    });
+
+    // Preference-fit statement for all recommendations (asked for each recommended article)
+    recommendations.forEach((rec, index) => {
+      let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">this article</span>?</h6>`;
+      html += `<p class="mb-1">The article fits my preferences.</p>`;
+      html += '<div class="d-flex justify-content-between align-items-center mb-2">';
+      html += '<span style="font-size: 0.75rem;">Strongly disagree</span>';
+      for (let i = 1; i <= 5; i++) {
+        html += `<label class="mx-1"><input type="radio" name="preference_fit_${rec.index}" value="${i}" onchange="updateHidden(this)"> ${i}</label>`;
+      }
+      html += '<span style="font-size: 0.75rem;">Strongly agree</span>';
+      html += '</div>';
       steps.push({html: html, recIndex: index});
     });
 
