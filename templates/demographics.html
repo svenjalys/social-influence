@@ -121,17 +121,20 @@
                     <label class="form-label">4. What is your highest level of education?</label>
                     <select name="education" id="education" class="form-select" required onchange="handleOther(this, 'education_other_wrapper')">
                         <option value="" disabled selected>Select...</option>
-                        <option>I did not complete any formal education</option>
-                        <option>Less than high school degree</option>
-                        <option>High school degree or equivalent</option>
-                        <option>Some college (no degree)</option>
-                        <option>Technical certification</option>
-                        <option>Associate degree</option>
-                        <option>Bachelor's degree</option>
-                        <option>Master's degree</option>
-                        <option>Doctoral degree (PhD)</option>
-                        <option>Professional degree</option>
-                        <option>Prefer not to say</option>
+                        <option value="No formal education">I did not complete any formal education</option>
+                        <option value="Nursery school">Nursery school</option>
+                        <option value="Grades 1 through 11">Grades 1 through 11</option>
+                        <option value="12th grade - no diploma">12th grade - no diploma</option>
+                        <option value="Regular high school diploma">Regular high school diploma</option>
+                        <option value="GED or alternative credential">GED or alternative credential</option>
+                        <option value="Some college credit, but less than 1 year of college">Some college credit, but less than 1 year of college</option>
+                        <option value="1 or more years of college, no degree">1 or more years of college, no degree</option>
+                        <option value="Associates degree">Associates degree (for example: AA, AS)</option>
+                        <option value="Bachelor's degree">Bachelor's degree (for example: BA, BS)</option>
+                        <option value="Master's degree">Master's degree (for example: MA, MS, MEd, MBA)</option>
+                        <option value="Professional degree beyond a bachelor's degree">Professional degree beyond a bachelor's degree (for example: JD, MD)</option>
+                        <option value="Doctorate degree">Doctorate degree (for example: PhD, EdD)</option>
+                        <option value="Prefer not to say">Prefer not to say</option>
                         <option value="Other">Other</option>
                     </select>
                     <div id="education_other_wrapper" class="hidden mt-2">
