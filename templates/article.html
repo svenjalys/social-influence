@@ -332,6 +332,7 @@
     <input type="hidden" name="label_influenced" id="label_influenced" value="">
     <input type="hidden" name="label_attention" id="label_attention" value="">
     <input type="hidden" name="label_more" id="label_more" value="">
+    <input type="hidden" name="rb_attention_check" id="rb_attention_check" value="">
   </form>
 
   <!-- Next Box (fixed-position helper like the questionnaire box) -->
@@ -584,6 +585,20 @@
       html += '</div>';
       steps.push({html: html, recIndex: index});
     });
+
+    // Attention check (ONLY in round 3)
+    if (Number(ROUND_NUMBER) === 3) {
+      let html = `<h6>This is an attention check. Please select "1" - Strongly disagree below.</h6>`;
+      html += `<p class="mb-1">The sky is green.</p>`;
+      html += '<div class="d-flex justify-content-between align-items-center mb-2">';
+      html += '<span style="font-size: 0.75rem;">Strongly disagree</span>';
+      for (let i = 1; i <= 5; i++) {
+        html += `<label class="mx-1"><input type="radio" name="rb_attention_check" value="${i}" onchange="updateHidden(this)"> ${i}</label>`;
+      }
+      html += '<span style="font-size: 0.75rem;">Strongly agree</span>';
+      html += '</div>';
+      steps.push({html: html, recIndex: (leastRecIndex >= 0 ? leastRecIndex : 0)});
+    }
 
     // Statements only for the least-favourite-topic recommendation.
     recommendations.forEach((rec, index) => {

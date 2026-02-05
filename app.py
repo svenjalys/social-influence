@@ -98,6 +98,9 @@ class Round(db.Model):
     label_influenced = db.Column(db.Integer)
     label_attention = db.Column(db.Integer)
     label_more = db.Column(db.Integer)
+
+    # Rating-box attention check (only asked in round 3; NULL otherwise)
+    rb_attention_check = db.Column(db.Integer)
 ###
 
 
@@ -153,6 +156,9 @@ def _ensure_round_flat_columns():
             'rec1_topic': 'TEXT',
             'rec0_label_text': 'TEXT',
             'rec1_label_text': 'TEXT',
+
+            # Rating-box attention check (round 3 only)
+            'rb_attention_check': 'INTEGER',
         }
 
         for col_name, col_type in desired_cols.items():
@@ -717,6 +723,8 @@ def debug_backfill_flat():
         r.label_attention = _to_int(ratings.get('label_attention'))
         r.label_more = _to_int(ratings.get('label_more'))
 
+        r.rb_attention_check = _to_int(ratings.get('rb_attention_check'))
+
         updated += 1
 
     db.session.commit()
@@ -861,6 +869,9 @@ def update_participant_data(section, data):
                 existing_round.label_influenced = _to_int(ratings.get('label_influenced'))
                 existing_round.label_attention = _to_int(ratings.get('label_attention'))
                 existing_round.label_more = _to_int(ratings.get('label_more'))
+
+                # Rating-box attention check (round 3 only)
+                existing_round.rb_attention_check = _to_int(ratings.get('rb_attention_check'))
             for k in ['theme_selection', 'article', 'mid_questionnaire']:
                 if k in data:
                     val = getattr(existing_round, k)
@@ -1328,6 +1339,9 @@ def article(article_id):
 
         for stmt in ['label_understandable', 'label_useful', 'label_influenced', 'label_attention', 'label_more']:
             ratings[stmt] = _pick_rating_value(stmt, f'{stmt}_hidden')
+
+        # Rating-box attention check (only asked in round 3; empty otherwise)
+        ratings['rb_attention_check'] = _pick_rating_value('rb_attention_check', 'rb_attention_check_hidden')
 
         # update_participant_data('round', {
         #     'round': round_number,
