@@ -72,6 +72,18 @@
       /* margin-bottom: 0.15rem; */
     }
 
+    .rec-description {
+      color: #495057;
+      font-size: 0.95rem;
+      line-height: 1.35;
+      margin-top: 0.5rem;
+      display: -webkit-box;
+      line-clamp: 3;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
     .article_body {
       font-family: 'Georgia', serif;
       font-size: 1.15rem;
@@ -217,12 +229,12 @@
       </div>
 
       {% set lines = article['Content'].split('\n') %}
-      {% for line in lines[:8] %}
+      {% for line in lines[:6] %}
         <p>{{ line }}</p>
       {% endfor %}
-      {% if lines|length > 8 %}
+      {% if lines|length > 6 %}
         <div id="moreContent" class="collapse">
-          {% for line in lines[8:] %}
+          {% for line in lines[6:] %}
             <p>{{ line }}</p>
           {% endfor %}
         </div>
@@ -258,9 +270,13 @@
             </div>
           </div>
         {% endif %}
-        <div class="row g-3 align-items-center">
+        <div class="row g-3 align-items-start">
           <div class="col-md-8">
             <h3 class="mb-0 fw-bold" style="font-size: 1.5rem;">{{ rec['Title'] }}</h3>
+            {% set rec_desc = (rec.get('description') or rec.get('Description') or rec.get('field16') or '') %}
+            {% if rec_desc %}
+              <div class="rec-description">{{ rec_desc }}</div>
+            {% endif %}
             {% if debug %}
               <div class="text-muted" style="font-size: 0.8rem; margin-top: 6px;">
                 topic ({{ topic_col }}): {{ rec.get(topic_col) }}
