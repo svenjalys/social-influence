@@ -26,9 +26,23 @@
 <div class="card">
     <h2 class="mb-4 text-center">Your task</h2>
     <div class="form-section">
-        <p>Next, you will see a news article, looking similar to a typical article page on a news website. Below it, you will see <strong>two recommended articles</strong> for you, each shown with a short explanation.</p>
-        <p>Please review the recommended articles and their explanations, then answer the questions carefully and honestly. You will complete this task <strong>6 times</strong> in total, each page showing different articles and different explanations.</p>
-        <p class="alert alert-primary mb-2 px-3 py-2"><strong>Disclaimer:</strong> Some of the articles may describe events from the past months. Please ignore how recent the events are when answering the questions.</p>
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-md-5">
+                <img
+                    src="{{ url_for('static', filename='images/article_structure.png') }}"
+                    alt="Example structure of the article page"
+                    class="img-fluid rounded border"
+                >
+                <div class="text-muted mt-2" style="font-size: 0.9rem;">
+                    Example layout of the article page and recommendation section.
+                </div>
+            </div>
+            <div class="col-12 col-md-7">
+                <p>Next, you will see a news article, looking similar to a typical article page on a news website. Below it, you will see <strong>two recommended articles</strong> for you, each shown with a short explanation.</p>
+                <p>Please review the recommended articles and their explanations, then answer the questions carefully and honestly. You will complete this task <strong>6 times</strong> in total, each page showing different articles and different explanations.</p>
+                <p class="alert alert-primary mb-0 px-3 py-2"><strong>Disclaimer:</strong> Some of the articles may describe events from the past months. Please ignore how recent the events are when answering the questions.</p>
+            </div>
+        </div>
     </div>
     <form method="POST">
         <div class="text-end">
