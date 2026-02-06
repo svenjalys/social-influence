@@ -1,0 +1,35 @@
+[Unit]
+Description=Transparency Label Study (Gunicorn)
+After=network.target
+
+[Service]
+Type=simple
+
+# Create a dedicated user for the app (recommended) and set it here.
+User=prolific
+Group=prolific
+
+# Change this to where you clone the repo on the VM.
+WorkingDirectory=/opt/social-influence
+
+# Put secrets and config in this file (see README.md).
+EnvironmentFile=/etc/default/prolific-study
+
+# Change the venv path if you use a different location.
+ExecStart=/opt/social-influence/venv/bin/gunicorn \
+  -w 2 \
+  -b 127.0.0.1:8000 \
+  --access-logfile - \
+  --error-logfile - \
+  wsgi:app
+
+Restart=always
+RestartSec=2
+TimeoutStopSec=30
+
+# A bit of hardening (optional, safe defaults for most VMs)
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

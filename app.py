@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-from flask_sqlalchemy import SQLAlchemy #for sqlite
+from flask_sqlalchemy import SQLAlchemy  # for sqlite
 from sqlalchemy.exc import OperationalError
+from werkzeug.middleware.proxy_fix import ProxyFix
+from functools import wraps
 import pandas as pd
 import sqlite3
 import json
@@ -8,12 +10,56 @@ import os
 import random
 from datetime import datetime
 
-app = Flask(__name__)
-app.secret_key = 'your_secret_key'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///responses.db' #for sqlite
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #for sqlite
-db = SQLAlchemy(app) #for sqlite
+def _get_bool_env(name: str, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _sqlite_uri_from_path(path: str) -> str:
+    # SQLAlchemy SQLite URI needs three slashes for absolute paths.
+    abs_path = os.path.abspath(path)
+    return f"sqlite:///{abs_path}"
+
+
+app = Flask(__name__)
+
+# ---- Production-friendly configuration (NREC / VM deployment) ----
+flask_debug = _get_bool_env("FLASK_DEBUG", default=(__name__ == "__main__"))
+
+secret_key = os.environ.get("FLASK_SECRET_KEY") or os.environ.get("SECRET_KEY")
+if not secret_key and not flask_debug:
+    raise RuntimeError(
+        "Missing FLASK_SECRET_KEY/SECRET_KEY. Set it before running in production. "
+        "Example: export FLASK_SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')"
+    )
+app.secret_key = secret_key or "dev-insecure-secret-key"
+
+# Support running behind Nginx/Caddy reverse proxy (recommended)
+if _get_bool_env("USE_PROXY_FIX", default=True):
+    # x_for/x_proto are the important ones for correct scheme + client ip.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
+
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = os.environ.get("SESSION_COOKIE_SAMESITE", "Lax")
+app.config["SESSION_COOKIE_SECURE"] = _get_bool_env("SESSION_COOKIE_SECURE", default=not flask_debug)
+
+db_uri = (
+    os.environ.get("SQLALCHEMY_DATABASE_URI")
+    or os.environ.get("DATABASE_URL")
+    or (
+        _sqlite_uri_from_path(os.environ["RESPONSES_DB_PATH"])
+        if os.environ.get("RESPONSES_DB_PATH")
+        else None
+    )
+    or "sqlite:///responses.db"
+)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = db_uri  # for sqlite
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False  # for sqlite
+db = SQLAlchemy(app)  # for sqlite
 
 
 
@@ -108,6 +154,30 @@ class Round(db.Model):
 # Must be called after models are declared.
 with app.app_context():
     db.create_all()
+
+
+ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN")
+
+
+def _admin_allowed() -> bool:
+    # In debug, keep it simple for local development.
+    if flask_debug:
+        return True
+    if not ADMIN_TOKEN:
+        return False
+    token = request.args.get("token") or request.headers.get("X-Admin-Token")
+    return token == ADMIN_TOKEN
+
+
+def admin_only(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not _admin_allowed():
+            # Return 404 to avoid advertising admin endpoints.
+            return ("Not found", 404)
+        return fn(*args, **kwargs)
+
+    return wrapper
 
 
 def _ensure_round_flat_columns():
@@ -491,6 +561,7 @@ def get_stable_article_id(article_row: dict):
 
 
 @app.route('/debug-init-db')
+@admin_only
 def debug_init_db():
     """Diagnostics: initialize responses DB tables and report status."""
     with app.app_context():
@@ -519,6 +590,7 @@ def debug_init_db():
 
 
 @app.route('/debug-articles')
+@admin_only
 def debug_articles():
     """Quick diagnostics: returns detected columns, topic column, and a small sample of rows."""
     try:
@@ -533,6 +605,7 @@ def debug_articles():
 
 
 @app.route('/debug-article/<int:article_id>')
+@admin_only
 def debug_article(article_id: int):
     """Diagnostics: look up a single article by its internal id (df['index']).
 
@@ -1635,6 +1708,7 @@ def thank_you():
 
 
 @app.route('/reset-db')
+@admin_only
 def reset_db():
     try:
         Round.query.delete()
@@ -1648,4 +1722,6 @@ def reset_db():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    host = os.environ.get("HOST", "127.0.0.1")
+    port = int(os.environ.get("PORT", "5001"))
+    app.run(debug=flask_debug, host=host, port=port)
