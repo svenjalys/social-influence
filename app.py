@@ -319,7 +319,7 @@ def set_condition(cond):
 # Load articles from SQLite database
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ARTICLES_DB_PATH = os.path.join(_BASE_DIR, "vacuumed_articles.db")
+ARTICLES_DB_PATH = os.path.join(_BASE_DIR, "article_selection.db")
 conn = sqlite3.connect(ARTICLES_DB_PATH)
 raw_df = pd.read_sql_query("SELECT * FROM new_articles", conn)
 conn.close()
@@ -368,7 +368,7 @@ TOPIC_MAP_LIST_A = {
     'Crime': 'Crime',
     'Finance': 'Finance',
     'Politics': 'Politics',
-    'Public Health & Health Policy': 'Health',
+    'Public Health & Health Policy': 'Public Health',
 }
 
 TOPIC_MAP_LIST_B = {
@@ -377,7 +377,7 @@ TOPIC_MAP_LIST_B = {
     'Science': 'Science',
     'Tech': 'Tech',
     'Sports': 'Sports',
-    'Personal Health & Wellbeing': 'Health',
+    'Personal Health & Wellbeing': 'Public Health',
 }
 
 
