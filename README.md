@@ -149,6 +149,23 @@ sudo apt install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d YOUR_DOMAIN
 ```
 
+#### Note: `nip.io` can hit Let’s Encrypt rate limits
+
+`nip.io` is a shared public domain, and sometimes Let’s Encrypt rate-limits it (domain-wide). If Certbot fails with a
+`too many certificates already issued for "nip.io"` error, use one of these instead:
+
+- **Alternative free IP-to-hostname domains** (same idea, different domain): try `sslip.io`.
+	- Test which hostname resolves on your VM:
+		- `getent hosts YOUR_IP.sslip.io`
+		- `getent hosts YOUR_IP_WITH_DASHES.sslip.io` (e.g. `158-39-74-93.sslip.io`)
+	- Update Nginx `server_name` and then run Certbot with that hostname.
+
+- **Free dynamic DNS**: DuckDNS (gives you a stable subdomain you control, works well with Certbot).
+
+- **HTTP-only fallback** (not recommended long-term):
+	- Skip Certbot and use `http://YOUR_FLOATING_IP/...`
+	- Set `SESSION_COOKIE_SECURE=0` in `/etc/default/prolific-study` (otherwise sessions may break over HTTP).
+
 ### 8) Verify Prolific entry URL
 
 Use your public URL:

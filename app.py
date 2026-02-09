@@ -378,6 +378,25 @@ def require_previous_step(step_name):
         return decorated_function
     return wrapper
 
+
+def require_session_flag(flag_name: str, redirect_endpoint: str = 'landing'):
+    """Require a specific session flag; redirect safely if missing.
+
+    Unlike require_previous_step(), this can redirect to an endpoint that does
+    not require URL parameters (important for guarding pages like /thank-you).
+    """
+
+    def wrapper(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not session.get(flag_name, False):
+                return redirect(url_for(redirect_endpoint))
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    return wrapper
+
 @app.route('/set-condition/<cond>')
 def set_condition(cond):
     if cond in ['color', 'no_color', 'c2pa', 'nolabel']:
@@ -1459,10 +1478,8 @@ def article(article_id):
             session['seen_article_ids'] = list(seen_ids)
             return redirect(url_for('article', article_id=next_id))
 
-        # After final round, finish the study (post-questionnaire not used in this prototype)
-        session['article_completed'] = True
-        session['mid_questionnaire_completed'] = True
-        session['post_questionnaire_completed'] = True
+        # After final round, finish the study.
+        session['study_completed'] = True
         return redirect(url_for('thank_you'))
 
     # Add random metadata if missing
@@ -1492,214 +1509,8 @@ def article(article_id):
         fav_topic=fav_topic,
         least_topic=least_topic,
     )
-
-
-
-@app.route('/mid-questionnaire', methods=['GET', 'POST'])
-@require_previous_step('article')
-def mid_questionnaire():
-    article_id = session.get('next_article')
-    article = df[df['index'] == article_id].iloc[0].to_dict()
-    article = normalize_article_row(article)
-
-    condition = session.get('condition')
-    # show_label = session.get('last_article_had_label', False)
-
-    if request.method == 'POST':
-        selected_elements = request.form.getlist('choice_elements')
-        other_text = request.form.get('choice_elements_other', '').strip()
-        trust_article = request.form.get('trust_article')
-        trust_image = request.form.get('trust_image')
-
-        # if not selected_elements or ("Other (please specify)" in selected_elements and not other_text):
-        #     return render_template('mid_questionnaire.html',
-        #                            article=article,
-        #                            condition=condition,
-        #                            show_label=show_label,
-        #                            error="Please complete the form.")
-        # if "Don't know / None of these" in selected_elements and len(selected_elements) > 1:
-        #     return render_template('mid_questionnaire.html',
-        #                            article=article,
-        #                            condition=condition,
-        #                            show_label=show_label,
-        #                            error="'Don't know' cannot be combined.")
-        # if selected_elements == ['Other (please specify)']:
-        #     selected_elements = [f"Other: {other_text}"]
-
-        selected_elements_out = []
-        for el in selected_elements:
-            if el == "Other":
-                if other_text:
-                    selected_elements_out.append(f"Other: {other_text}")
-                else:
-                    return render_template('mid_questionnaire.html',
-                                        article=article,
-                                        condition=condition,
-                                        # show_label=show_label,
-                                        error="Please specify what 'Other' means.")
-            else:
-                selected_elements_out.append(el)
-
-        if "Don't know/None of these" in selected_elements and len(selected_elements) > 1:
-            return render_template('mid_questionnaire.html',
-                                article=article,
-                                condition=condition,
-                                # show_label=show_label,
-                                error="'Don't know' cannot be combined.")
-
-        update_participant_data('round', {
-            'round': session.get('round', 1),
-            'article_id': article_id,
-            # 'selected_article_had_label': show_label,
-            'mid_questionnaire': {
-                'selected_elements': selected_elements_out,
-                'trust_article': trust_article,
-                'trust_image': trust_image
-            }
-        })
-
-        session['mid_questionnaire_completed'] = True
-        if session.get('round', 1) < 6:
-            session['round'] += 1
-            return redirect(url_for('article', article_id=session.get('next_article')))
-        return redirect(url_for('post_questionnaire'))
-
-    return render_template(
-        'mid_questionnaire.html',
-        article=article,
-        condition=condition,
-        # show_label=show_label,
-        debug=False
-    )
-
-
-
-
-# @app.route('/post-questionnaire', methods=['GET', 'POST'])
-# @require_previous_step('mid_questionnaire')
-# def post_questionnaire():
-#     condition = session.get('condition')
-
-#     if request.method == 'POST':
-#         confidence = request.form.get('confidence')
-#         feedback = request.form.get('feedback')
-#         score_meaning = request.form.getlist('score_meaning')
-#         score_meaning_other = request.form.get('score_meaning_other')
-#         label_expectation = request.form.getlist('label_expectation')
-#         label_expectation_other = request.form.get('label_expectation_other')
-#         if condition in ['color', 'no_color']:
-#             grade_basis = request.form.get('grade_basis')
-#             grade_basis_other = request.form.get('grade_basis_other')
-#         else:
-#             grade_basis = None
-#             grade_basis_other = None
-#         familiar_trust_levels = request.form.get('familiar_trust_levels')
-#         familiar_nutriscore = request.form.get('familiar_nutriscore')
-
-#         likert_items = ['understood_label', 'visual_design', 'decision_support', 'info_usefulness',
-#                         'image_trust', 'evaluate_trustworthiness', 'more_labels', 'attention_check']
-#         likert_responses = {}
-#         for item in likert_items:
-#             val = request.form.get(item)
-#             if not val:
-#                 return render_template('post_questionnaire.html', error="Please answer all questions.")
-#             likert_responses[item] = int(val)
-
-#         update_participant_data('post_questionnaire', {
-#             'confidence': confidence,
-#             'feedback': feedback,
-#             'score_meaning': [
-#                 f"Other: {score_meaning_other}" if val == "Other" and score_meaning_other else val
-#                 for val in score_meaning
-#             ],
-#             'label_expectation': [
-#                 f"Other: {label_expectation_other}" if val == "Other" and label_expectation_other else val
-#                 for val in label_expectation
-#             ],
-#             'familiar_trust_levels': familiar_trust_levels,
-#             'familiar_nutriscore': familiar_nutriscore,
-#             'grade_basis': f"Other: {grade_basis_other}" if grade_basis == "Other" and grade_basis_other else grade_basis,
-#             'likert_responses': likert_responses,
-#             'label_present': session.get('last_article_had_label', False)
-#         })
-#         session['post_questionnaire_completed'] = True
-#         return redirect(url_for('thank_you'))
-
-#     return render_template(
-#         'post_questionnaire.html',
-#         condition=session.get('condition'))
-
-@app.route('/post-questionnaire', methods=['GET', 'POST'])
-@require_previous_step('mid_questionnaire')
-def post_questionnaire():
-    condition = session.get('condition')
-
-    if request.method == 'POST':
-        confidence = request.form.get('confidence')
-        feedback = request.form.get('feedback')
-        familiar_trust_levels = request.form.get('familiar_trust_levels')
-        familiar_nutriscore = request.form.get('familiar_nutriscore')
-
-        # Only handle these if the fields are present (i.e., if condition is NOT 'nolabel')
-        if condition in ['color', 'no_color', 'c2pa']:
-            score_meaning = request.form.getlist('score_meaning')
-            score_meaning_other = request.form.get('score_meaning_other')
-            label_expectation = request.form.getlist('label_expectation')
-            label_expectation_other = request.form.get('label_expectation_other')
-
-            if condition in ['color', 'no_color']:
-                grade_basis = request.form.get('grade_basis')
-                grade_basis_other = request.form.get('grade_basis_other')
-            else:
-                grade_basis = None
-                grade_basis_other = None
-
-            # Process Likert
-            likert_items = ['understood_label', 'visual_design', 'decision_support', 'info_usefulness',
-                            'image_trust', 'evaluate_trustworthiness', 'more_labels', 'attention_check']
-            likert_responses = {}
-            for item in likert_items:
-                val = request.form.get(item)
-                if not val:
-                    return render_template('post_questionnaire.html', error="Please answer all questions.", condition=condition)
-                likert_responses[item] = int(val)
-
-            # Save all data
-            update_participant_data('post_questionnaire', {
-                'confidence': confidence,
-                'feedback': feedback,
-                'score_meaning': [
-                    f"Other: {score_meaning_other}" if val == "Other" and score_meaning_other else val
-                    for val in score_meaning
-                ],
-                'label_expectation': [
-                    f"Other: {label_expectation_other}" if val == "Other" and label_expectation_other else val
-                    for val in label_expectation
-                ],
-                'familiar_trust_levels': familiar_trust_levels,
-                'familiar_nutriscore': familiar_nutriscore,
-                'grade_basis': f"Other: {grade_basis_other}" if grade_basis == "Other" and grade_basis_other else grade_basis,
-                'likert_responses': likert_responses,
-                'label_present': session.get('last_article_had_label', False)
-            })
-        else:  # NO LABEL condition
-            # Just save the available data
-            update_participant_data('post_questionnaire', {
-                'confidence': confidence,
-                'feedback': feedback,
-                'familiar_trust_levels': familiar_trust_levels,
-                'familiar_nutriscore': familiar_nutriscore,
-                'label_present': session.get('last_article_had_label', False)
-            })
-        session['post_questionnaire_completed'] = True
-        return redirect(url_for('thank_you'))
-
-    return render_template(
-        'post_questionnaire.html',
-        condition=session.get('condition'))
-
 @app.route('/thank-you')
-@require_previous_step('post_questionnaire')
+@require_session_flag('study_completed', redirect_endpoint='landing')
 def thank_you():
     condition = session.get('condition', 'none')
     return render_template('thank_you.html', condition=condition)
