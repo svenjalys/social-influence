@@ -582,6 +582,14 @@
   function buildRatingContent() {
     steps = [];
 
+    // For the two recommended articles shown on the page, tag questions as (1/2) or (2/2)
+    // depending on whether they refer to the first (top) or second (bottom) recommendation card.
+    const _recPosTag = (recIndex) => {
+      const n = Number(recIndex);
+      if (!Number.isFinite(n)) return '';
+      return `(${n + 1}/2)`;
+    };
+
     const leastRecIndex = recommendations.findIndex((rec) => {
       const recKind = String(REC_KINDS[String(rec.index)] || '').trim();
       return recKind === 'least';
@@ -607,7 +615,7 @@
 
     // Preference-fit statement for all recommendations (asked for each recommended article)
     recommendations.forEach((rec, index) => {
-      let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">this article</span>?</h6>`;
+      let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">this article</span> ${_recPosTag(index)}?</h6>`;
       html += `<p class="mb-1">The article fits my preferences.</p>`;
       html += '<div class="d-flex justify-content-between align-items-center mb-2">';
       html += '<span style="font-size: 0.75rem;">Strongly disagree</span>';
@@ -645,7 +653,7 @@
         {key: 'relevant', text: 'The article seems relevant.'}
       ];
       statements.forEach(stmt => {
-        let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">this article</span>?</h6>`;
+        let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">this article</span> ${_recPosTag(index)}?</h6>`;
         html += `<p class="mb-1">${stmt.text}</p>`;
         html += '<div class="d-flex justify-content-between align-items-center mb-2">';
         html += '<span style="font-size: 0.75rem;">Strongly disagree</span>';
