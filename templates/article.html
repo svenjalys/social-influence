@@ -201,6 +201,17 @@
 </div>
 {% endif %}
 
+<div class="mx-auto mb-2" style="max-width: 900px;">
+  <div class="d-flex justify-content-between align-items-center">
+    <div class="text-body-secondary" style="font-size: 0.9rem;">
+      Round <span id="roundProgressText">{{ round_number }} of {{ total_rounds }}</span>
+    </div>
+  </div>
+  <div class="progress" role="progressbar" aria-label="Study progress" style="height: 6px;">
+    <div id="roundProgressBar" class="progress-bar" style="width: 0%;"></div>
+  </div>
+</div>
+
 <div class="d-flex justify-content-center mb-4">
   <div class="alert alert-primary mb-0 px-4 py-3" role="alert" style="max-width: 900px; width: 100%;">
     <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
@@ -394,6 +405,26 @@
   const TOTAL_ROUNDS = __pageConfig.total_rounds;
   let steps = [];
   let currentStep = 0;
+
+  // Round progress UI (top of page)
+  (function renderRoundProgress() {
+    const roundNum = Number(ROUND_NUMBER);
+    const totalNum = Number(TOTAL_ROUNDS);
+    if (!Number.isFinite(roundNum) || !Number.isFinite(totalNum) || totalNum <= 0) return;
+
+    const pct = Math.max(0, Math.min(100, Math.round((roundNum / totalNum) * 100)));
+    const textEl = document.getElementById('roundProgressText');
+    const barEl = document.getElementById('roundProgressBar');
+    const progressEl = barEl?.closest('.progress');
+
+    if (textEl) textEl.textContent = `${roundNum} of ${totalNum}`;
+    if (barEl) barEl.style.width = `${pct}%`;
+    if (progressEl) {
+      progressEl.setAttribute('aria-valuenow', String(roundNum));
+      progressEl.setAttribute('aria-valuemin', '1');
+      progressEl.setAttribute('aria-valuemax', String(totalNum));
+    }
+  })();
 
   let selectedRecommendationId = null;
   let choiceConfirmed = false;
