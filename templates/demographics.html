@@ -55,10 +55,10 @@
                     <div id="ageError" class="invalid-feedback">Please enter a valid age (18–110).</div>
                 </div>
 
-                <!-- Country -->
+                <!-- State -->
                 <div class="mb-3">
-                    <label class="form-label">3. Where do you live?</label>
-                    <select name="country" id="country" class="form-select" required onchange="handleOther(this, 'country_other_wrapper')">
+                    <label class="form-label">3. In which US state do you live?</label>
+                    <select name="state" id="state" class="form-select" required onchange="handleOther(this, 'state_other_wrapper')">
                         <option value="" disabled selected>Select...</option>
                         <option value="Alabama">Alabama</option>
                         <option value="Alaska">Alaska</option>
@@ -110,9 +110,10 @@
                         <option value="West Virginia">West Virginia</option>
                         <option value="Wisconsin">Wisconsin</option>
                         <option value="Wyoming">Wyoming</option>
+                        <option value="Other territories">Other territories</option>
                     </select>
-                    <div id="country_other_wrapper" class="hidden mt-2">
-                        <input type="text" name="other_country" id="country_other" class="form-control" placeholder="Please specify">
+                    <div id="state_other_wrapper" class="hidden mt-2">
+                        <input type="text" name="other_state" id="state_other" class="form-control" placeholder="Please specify">
                     </div>
                 </div>
 
@@ -122,13 +123,9 @@
                     <select name="education" id="education" class="form-select" required onchange="handleOther(this, 'education_other_wrapper')">
                         <option value="" disabled selected>Select...</option>
                         <option value="No formal education">I did not complete any formal education</option>
-                        <option value="Nursery school">Nursery school</option>
-                        <option value="Grades 1 through 11">Grades 1 through 11</option>
-                        <option value="12th grade - no diploma">12th grade - no diploma</option>
-                        <option value="Regular high school diploma">Regular high school diploma</option>
-                        <option value="GED or alternative credential">GED or alternative credential</option>
-                        <option value="Some college credit, but less than 1 year of college">Some college credit, but less than 1 year of college</option>
-                        <option value="1 or more years of college, no degree">1 or more years of college, no degree</option>
+                        <option value="Elementary school">Elementary school</option>
+                        <option value="High school">High school</option>
+                        <option value="Some college">Some college (no degree)</option>
                         <option value="Associates degree">Associates degree (for example: AA, AS)</option>
                         <option value="Bachelor's degree">Bachelor's degree (for example: BA, BS)</option>
                         <option value="Master's degree">Master's degree (for example: MA, MS, MEd, MBA)</option>
@@ -182,7 +179,7 @@ function handleOther(selectElement, wrapperId) {
     const input = wrapper.querySelector('input');
     const selectedValue = selectElement.value;
 
-    if (selectedValue === "Other" || selectedValue === "Self-describe") {
+    if (selectedValue === "Other" || selectedValue === "Self-describe" || selectedValue === "Other territories") {
         wrapper.classList.remove("hidden");
         input.required = true;
     } else {
@@ -214,16 +211,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Restore selections/inputs if we came back with an error.
     setValueIfPresent('gender', 'gender');
     setValueIfPresent('gender_other', 'gender_self_describe');
-    setValueIfPresent('country', 'country');
-    setValueIfPresent('country_other', 'other_country');
+    // Q3: state (legacy key support: country/other_country)
+    setValueIfPresent('state', 'state');
+    if (!document.getElementById('state')?.value) setValueIfPresent('state', 'country');
+    setValueIfPresent('state_other', 'other_state');
+    if (!document.getElementById('state_other')?.value) setValueIfPresent('state_other', 'other_country');
     setValueIfPresent('education', 'education');
     setValueIfPresent('education_other', 'other_education');
 
     // Ensure “Other” textboxes show if relevant.
     const genderEl = document.getElementById('gender');
     if (genderEl) handleOther(genderEl, 'gender_other_wrapper');
-    const countryEl = document.getElementById('country');
-    if (countryEl) handleOther(countryEl, 'country_other_wrapper');
+    const stateEl = document.getElementById('state');
+    if (stateEl) handleOther(stateEl, 'state_other_wrapper');
     const eduEl = document.getElementById('education');
     if (eduEl) handleOther(eduEl, 'education_other_wrapper');
 

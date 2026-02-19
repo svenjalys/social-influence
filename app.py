@@ -299,7 +299,7 @@ def _sync_participant_flat_columns(participant: Participant, section: str, data:
         participant.demo_gender = _as_text(data.get('gender'))
         participant.demo_age = data.get('age') if isinstance(data.get('age'), int) else None
         participant.demo_age_group = _as_text(data.get('age_group'))
-        participant.demo_country = _as_text(data.get('country'))
+        participant.demo_country = _as_text(data.get('state') or data.get('country'))
         participant.demo_education = _as_text(data.get('education'))
         participant.demo_political_leaning = _as_text(data.get('political_leaning'))
 
@@ -993,13 +993,17 @@ def demographics():
         gender = request.form.get('gender')
         gender_self = request.form.get('gender_self_describe', '').strip()
         age_raw = request.form.get('age', '').strip()
-        country = request.form.get('country')
-        other_country = request.form.get('other_country', '').strip()
+        # Q3 field renamed from country -> state (keep legacy fallbacks)
+        state = request.form.get('state') or request.form.get('country')
+        other_state = (request.form.get('other_state') or request.form.get('other_country') or '').strip()
         education = request.form.get('education')
         other_education = request.form.get('other_education', '').strip()
 
         gender_final = gender_self if gender == 'Self-describe' else gender
-        country_final = other_country if country == 'Other' else country
+        if state in {'Other', 'Other territories'} and other_state:
+            state_final = other_state
+        else:
+            state_final = state
         education_final = other_education if education == 'Other' else education
         # Political leaning question (new)
         political_leaning = request.form.get('political_leaning')
@@ -1040,7 +1044,9 @@ def demographics():
             'gender': gender_final,
             'age': age,
             'age_group': age_group,
-            'country': country_final,
+            # Store under the new key, but also mirror to 'country' for backwards compatibility
+            'state': state_final,
+            'country': state_final,
             'education': education_final,
             'political_leaning': political_final
         })
