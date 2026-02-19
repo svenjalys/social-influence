@@ -163,8 +163,41 @@
       border-left: 19px solid white;
     }
 
+    .arrow-down {
+      position: absolute;
+      left: 50%;
+      bottom: -21px;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-top: 20px solid #ccc;
+      z-index: 1001;
+    }
+
+    .arrow-down::after {
+      content: '';
+      position: absolute;
+      left: -19px;
+      top: -20px;
+      width: 0;
+      height: 0;
+      border-left: 19px solid transparent;
+      border-right: 19px solid transparent;
+      border-top: 19px solid white;
+    }
+
     #ratingBox {
       box-sizing: border-box;
+    }
+
+    #questionContent {
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: auto;
+      /* Leave room for the Continue button + padding inside the box */
+      max-height: calc(70vh - 96px);
     }
 
     #nextBox {
@@ -175,6 +208,19 @@
       font-size: 2em;
       line-height: 1;
       display: inline-block;
+    }
+
+    #focusOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 950;
+      pointer-events: none;
+    }
+
+    .rating-focus-card {
+      position: relative;
+      z-index: 960;
     }
   </style>
 </head>
@@ -364,7 +410,7 @@
   </div>
 
   <!-- Rating Box -->
-  <div id="ratingBox" class="card position-fixed d-none shadow-lg" style="width: 320px; z-index: 1000; max-height: 70vh; overflow: visible;">
+  <div id="ratingBox" class="card position-fixed d-none shadow-lg" style="z-index: 1000; overflow: visible;">
     <div class="card-body p-3">
       <div id="questionContent">
         <!-- Questions loaded by JS -->
@@ -373,8 +419,11 @@
         <button class="btn btn-primary" onclick="continueToNext()">Continue</button>
       </div>
     </div>
-    <div class="arrow"></div>
+    <div id="ratingArrow" class="arrow-down" aria-hidden="true"></div>
   </div>
+
+  <!-- Subtle overlay to grey-out background during rating -->
+  <div id="focusOverlay" class="d-none" aria-hidden="true"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -476,6 +525,8 @@
 
     // Start questionnaire
     document.getElementById('ratingBox').classList.remove('d-none');
+    const overlay = document.getElementById('focusOverlay');
+    if (overlay) overlay.classList.remove('d-none');
     buildRatingContent();
     positionBox();
   }
@@ -572,10 +623,19 @@
     positionBox();
   }
 
+  function _setFocusTargetCard(cardEl) {
+    document.querySelectorAll('.recommendation-card').forEach((c) => c.classList.remove('rating-focus-card'));
+    if (cardEl) cardEl.classList.add('rating-focus-card');
+  }
+
   function isAnswered() {
     const container = document.getElementById('questionContent');
-    const radios = container.querySelectorAll('input[type="radio"]');
-    return Array.from(radios).some(r => r.checked);
+    if (!container) return false;
+    const radios = Array.from(container.querySelectorAll('input[type="radio"]'));
+    if (!radios.length) return true;
+
+    const names = Array.from(new Set(radios.map(r => r.name).filter(Boolean)));
+    return names.every((name) => radios.some((r) => r.name === name && r.checked));
   }
 
   // Build the rating content
@@ -599,73 +659,131 @@
       ? String(recommendations[leastRecIndex].Title || recommendations[leastRecIndex]['Title'] || '').trim()
       : '';
 
+    const _likertScaleHtml = (inputName) => {
+      let out = '';
+      // Use flex-shrink-0 on end labels so text doesn't get clipped (e.g. missing last character).
+      // If the row becomes wider than the box, #questionContent will scroll horizontally.
+      out += '<div class="likert-scale d-inline-flex align-items-center gap-2" style="white-space: nowrap;">';
+      out += '<span class="text-muted flex-shrink-0" style="font-size: 0.75rem; white-space: nowrap;">Strongly disagree</span>';
+      out += '<div class="d-inline-flex align-items-center" style="white-space: nowrap;">';
+      for (let i = 1; i <= 5; i++) {
+        out += `<label class="mx-1" style="font-size: 0.9rem;"><input type="radio" name="${inputName}" value="${i}" onchange="updateHidden(this)"> ${i}</label>`;
+      }
+      out += '</div>';
+      out += '<span class="text-muted flex-shrink-0" style="font-size: 0.75rem; white-space: nowrap;">Strongly agree</span>';
+      out += '</div>';
+      return out;
+    };
+
+    const _statementGroupLikertHtml = (items, forceGridFormat = false, zebraRows = false) => {
+      if (!items || !items.length) return '';
+
+      // For a single statement, keep the compact per-row scale (more readable).
+      if (items.length === 1 && !forceGridFormat) {
+        return _statementWithLikertRowHtml(items[0].text, items[0].name);
+      }
+
+      // For multiple statements on one screen: show the Likert labels and numbers ONCE as a header.
+      let out = '';
+      out += '<div class="mb-2">';
+
+      // Header line: use verbal anchors aligned with the five radio columns.
+      const __likertLabels = ['Strongly disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly agree'];
+      out += '<div class="d-grid align-items-end mb-1" style="grid-template-columns: minmax(220px, 1fr) repeat(5, 75px);">';
+      out += '<div></div>';
+      for (let i = 0; i < __likertLabels.length; i++) {
+        out += `<div class="text-center text-body-secondary" style="font-size: 0.75rem; line-height: 1.1; white-space: normal;">${__likertLabels[i]}</div>`;
+      }
+      out += '</div>';
+
+      // Rows: statement column + 5 fixed radio columns using the same widths/gaps as the header.
+      const __zebraEnabled = Boolean(zebraRows) && items.length > 1;
+      items.forEach((it, idx) => {
+        const __rowStyle = [
+          'grid-template-columns: minmax(220px, 1fr) repeat(5, 75px);',
+          'padding-block: 6px;',
+          (__zebraEnabled && (idx % 2 === 1)) ? 'background-color: var(--bs-tertiary-bg);' : '',
+        ].filter(Boolean).join(' ');
+        out += `<div class="d-grid align-items-center" style="${__rowStyle}">`;
+        out += `<div class="text-end" style="white-space: normal;">${it.text}</div>`;
+        for (let i = 1; i <= 5; i++) {
+          out += '<div class="text-center">';
+          out += `<input type="radio" name="${it.name}" value="${i}" onchange="updateHidden(this)" aria-label="${i}">`;
+          out += '</div>';
+        }
+        out += '</div>';
+      });
+
+      out += '</div>';
+      return out;
+    };
+
+    const _statementWithLikertRowHtml = (statementText, inputName) => {
+      let out = '';
+      // Single-statement layout: statement first, then the Likert scale below.
+      out += '<div class="mb-3">';
+      out += `<p class="mb-2">${statementText}</p>`;
+      out += _likertScaleHtml(inputName);
+      out += '</div>';
+      return out;
+    };
+
     // Likelihood questions for all recommendations
     recommendations.forEach((rec, index) => {
       let html = `<h6>How likely is it that you would read this article ${_recPosTag(index)} in full?</h6>`;
-      html += '<div class="d-flex justify-content-between align-items-center mb-3">';
-      html += '<span style="font-size: 0.75rem;">Very unlikely</span>';
+      html += '<div class="likert-scale d-inline-flex align-items-center gap-2 mb-3" style="white-space: nowrap;">';
+      html += '<span class="flex-shrink-0" style="font-size: 0.75rem; white-space: nowrap;">Very unlikely</span>';
+      html += '<div class="d-inline-flex align-items-center" style="white-space: nowrap;">';
       for (let i = 1; i <= 5; i++) {
         html += `<label class="mx-1"><input type="radio" name="likelihood_${rec.index}" value="${i}" onchange="updateHidden(this)"> ${i}</label>`;
       }
-      html += '<span style="font-size: 0.75rem;">Very likely</span>';
+      html += '</div>';
+      html += '<span class="flex-shrink-0" style="font-size: 0.75rem; white-space: nowrap;">Very likely</span>';
       html += '</div>';
       html += `<input type="hidden" name="likelihood_${rec.index}_hidden" value="">`;
       steps.push({html: html, recIndex: index});
     });
 
-    // Preference-fit statement for all recommendations (asked for each recommended article)
+    // Grouped statements about each recommended article.
+    // All items that share the same header and target the same article are shown together.
     recommendations.forEach((rec, index) => {
-      let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">this article</span> ${_recPosTag(index)}?</h6>`;
-      html += `<p class="mb-1">The article fits my preferences.</p>`;
-      html += '<div class="d-flex justify-content-between align-items-center mb-2">';
-      html += '<span style="font-size: 0.75rem;">Strongly disagree</span>';
-      for (let i = 1; i <= 5; i++) {
-        html += `<label class="mx-1"><input type="radio" name="preference_fit_${rec.index}" value="${i}" onchange="updateHidden(this)"> ${i}</label>`;
+      const recKind = String(REC_KINDS[String(rec.index)] || '').trim();
+      const items = [];
+
+      // Always asked for both recommended articles
+      items.push({
+        name: `preference_fit_${rec.index}`,
+        text: 'The article fits my preferences.',
+      });
+
+      // Extra statements only for the least-favourite-topic recommendation
+      if (recKind === 'least') {
+        items.push(
+          { name: `constructive_${rec.index}`, text: 'The article seems constructive.' },
+          { name: `understandable_${rec.index}`, text: 'The article seems easy to understand.' },
+          { name: `trustworthy_${rec.index}`, text: 'The article seems trustworthy.' },
+          { name: `relevant_${rec.index}`, text: 'The article seems relevant.' },
+        );
       }
-      html += '<span style="font-size: 0.75rem;">Strongly agree</span>';
-      html += '</div>';
-      steps.push({html: html, recIndex: index});
+
+      let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">this article</span> ${_recPosTag(index)}?</h6>`;
+      // Use the grid layout for these steps even if only one statement is present,
+      // so formatting stays consistent across both recommended articles.
+      html += _statementGroupLikertHtml(items, true, true);
+
+      steps.push({ html: html, recIndex: index });
     });
 
     // Attention check (ONLY in round 3)
     if (Number(ROUND_NUMBER) === 3) {
       let html = `<h6>This is an attention check. Please select "1" - Strongly disagree below.</h6>`;
-      html += `<p class="mb-1">The sky is green.</p>`;
-      html += '<div class="d-flex justify-content-between align-items-center mb-2">';
-      html += '<span style="font-size: 0.75rem;">Strongly disagree</span>';
-      for (let i = 1; i <= 5; i++) {
-        html += `<label class="mx-1"><input type="radio" name="rb_attention_check" value="${i}" onchange="updateHidden(this)"> ${i}</label>`;
-      }
-      html += '<span style="font-size: 0.75rem;">Strongly agree</span>';
-      html += '</div>';
+      html += _statementGroupLikertHtml([
+        { name: 'rb_attention_check', text: 'The sky is green.' },
+      ], true);
       steps.push({html: html, recIndex: (leastRecIndex >= 0 ? leastRecIndex : 0)});
     }
 
-    // Statements only for the least-favourite-topic recommendation.
-    recommendations.forEach((rec, index) => {
-      const recKind = String(REC_KINDS[String(rec.index)] || '').trim();
-      if (recKind !== 'least') return;
-
-      const statements = [
-        {key: 'constructive', text: 'The article seems constructive.'},
-        {key: 'understandable', text: 'The article seems easy to understand.'},
-        {key: 'trustworthy', text: 'The article seems trustworthy.'},
-        {key: 'relevant', text: 'The article seems relevant.'}
-      ];
-      statements.forEach(stmt => {
-        let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">this article</span> ${_recPosTag(index)}?</h6>`;
-        html += `<p class="mb-1">${stmt.text}</p>`;
-        html += '<div class="d-flex justify-content-between align-items-center mb-2">';
-        html += '<span style="font-size: 0.75rem;">Strongly disagree</span>';
-        for (let i = 1; i <= 5; i++) {
-          html += `<label class="mx-1"><input type="radio" name="${stmt.key}_${rec.index}" value="${i}" onchange="updateHidden(this)"> ${i}</label>`;
-        }
-        html += '<span style="font-size: 0.75rem;">Strongly agree</span>';
-        html += '</div>';
-        html += `<input type="hidden" name="${stmt.key}_${rec.index}_hidden" value="">`;
-        steps.push({html: html, recIndex: index});
-      });
-    });
+    // (The least-topic-only statements are grouped above with preference-fit.)
 
     // Label questions
     const labelStatements = [
@@ -675,19 +793,12 @@
       {key: 'label_attention', text: 'The explanation grabbed my attention.'},
       {key: 'label_more', text: 'I would like to see more explanations like this for recommended news articles.'}
     ];
-    labelStatements.forEach(stmt => {
+    // Group all explanation items together under a single header.
+    {
       let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">the article explanation</span>?</h6>`;
-      html += `<p class="mb-1">${stmt.text}</p>`;
-      html += '<div class="d-flex justify-content-between align-items-center mb-2">';
-      html += '<span style="font-size: 0.75rem;">Strongly disagree</span>';
-      for (let i = 1; i <= 5; i++) {
-        html += `<label class="mx-1"><input type="radio" name="${stmt.key}" value="${i}" onchange="updateHidden(this)"> ${i}</label>`;
-      }
-      html += '<span style="font-size: 0.75rem;">Strongly agree</span>';
-      html += '</div>';
-      html += `<input type="hidden" name="${stmt.key}_hidden" value="">`;
-      steps.push({html: html, recIndex: (leastRecIndex >= 0 ? leastRecIndex : undefined)});
-    });
+      html += _statementGroupLikertHtml(labelStatements.map((s) => ({ name: s.key, text: s.text })), true);
+      steps.push({ html: html, recIndex: (leastRecIndex >= 0 ? leastRecIndex : 0) });
+    }
 
     // Debug aid: confirm that label steps are included.
     try {
@@ -719,6 +830,7 @@
 
   function positionBox() {
     const box = document.getElementById('ratingBox');
+    const arrow = document.getElementById('ratingArrow');
     const step = steps[currentStep];
     let activeCard = null;
     if (step && step.recIndex !== undefined) {
@@ -736,41 +848,70 @@
       });
     }
     if (activeCard) {
+      _setFocusTargetCard(activeCard);
       const rect = activeCard.getBoundingClientRect();
-      // Horizontal positioning: keep next to the active card, but shrink/clamp
-      // so the box stays fully visible with at least 5px gap to the viewport.
-      const H_GAP = 20;       // gap between card and box
-      const RIGHT_GAP = 5;    // minimum distance to viewport right
-      const LEFT_GAP = 5;     // minimum distance to viewport left (fallback)
-      const DEFAULT_WIDTH = 320;
-      const MIN_USABLE_WIDTH = 220;
 
-      // Prefer placing the box directly to the right of the card.
-      const desiredLeft = rect.right + H_GAP;
+      // Position the rating box above the active recommendation card.
+      const VIEWPORT_GAP = 8;
+      const V_GAP = 14; // vertical gap between card and box
 
-      // Keep the default width unless the space between the card and the viewport edge is smaller.
-      let left = desiredLeft;
-      let available = window.innerWidth - RIGHT_GAP - left;
-      let width = Math.min(DEFAULT_WIDTH, Math.max(0, available));
+      // Shrink-wrap the box to its content, but cap it at the recommendation card width
+      // (and also cap to viewport on small screens). If content exceeds the cap,
+      // the inner questionContent becomes horizontally scrollable.
+      const availableViewportWidth = window.innerWidth - (VIEWPORT_GAP * 2);
+      const capWidth = Math.max(0, Math.min(Math.floor(rect.width), Math.floor(availableViewportWidth)));
 
-      // Fallback: if there's not even a usable width next to the card, pin the box inside
-      // the viewport (still keeping vertical position unchanged).
-      if (width < MIN_USABLE_WIDTH) {
-        left = LEFT_GAP;
-        available = window.innerWidth - RIGHT_GAP - left;
-        width = Math.min(DEFAULT_WIDTH, Math.max(0, available));
-      }
+      // Default: shrink-wrap to content but cap at card/viewport.
+      box.style.minWidth = '240px';
+      box.style.width = 'fit-content';
+      box.style.maxWidth = capWidth > 0 ? `${capWidth}px` : `${Math.floor(availableViewportWidth)}px`;
+
+      // If this step has only ONE rating scale (one radio group), size the box to the scale width.
+      // The question/statement text can wrap within that width.
+      try {
+        const content = document.getElementById('questionContent');
+        const radios = Array.from(content?.querySelectorAll('input[type="radio"]') || []);
+        const names = Array.from(new Set(radios.map(r => r.name).filter(Boolean)));
+        const hasTable = !!content?.querySelector('table');
+        const isSingleScale = names.length === 1 && !hasTable;
+        if (isSingleScale) {
+          const scaleEl = content?.querySelector('.likert-scale');
+          if (scaleEl) {
+            const scaleWidth = Math.ceil(scaleEl.scrollWidth || scaleEl.getBoundingClientRect().width || 0);
+            // Add a little room for the card padding/border.
+            const desired = Math.max(240, Math.min(capWidth || availableViewportWidth, scaleWidth + 40));
+            box.style.width = `${desired}px`;
+            box.style.maxWidth = `${desired}px`;
+          }
+        }
+      } catch (e) {}
+
+      // After setting width, measure box height.
+      const boxHeight = box.getBoundingClientRect().height || box.offsetHeight || 400;
+
+      // Measure actual width after fit-content/maxWidth rules apply.
+      const boxWidth = box.getBoundingClientRect().width || box.offsetWidth || capWidth || 320;
+
+      const cardCenterX = rect.left + (rect.width / 2);
+      let left = cardCenterX - (boxWidth / 2);
+      left = Math.max(VIEWPORT_GAP, Math.min(left, window.innerWidth - boxWidth - VIEWPORT_GAP));
+
+      let top = rect.top - boxHeight - V_GAP;
+      top = Math.max(VIEWPORT_GAP, top);
 
       box.style.right = 'auto';
       box.style.left = `${left}px`;
-      box.style.width = `${width}px`;
-      box.style.top = `${rect.top}px`;
+      box.style.top = `${top}px`;
 
-      // Ensure the box doesn't extend below the viewport
-      const boxHeight = box.offsetHeight || 400;
-      const currentTop = parseInt(box.style.top);
-      if (currentTop + boxHeight > window.innerHeight) {
-        box.style.top = `${window.innerHeight - boxHeight - 10}px`;
+      // Align the arrow with the card center (clamped within the box).
+      if (arrow) {
+        const arrowHalf = 20; // matches CSS border size (20px)
+        const desiredArrowLeft = (cardCenterX - left) - arrowHalf;
+        const minArrowLeft = 8;
+        const maxArrowLeft = boxWidth - (arrowHalf * 2) - 8;
+        const arrowLeft = Math.max(minArrowLeft, Math.min(desiredArrowLeft, maxArrowLeft));
+        arrow.style.left = `${arrowLeft + arrowHalf}px`;
+        arrow.style.transform = 'translateX(-50%)';
       }
     }
   }
@@ -789,6 +930,8 @@
 
     // Keep rating box hidden until choice is confirmed
     document.getElementById('ratingBox').classList.add('d-none');
+    const overlay = document.getElementById('focusOverlay');
+    if (overlay) overlay.classList.add('d-none');
     _setConfirmEnabled(false);
 
     // Position helper callout (may hide itself if recommendations are off-screen)
