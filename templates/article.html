@@ -70,6 +70,27 @@
       cursor: pointer;
     }
 
+    /* Clear separation between explanation (page background) and the focused card.
+       The card uses Bootstrap's `border-0`, so we override it only while focused. */
+    .rec-item.rating-focus-item .recommendation-card {
+      border: 1px solid var(--bs-border-color) !important;
+      border-top-width: 2px !important;
+    }
+
+    /* Grey overlay during rating: dims everything except the active rec-item and the rating box.
+       Implemented as four fixed segments that surround the focused rec-item (a "hole" in the dim). */
+    .focus-overlay-segment {
+      position: fixed;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 1050;
+      pointer-events: none;
+      display: none;
+    }
+
+    body.rating-active .focus-overlay-segment {
+      display: block;
+    }
+
     .rec-description {
       color: #495057;
       font-size: 0.95rem;
@@ -203,23 +224,17 @@
     }
 
     .nextbox-arrow {
-      font-size: 2em;
+      /* font-size: 2em; */
+      /* line-height: 1; */
+      display: inline-block;
+    }
+
+    .arrow-explanation {
+      /* font-size: 1.25em; */
       line-height: 1;
       display: inline-block;
     }
 
-    #focusOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.3);
-      z-index: 950;
-      pointer-events: none;
-    }
-
-    .rating-focus-card {
-      position: relative;
-      z-index: 960;
-    }
   </style>
 </head>
 <body class="container mt-5">
@@ -314,7 +329,10 @@
       <div class="rec-item">
         {% if rec_label %}
           <div class="rec-explanation-above py-1">
-            <div class="h5 mb-0 rec-explanation-title">{{ rec_label }}</div>
+            <div class="h5 mb-0 rec-explanation-title">
+              <i class="bi bi-arrow-right-short arrow-explanation" aria-hidden="true"></i>
+              {{ rec_label }}
+            </div>
           </div>
         {% endif %}
         <div class="card text-start py-3 px-3 border-0 shadow text-decoration-none text-body recommendation-card"
@@ -392,8 +410,8 @@
   <div id="nextBox" class="card position-fixed d-none shadow-lg" style="width: 280px; z-index: 999; max-height: 60vh; overflow: visible;">
     <div class="card-body p-3">
       <div class="d-flex gap-2 align-items-start">
-        <div class="flex-shrink-0" style="line-height:1; margin-top: -4px;">
-          <i class="bi bi-arrow-right-short text-primary nextbox-arrow" aria-hidden="true"></i>
+        <div class="flex-shrink-0">
+          <i class="bi bi-info-circle text-primary nextbox-arrow" aria-hidden="true"></i>
         </div>
         <div style="font-size: 0.95rem;">
           Select the recommended article you prefer among the two.
@@ -404,7 +422,7 @@
   </div>
 
   <!-- Rating Box -->
-  <div id="ratingBox" class="card position-absolute d-none shadow-lg" style="z-index: 1000; overflow: visible;">
+  <div id="ratingBox" class="card position-absolute d-none shadow-lg" style="z-index: 1200; overflow: visible;">
     <div class="card-body p-3">
       <div id="questionContent">
         <!-- Questions loaded by JS -->
@@ -416,8 +434,12 @@
     <div id="ratingArrow" class="arrow-down" aria-hidden="true"></div>
   </div>
 
-  <!-- Subtle overlay to grey-out background during rating -->
-  <div id="focusOverlay" class="d-none" aria-hidden="true"></div>
+  <!-- Focus overlay segments (create a "hole" around the focused recommendation) -->
+  <div id="focusOverlayTop" class="focus-overlay-segment" aria-hidden="true"></div>
+  <div id="focusOverlayLeft" class="focus-overlay-segment" aria-hidden="true"></div>
+  <div id="focusOverlayRight" class="focus-overlay-segment" aria-hidden="true"></div>
+  <div id="focusOverlayBottom" class="focus-overlay-segment" aria-hidden="true"></div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -519,8 +541,7 @@
 
     // Start questionnaire
     document.getElementById('ratingBox').classList.remove('d-none');
-    const overlay = document.getElementById('focusOverlay');
-    if (overlay) overlay.classList.remove('d-none');
+    document.body.classList.add('rating-active');
     buildRatingContent();
     positionBox();
   }
@@ -613,11 +634,6 @@
       button.textContent = 'Continue';
     }
     positionBox();
-  }
-
-  function _setFocusTargetCard(cardEl) {
-    document.querySelectorAll('.recommendation-card').forEach((c) => c.classList.remove('rating-focus-card'));
-    if (cardEl) cardEl.classList.add('rating-focus-card');
   }
 
   function isAnswered() {
@@ -722,7 +738,7 @@
 
     // Likelihood questions for all recommendations
     recommendations.forEach((rec, index) => {
-      let html = `<h6>How likely is it that you would read this article ${_recPosTag(index)} in full?</h6>`;
+      let html = `<h6>How likely is it that you would read this article in full?</h6>`;
       html += '<div class="likert-scale d-inline-flex align-items-center gap-2 mb-3" style="white-space: nowrap;">';
       html += '<span class="flex-shrink-0" style="font-size: 0.75rem; white-space: nowrap;">Very unlikely</span>';
       html += '<div class="d-inline-flex align-items-center" style="white-space: nowrap;">';
@@ -758,7 +774,7 @@
         );
       }
 
-      let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">this article</span> ${_recPosTag(index)}?</h6>`;
+      let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">this article</span>?</h6>`;
       // Use the grid layout for these steps even if only one statement is present,
       // so formatting stays consistent across both recommended articles.
       html += _statementGroupLikertHtml(items, true, true);
@@ -820,11 +836,65 @@
     }
   }
 
+  function updateFocusOverlay(activeItem) {
+    const segTop = document.getElementById('focusOverlayTop');
+    const segLeft = document.getElementById('focusOverlayLeft');
+    const segRight = document.getElementById('focusOverlayRight');
+    const segBottom = document.getElementById('focusOverlayBottom');
+    const segs = [segTop, segLeft, segRight, segBottom].filter(Boolean);
+    if (!segs.length) return;
+
+    const ratingActive = document.body.classList.contains('rating-active');
+    if (!ratingActive || !activeItem) {
+      segs.forEach((el) => (el.style.display = 'none'));
+      return;
+    }
+
+    const PAD = 8;
+    const rect = activeItem.getBoundingClientRect();
+    const holeLeft = Math.max(0, rect.left - PAD);
+    const holeTop = Math.max(0, rect.top - PAD);
+    const holeRight = Math.min(window.innerWidth, rect.right + PAD);
+    const holeBottom = Math.min(window.innerHeight, rect.bottom + PAD);
+
+    function setSeg(el, left, top, width, height) {
+      if (!el) return;
+      const w = Math.max(0, width);
+      const h = Math.max(0, height);
+      if (w <= 0 || h <= 0) {
+        el.style.display = 'none';
+        return;
+      }
+      el.style.display = 'block';
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
+      el.style.width = `${w}px`;
+      el.style.height = `${h}px`;
+    }
+
+    // Top segment: above the focused item
+    setSeg(segTop, 0, 0, window.innerWidth, holeTop);
+    // Bottom segment: below the focused item
+    setSeg(segBottom, 0, holeBottom, window.innerWidth, window.innerHeight - holeBottom);
+    // Left segment: left side of the focused item
+    setSeg(segLeft, 0, holeTop, holeLeft, holeBottom - holeTop);
+    // Right segment: right side of the focused item
+    setSeg(segRight, holeRight, holeTop, window.innerWidth - holeRight, holeBottom - holeTop);
+  }
+
   function positionBox() {
     const box = document.getElementById('ratingBox');
     const arrow = document.getElementById('ratingArrow');
     const step = steps[currentStep];
     if (!box) return;
+
+    // Only show focus/overlay behavior while the rating box is active.
+    const isRatingActive = document.body.classList.contains('rating-active') && !box.classList.contains('d-none');
+    if (!isRatingActive) {
+      document.querySelectorAll('.rec-item').forEach((i) => i.classList.remove('rating-focus-item'));
+      updateFocusOverlay(null);
+      return;
+    }
 
     // Ensure the box is anchored to the document (not the viewport).
     // This makes it move with the recommendation card when the user scrolls.
@@ -846,8 +916,24 @@
       });
     }
     if (activeCard) {
-      _setFocusTargetCard(activeCard);
-      const rect = activeCard.getBoundingClientRect();
+      const cardRect = activeCard.getBoundingClientRect();
+
+      // Focus the full recommendation block this question refers to.
+      document.querySelectorAll('.rec-item').forEach((i) => i.classList.remove('rating-focus-item'));
+      const activeItem = activeCard.closest('.rec-item');
+      if (activeItem) activeItem.classList.add('rating-focus-item');
+      updateFocusOverlay(activeItem);
+
+      // Anchor to the explanation title ABOVE the card when present.
+      // Fallback to the card itself if no explanation exists.
+      let anchorRect = cardRect;
+      try {
+        const item = activeCard.closest('.rec-item');
+        const anchorEl = item?.querySelector('.rec-explanation-title') || item?.querySelector('.rec-explanation-above');
+        if (anchorEl) anchorRect = anchorEl.getBoundingClientRect();
+      } catch (e) {
+        anchorRect = cardRect;
+      }
 
       const scrollX = window.scrollX || window.pageXOffset || 0;
       const scrollY = window.scrollY || window.pageYOffset || 0;
@@ -860,7 +946,7 @@
       // (and also cap to viewport on small screens). If content exceeds the cap,
       // the inner questionContent becomes horizontally scrollable.
       const availableViewportWidth = window.innerWidth - (VIEWPORT_GAP * 2);
-      const capWidth = Math.max(0, Math.min(Math.floor(rect.width), Math.floor(availableViewportWidth)));
+      const capWidth = Math.max(0, Math.min(Math.floor(cardRect.width), Math.floor(availableViewportWidth)));
 
       // Default: shrink-wrap to content but cap at card/viewport.
       box.style.minWidth = '240px';
@@ -893,12 +979,12 @@
       // Measure actual width after fit-content/maxWidth rules apply.
       const boxWidth = box.getBoundingClientRect().width || box.offsetWidth || capWidth || 320;
 
-      const cardCenterX = rect.left + scrollX + (rect.width / 2);
-      let left = cardCenterX - (boxWidth / 2);
+      const anchorCenterX = anchorRect.left + scrollX + (anchorRect.width / 2);
+      let left = anchorCenterX - (boxWidth / 2);
       left = Math.max(scrollX + VIEWPORT_GAP, Math.min(left, scrollX + window.innerWidth - boxWidth - VIEWPORT_GAP));
 
       // Use document coordinates so the box stays attached to the card (not sticky in the viewport).
-      let top = (rect.top + scrollY) - boxHeight - V_GAP;
+      let top = (anchorRect.top + scrollY) - boxHeight - V_GAP;
       top = Math.max(VIEWPORT_GAP, top);
 
       box.style.right = 'auto';
@@ -908,7 +994,7 @@
       // Align the arrow with the card center (clamped within the box).
       if (arrow) {
         const arrowHalf = 20; // matches CSS border size (20px)
-        const desiredArrowLeft = (cardCenterX - left) - arrowHalf;
+        const desiredArrowLeft = (anchorCenterX - left) - arrowHalf;
         const minArrowLeft = 8;
         const maxArrowLeft = boxWidth - (arrowHalf * 2) - 8;
         const arrowLeft = Math.max(minArrowLeft, Math.min(desiredArrowLeft, maxArrowLeft));
@@ -942,8 +1028,8 @@
 
     // Keep rating box hidden until choice is confirmed
     document.getElementById('ratingBox').classList.add('d-none');
-    const overlay = document.getElementById('focusOverlay');
-    if (overlay) overlay.classList.add('d-none');
+    document.body.classList.remove('rating-active');
+    updateFocusOverlay(null);
     _setConfirmEnabled(false);
 
     // Position helper callout (may hide itself if recommendations are off-screen)
