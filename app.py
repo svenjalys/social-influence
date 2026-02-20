@@ -471,7 +471,7 @@ TOPIC_MAP_LIST_B = {
     'Science': 'Science',
     'Tech': 'Tech',
     'Sports': 'Sports',
-    'Personal Health & Wellbeing': 'Public Health',
+    'Personal Health & Wellbeing': 'Personal Health',
 }
 
 
