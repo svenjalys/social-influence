@@ -11,6 +11,11 @@ import random
 from datetime import datetime
 
 
+# Study configuration
+# This study previously ran 6 rounds; it now runs 2 rounds total.
+STUDY_TOTAL_ROUNDS = 2
+
+
 def _get_bool_env(name: str, default: bool = False) -> bool:
     raw = os.environ.get(name)
     if raw is None:
@@ -440,14 +445,14 @@ app.logger.info("Using topic column: %s", TOPIC_COL)
 
 
 # Social-influence labels shown above recommendation cards.
-FAV_REC_LABEL = "You might also like this story:"
+FAV_REC_LABEL = "You might also like this article:"
 LEAST_REC_LABELS = [
     "The information in this article has been fact-checked for accuracy:",
     "This article is recommended by 82% of readers your age in your region:",
     "This article breaks the topic into key points without unnecessary details:",
     "This article's content focuses on solutions and constructive ways forward:",
     "This article is trending right now:",
-    "You might also like this story:",
+    "You might also like this article:",
 ]
 
 
@@ -484,7 +489,7 @@ def _ensure_topic_start_list():
     session['topic_start_list'] = random.choice(['A', 'B'])
 
 
-def _ensure_least_rec_label_order(total_rounds: int = 6):
+def _ensure_least_rec_label_order(total_rounds: int = STUDY_TOTAL_ROUNDS):
     """Create a per-participant randomized order of least-topic labels.
 
     Requirement: least-topic recommendation shows one of the provided labels,
@@ -492,11 +497,20 @@ def _ensure_least_rec_label_order(total_rounds: int = 6):
     """
     order = session.get('least_rec_label_order')
     if isinstance(order, list) and order:
-        return
-    order = LEAST_REC_LABELS[:]
-    random.shuffle(order)
-    # If there are more rounds than labels, cycle (but for this study it's 6 vs 5).
-    if total_rounds > len(order):
+        # If the participant already has an order from a previous version/session,
+        # normalize it to the number of rounds we will actually run.
+        if len(order) >= int(total_rounds):
+            session['least_rec_label_order'] = order[: int(total_rounds)]
+            return
+    labels = LEAST_REC_LABELS[:]
+    # Randomize which label-conditions are used for this participant.
+    # If fewer rounds than labels, sample without replacement.
+    if total_rounds <= len(labels):
+        order = random.sample(labels, k=total_rounds)
+    else:
+        random.shuffle(labels)
+        order = labels
+        # If there are more rounds than labels, cycle.
         order = (order * ((total_rounds // len(order)) + 1))[:total_rounds]
     session['least_rec_label_order'] = order
 
@@ -1194,7 +1208,7 @@ def article(article_id):
     # Generate recommendations (only on GET)
     if request.method == 'GET':
         # Ensure per-participant randomized label order exists.
-        _ensure_least_rec_label_order(total_rounds=6)
+        _ensure_least_rec_label_order(total_rounds=STUDY_TOTAL_ROUNDS)
 
         # Ensure main article matches the favourite topic for this round's list.
         # If not, pick a fresh main article from the correct topic.
@@ -1358,7 +1372,7 @@ def article(article_id):
                 article=article_data,
                 recommendations=recommendations,
                 round_number=round_number,
-                total_rounds=6,
+                total_rounds=STUDY_TOTAL_ROUNDS,
                 debug=debug_flag,
                 rec_labels=session.get('current_recommendations_labels', {}),
                 rec_kinds=session.get('current_recommendations_kinds', {}),
@@ -1467,8 +1481,8 @@ def article(article_id):
             }
         })
 
-        # Advance to next round/article (6 rounds total)
-        total_rounds = 6
+        # Advance to next round/article
+        total_rounds = STUDY_TOTAL_ROUNDS
         if round_number < total_rounds:
             session['round'] = round_number + 1
             # pick a new main article not seen yet
@@ -1504,7 +1518,7 @@ def article(article_id):
         article=article_data,
         recommendations=recommendations,
         round_number=round_number,
-        total_rounds=6,
+        total_rounds=STUDY_TOTAL_ROUNDS,
         debug=debug_flag,
         rec_labels=session.get('current_recommendations_labels', {}),
         rec_kinds=session.get('current_recommendations_kinds', {}),
