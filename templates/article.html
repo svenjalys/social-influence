@@ -56,20 +56,18 @@
       font-weight: 700;
     }
 
-    .rec-explanation {
-      /* border-left: 3px solid #0d6efd; */
-      background: #eef6ff;
-      padding: 0.5rem 0.75rem;
-      border-radius: 0.4rem;
-      color: #1f2a37;
-      /* line-height: 1; */
+    .rec-explanation-above {
+      margin-bottom: 0.75rem;
     }
 
     .rec-explanation-title {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #0d6efd;
-      /* margin-bottom: 0.15rem; */
+      font-weight: 600;
+      color: #212529;
+      line-height: 1.25;
+    }
+
+    .rec-item {
+      cursor: pointer;
     }
 
     .rec-description {
@@ -303,8 +301,6 @@
   </div>
 
   <!-- Recommendations -->
-  <h3 id="recommendedHeading">Recommended articles</h3>
-  <br>
   <form method="POST">
     <input type="hidden" name="selected_article_id" id="selected_article_id" value="">
 
@@ -315,58 +311,56 @@
     <div id="recommendationsStack" class="vstack gap-3">
       {% for rec in recommendations %}
       {% set rec_label = (rec_labels or {}).get(rec['index']|string, '') %}
-       <div class="card text-start py-3 px-3 border-0 shadow text-decoration-none text-body recommendation-card"
-         data-article-id="{{ rec['index'] }}">
+      <div class="rec-item">
         {% if rec_label %}
-          <div class="rec-explanation mb-3">
-            <div class="d-flex gap-2 align-items-center">
-              <div class="flex-shrink-0" style="line-height: 1; margin-top: 1px;">
-                <i class="bi bi-info-circle-fill text-primary" aria-hidden="true"></i>
-              </div>
-              <div>
-                <div class="rec-explanation-title">{{ rec_label }}</div>
-              </div>
-            </div>
+          <div class="rec-explanation-above py-1">
+            <div class="h5 mb-0 rec-explanation-title">{{ rec_label }}</div>
           </div>
         {% endif %}
-        <div class="row g-3 align-items-start">
-          <div class="col-md-8">
-            <h3 class="mb-0 fw-bold" style="font-size: 1.5rem;">{{ rec['Title'] }}</h3>
-            {% set rec_desc = (rec.get('description') or rec.get('Description') or rec.get('field16') or '') %}
-            {% if rec_desc %}
-              <div class="rec-description">{{ rec_desc }}</div>
-            {% endif %}
-            {% if debug %}
-              <div class="text-muted" style="font-size: 0.8rem; margin-top: 6px;">
-                topic ({{ topic_col }}): {{ rec.get(topic_col) }}
-              </div>
-            {% endif %}
-          </div>
-          <div class="col-md-4">
-            <img src="{{ rec['Image URL'] or 'https://placehold.co/300x180?text=No+Image' }}"
-                 class="img-fluid rounded mb-2"
-                 style="max-height: 180px; object-fit: cover;">
-            {% if rec.get('show_label') %}
-              {% if condition == 'color' %}
-                <img src="{{ url_for('static', filename='images/itsCOLOUR.png') }}" style="height: 30px;">
-              {% elif condition == 'no_color' %}
-                <img src="{{ url_for('static', filename='images/itsBW.png') }}" style="height: 30px;">
-              {% elif condition == 'c2pa' %}
-                <img src="{{ url_for('static', filename='images/cr_logo.png') }}" style="height: 30px;">
+        <div class="card text-start py-3 px-3 border-0 shadow text-decoration-none text-body recommendation-card"
+          data-article-id="{{ rec['index'] }}">
+          <div class="row g-3 align-items-start">
+            <div class="col-md-8">
+              <h3 class="mb-0 fw-bold" style="font-size: 1.5rem;">{{ rec['Title'] }}</h3>
+              {% set rec_desc = (rec.get('description') or rec.get('Description') or rec.get('field16') or '') %}
+              {% if rec_desc %}
+                <div class="rec-description">{{ rec_desc }}</div>
               {% endif %}
-            {% endif %}
-            {% if rec.get('show_label') %}
-              {% if condition == 'color' %}
-                <img src="{{ url_for('static', filename='images/itsCOLOUR.png') }}" style="height: 30px;">
-              {% elif condition == 'no_color' %}
-                <img src="{{ url_for('static', filename='images/itsBW.png') }}" style="height: 30px;">
-              {% elif condition == 'c2pa' %}
-                <img src="{{ url_for('static', filename='images/cr_logo.png') }}" style="height: 30px;">
+              {% if debug %}
+                <div class="text-muted" style="font-size: 0.8rem; margin-top: 6px;">
+                  topic ({{ topic_col }}): {{ rec.get(topic_col) }}
+                </div>
               {% endif %}
-            {% endif %}
+            </div>
+            <div class="col-md-4">
+              <img src="{{ rec['Image URL'] or 'https://placehold.co/300x180?text=No+Image' }}"
+                   class="img-fluid rounded mb-2"
+                   style="max-height: 180px; object-fit: cover;">
+              {% if rec.get('show_label') %}
+                {% if condition == 'color' %}
+                  <img src="{{ url_for('static', filename='images/itsCOLOUR.png') }}" style="height: 30px;">
+                {% elif condition == 'no_color' %}
+                  <img src="{{ url_for('static', filename='images/itsBW.png') }}" style="height: 30px;">
+                {% elif condition == 'c2pa' %}
+                  <img src="{{ url_for('static', filename='images/cr_logo.png') }}" style="height: 30px;">
+                {% endif %}
+              {% endif %}
+              {% if rec.get('show_label') %}
+                {% if condition == 'color' %}
+                  <img src="{{ url_for('static', filename='images/itsCOLOUR.png') }}" style="height: 30px;">
+                {% elif condition == 'no_color' %}
+                  <img src="{{ url_for('static', filename='images/itsBW.png') }}" style="height: 30px;">
+                {% elif condition == 'c2pa' %}
+                  <img src="{{ url_for('static', filename='images/cr_logo.png') }}" style="height: 30px;">
+                {% endif %}
+              {% endif %}
+            </div>
           </div>
         </div>
       </div>
+      {% if loop.index == 1 and (recommendations|length) > 1 %}
+        <hr class="my-1" style="border-top: 1px solid #818181; opacity: 0;">
+      {% endif %}
       {% endfor %}
     </div>
 
@@ -410,7 +404,7 @@
   </div>
 
   <!-- Rating Box -->
-  <div id="ratingBox" class="card position-fixed d-none shadow-lg" style="z-index: 1000; overflow: visible;">
+  <div id="ratingBox" class="card position-absolute d-none shadow-lg" style="z-index: 1000; overflow: visible;">
     <div class="card-body p-3">
       <div id="questionContent">
         <!-- Questions loaded by JS -->
@@ -534,8 +528,7 @@
   function positionNextBox() {
     const box = document.getElementById('nextBox');
     const stack = document.getElementById('recommendationsStack');
-    const heading = document.getElementById('recommendedHeading');
-    if (!box || !stack || !heading) return;
+    if (!box || !stack) return;
 
     if (choiceConfirmed) {
       box.classList.add('d-none');
@@ -545,9 +538,8 @@
     const rect = stack.getBoundingClientRect();
     const firstCard = stack.querySelector('.recommendation-card');
     const firstCardRect = firstCard ? firstCard.getBoundingClientRect() : null;
-    const headingRect = heading.getBoundingClientRect();
 
-    const visibleRect = firstCardRect || headingRect;
+    const visibleRect = firstCardRect || rect;
     const isVisible = visibleRect.bottom > 0 && visibleRect.top < window.innerHeight;
     if (!isVisible) {
       box.classList.add('d-none');
@@ -571,7 +563,7 @@
     if (left < LEFT_GAP) left = LEFT_GAP;
 
     // Align the top of the callout with the top of the first recommended article card.
-    let top = (firstCardRect ? firstCardRect.top : headingRect.top);
+    let top = (firstCardRect ? firstCardRect.top : rect.top);
     if (top < 10) top = 10;
     if (top + boxHeight > window.innerHeight - 10) {
       top = window.innerHeight - boxHeight - 10;
@@ -796,7 +788,7 @@
     // Group all explanation items together under a single header.
     {
       let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">the article explanation</span>?</h6>`;
-      html += _statementGroupLikertHtml(labelStatements.map((s) => ({ name: s.key, text: s.text })), true);
+      html += _statementGroupLikertHtml(labelStatements.map((s) => ({ name: s.key, text: s.text })), true, true);
       steps.push({ html: html, recIndex: (leastRecIndex >= 0 ? leastRecIndex : 0) });
     }
 
@@ -832,6 +824,12 @@
     const box = document.getElementById('ratingBox');
     const arrow = document.getElementById('ratingArrow');
     const step = steps[currentStep];
+    if (!box) return;
+
+    // Ensure the box is anchored to the document (not the viewport).
+    // This makes it move with the recommendation card when the user scrolls.
+    box.classList.remove('position-fixed');
+    box.classList.add('position-absolute');
     let activeCard = null;
     if (step && step.recIndex !== undefined) {
       const articleId = recommendations[step.recIndex]['index'];
@@ -850,6 +848,9 @@
     if (activeCard) {
       _setFocusTargetCard(activeCard);
       const rect = activeCard.getBoundingClientRect();
+
+      const scrollX = window.scrollX || window.pageXOffset || 0;
+      const scrollY = window.scrollY || window.pageYOffset || 0;
 
       // Position the rating box above the active recommendation card.
       const VIEWPORT_GAP = 8;
@@ -892,11 +893,12 @@
       // Measure actual width after fit-content/maxWidth rules apply.
       const boxWidth = box.getBoundingClientRect().width || box.offsetWidth || capWidth || 320;
 
-      const cardCenterX = rect.left + (rect.width / 2);
+      const cardCenterX = rect.left + scrollX + (rect.width / 2);
       let left = cardCenterX - (boxWidth / 2);
-      left = Math.max(VIEWPORT_GAP, Math.min(left, window.innerWidth - boxWidth - VIEWPORT_GAP));
+      left = Math.max(scrollX + VIEWPORT_GAP, Math.min(left, scrollX + window.innerWidth - boxWidth - VIEWPORT_GAP));
 
-      let top = rect.top - boxHeight - V_GAP;
+      // Use document coordinates so the box stays attached to the card (not sticky in the viewport).
+      let top = (rect.top + scrollY) - boxHeight - V_GAP;
       top = Math.max(VIEWPORT_GAP, top);
 
       box.style.right = 'auto';
@@ -926,6 +928,16 @@
     // Enable click-to-select on recommendation cards
     document.querySelectorAll('.recommendation-card').forEach((card) => {
       card.addEventListener('click', () => selectRecommendationCard(card));
+    });
+
+    // Also allow clicking on the explanation above the card.
+    document.querySelectorAll('.rec-item').forEach((item) => {
+      item.addEventListener('click', (e) => {
+        // If the click originated inside the card, the card handler already ran.
+        if (e && e.target && e.target.closest && e.target.closest('.recommendation-card')) return;
+        const card = item.querySelector('.recommendation-card');
+        if (card) selectRecommendationCard(card);
+      });
     });
 
     // Keep rating box hidden until choice is confirmed
