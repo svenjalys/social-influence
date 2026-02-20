@@ -277,7 +277,7 @@
       <div>
         <div class="h5 mb-1"><strong>Your task:</strong></div>
         <div class="text-body" style="font-size: 0.98rem;">
-          1. Please read through the article below.<br>
+          1. Have a look at the article below.<br>
           2. From the two recommended articles at the bottom of the page, please select the one you would prefer to read.<br>
           3. Complete the questions that pop up next to the recommended articles before proceeding to the next page.
         </div>
@@ -782,8 +782,8 @@
       steps.push({ html: html, recIndex: index });
     });
 
-    // Attention check (ONLY in round 3)
-    if (Number(ROUND_NUMBER) === 3) {
+    // Attention check (ONLY in round 2)
+    if (Number(ROUND_NUMBER) === 2) {
       let html = `<h6>This is an attention check. Please select "1" - Strongly disagree below.</h6>`;
       html += _statementGroupLikertHtml([
         { name: 'rb_attention_check', text: 'The sky is green.' },
