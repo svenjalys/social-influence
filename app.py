@@ -117,6 +117,16 @@ class Round(db.Model):
     main_article_stable_id = db.Column(db.String)
     main_article_title = db.Column(db.String)
 
+    # The recommendation the participant chose before completing the rating questions
+    selected_rec_stable_id = db.Column(db.String)
+    selected_rec_title = db.Column(db.String)
+
+    # Which recommendation position was chosen: 0 (rec0) or 1 (rec1)
+    selected_rec_pos = db.Column(db.Integer)
+
+    # Which recommendation position showed the changing explanation text (least-topic label): 0/1
+    changing_label_rec_pos = db.Column(db.Integer)
+
     # Main article topic (for analysis convenience)
     main_topic = db.Column(db.String)
 
@@ -206,6 +216,10 @@ def _ensure_round_flat_columns():
             'main_article_stable_id': 'TEXT',
             'main_article_title': 'TEXT',
             'main_topic': 'TEXT',
+            'selected_rec_stable_id': 'TEXT',
+            'selected_rec_title': 'TEXT',
+            'selected_rec_pos': 'INTEGER',
+            'changing_label_rec_pos': 'INTEGER',
             'rec0_stable_id': 'TEXT',
             'rec0_title': 'TEXT',
             'rec0_likelihood': 'INTEGER',
@@ -760,6 +774,36 @@ def debug_backfill_flat():
 
         r.main_article_stable_id = payload.get('main_article_stable_id')
         r.main_article_title = payload.get('main_article_title')
+        r.selected_rec_stable_id = payload.get('selected_recommendation_stable_id')
+        r.selected_rec_title = payload.get('selected_recommendation_title')
+
+        # Best-effort: derive chosen position and changing-label position from stored JSON.
+        rec_ids = payload.get('recommendations') or []
+        selected_id = payload.get('selected_recommendation_id')
+        try:
+            r.selected_rec_pos = int(rec_ids.index(selected_id)) if selected_id in rec_ids else None
+        except Exception:
+            r.selected_rec_pos = None
+
+        # Prefer explicit value if present (newer payloads), otherwise infer from labels.
+        explicit_pos = payload.get('changing_label_rec_pos')
+        if explicit_pos in (0, 1, '0', '1'):
+            try:
+                r.changing_label_rec_pos = int(explicit_pos)
+            except Exception:
+                r.changing_label_rec_pos = None
+        else:
+            try:
+                rec_labels = payload.get('recommendations_labels') or {}
+                # If exactly one rec label differs from the favourite label, treat it as the changing one.
+                candidates = []
+                for pos, rid in enumerate(rec_ids[:2]):
+                    lbl = rec_labels.get(str(rid))
+                    if lbl and lbl != FAV_REC_LABEL:
+                        candidates.append(pos)
+                r.changing_label_rec_pos = candidates[0] if len(candidates) == 1 else None
+            except Exception:
+                r.changing_label_rec_pos = None
 
         main_id = payload.get('main_article_id')
         if main_id is not None and main_id in df['index'].values:
@@ -899,6 +943,10 @@ def update_participant_data(section, data):
             if isinstance(article_payload, dict):
                 existing_round.main_article_stable_id = article_payload.get('main_article_stable_id')
                 existing_round.main_article_title = article_payload.get('main_article_title')
+                existing_round.selected_rec_stable_id = article_payload.get('selected_recommendation_stable_id')
+                existing_round.selected_rec_title = article_payload.get('selected_recommendation_title')
+                existing_round.selected_rec_pos = article_payload.get('selected_recommendation_pos')
+                existing_round.changing_label_rec_pos = article_payload.get('changing_label_rec_pos')
 
                 main_id = article_payload.get('main_article_id')
                 if main_id is not None and main_id in df['index'].values:
@@ -1366,6 +1414,25 @@ def article(article_id):
         # Collect ratings
         recommendations_ids = session.get('current_recommendations', [])
 
+        # Derive positions based on the current rec0/rec1 ordering.
+        selected_rec_pos = None
+        try:
+            if selected_article_id is not None and selected_article_id in recommendations_ids:
+                selected_rec_pos = int(recommendations_ids.index(selected_article_id))
+        except Exception:
+            selected_rec_pos = None
+
+        changing_label_rec_pos = None
+        try:
+            kinds_by_id = session.get('current_recommendations_kinds', {}) or {}
+            # The changing explanation is intended for the least-topic recommendation.
+            for pos, rec_id in enumerate(recommendations_ids[:2]):
+                if str(kinds_by_id.get(str(rec_id), '')).strip() == 'least':
+                    changing_label_rec_pos = int(pos)
+                    break
+        except Exception:
+            changing_label_rec_pos = None
+
         if selected_article_id is None or selected_article_id not in recommendations_ids:
             return render_template(
                 'article.html',
@@ -1473,6 +1540,8 @@ def article(article_id):
                 'selected_recommendation_id': selected_article_id,
                 'selected_recommendation_stable_id': selected_rec_stable_id,
                 'selected_recommendation_title': selected_rec_title,
+                'selected_recommendation_pos': selected_rec_pos,
+                'changing_label_rec_pos': changing_label_rec_pos,
                 'recommendations': session.get('current_recommendations', []),
                 'recommendations_labels': session.get('current_recommendations_labels', {}),
                 'recommendations_stable_ids': recommendation_stable_ids,
