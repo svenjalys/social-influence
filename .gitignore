@@ -9,7 +9,7 @@ responses.db
 social_influence/instance/responses.db-*
 .venv
 __pycache__
-
+static/.DS_Store
 .github/instructions.md
 
 # Large local data artifacts (do not commit)
