@@ -659,14 +659,6 @@
   function buildRatingContent() {
     steps = [];
 
-    // For the two recommended articles shown on the page, tag questions as (1/2) or (2/2)
-    // depending on whether they refer to the first (top) or second (bottom) recommendation card.
-    const _recPosTag = (recIndex) => {
-      const n = Number(recIndex);
-      if (!Number.isFinite(n)) return '';
-      return `(${n + 1}/2)`;
-    };
-
     const leastRecIndex = recommendations.findIndex((rec) => {
       const recKind = String(REC_KINDS[String(rec.index)] || '').trim();
       return recKind === 'least';
@@ -747,7 +739,7 @@
 
     // Likelihood questions for all recommendations
     recommendations.forEach((rec, index) => {
-      let html = `<h6>How likely is it that you would read this article ${_recPosTag(index)} in full?</h6>`;
+      let html = `<h6>How likely is it that you would read this article in full?</h6>`;
       html += '<div class="likert-scale d-inline-flex align-items-center gap-2 mb-3" style="white-space: nowrap;">';
       html += '<span class="flex-shrink-0" style="font-size: 0.75rem; white-space: nowrap;">Very unlikely</span>';
       html += '<div class="d-inline-flex align-items-center" style="white-space: nowrap;">';
@@ -783,7 +775,7 @@
         );
       }
 
-      let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">this article</span> ${_recPosTag(index)}?</h6>`;
+      let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">this article</span>?</h6>`;
       // Use the grid layout for these steps even if only one statement is present,
       // so formatting stays consistent across both recommended articles.
       html += _statementGroupLikertHtml(items, true, true);
@@ -791,8 +783,8 @@
       steps.push({ html: html, recIndex: index });
     });
 
-    // Attention check (ONLY in round 3)
-    if (Number(ROUND_NUMBER) === 3) {
+    // Attention check (ONLY in round 2)
+    if (Number(ROUND_NUMBER) === 2) {
       let html = `<h6>This is an attention check. Please select "1" - Strongly disagree below.</h6>`;
       html += _statementGroupLikertHtml([
         { name: 'rb_attention_check', text: 'The sky is green.' },
