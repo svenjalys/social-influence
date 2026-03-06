@@ -1368,15 +1368,15 @@ def article(article_id):
             rec_id = str(rec.get('index'))
 
             if fav_topic_str and rec_topic_str == fav_topic_str:
-                rec_labels_by_id[rec_id] = FAV_REC_LABEL
+                rec_labels_by_id[rec_id] = ''
                 rec_kinds_by_id[rec_id] = 'fav'
             elif least_topic_str and rec_topic_str == least_topic_str:
                 rec_labels_by_id[rec_id] = least_label_for_round or ''
                 rec_kinds_by_id[rec_id] = 'least'
             else:
                 # If topics are missing (e.g., duplicates), assign remaining slot deterministically.
-                if FAV_REC_LABEL not in rec_labels_by_id.values():
-                    rec_labels_by_id[rec_id] = FAV_REC_LABEL
+                if len([v for v in rec_labels_by_id.values() if v == '']) < 1:
+                    rec_labels_by_id[rec_id] = ''
                     rec_kinds_by_id[rec_id] = 'fav'
                 else:
                     rec_labels_by_id[rec_id] = least_label_for_round or ''
