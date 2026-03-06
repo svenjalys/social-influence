@@ -148,6 +148,20 @@ class Round(db.Model):
     rec1_trustworthy = db.Column(db.Integer)
     rec1_relevant = db.Column(db.Integer)
 
+    # Low-interest article (with explanation from LEAST_REC_LABELS)
+    low_preference_fit = db.Column(db.Integer)
+    low_constructive = db.Column(db.Integer)
+    low_understandable = db.Column(db.Integer)
+    low_trustworthy = db.Column(db.Integer)
+    low_relevant = db.Column(db.Integer)
+
+    # High-interest article (no explanation)
+    high_preference_fit = db.Column(db.Integer)
+    high_constructive = db.Column(db.Integer)
+    high_understandable = db.Column(db.Integer)
+    high_trustworthy = db.Column(db.Integer)
+    high_relevant = db.Column(db.Integer)
+
     # Recommendation topics + shown labels (for analysis convenience)
     rec0_topic = db.Column(db.String)
     rec1_topic = db.Column(db.String)
@@ -236,6 +250,16 @@ def _ensure_round_flat_columns():
             'rec1_understandable': 'INTEGER',
             'rec1_trustworthy': 'INTEGER',
             'rec1_relevant': 'INTEGER',
+            'low_preference_fit': 'INTEGER',
+            'low_constructive': 'INTEGER',
+            'low_understandable': 'INTEGER',
+            'low_trustworthy': 'INTEGER',
+            'low_relevant': 'INTEGER',
+            'high_preference_fit': 'INTEGER',
+            'high_constructive': 'INTEGER',
+            'high_understandable': 'INTEGER',
+            'high_trustworthy': 'INTEGER',
+            'high_relevant': 'INTEGER',
             'label_understandable': 'INTEGER',
             'label_useful': 'INTEGER',
             'label_influenced': 'INTEGER',
@@ -875,6 +899,19 @@ def debug_backfill_flat():
         r.rec1_trustworthy = _to_int(_rating_for_rec(1, 'trustworthy'))
         r.rec1_relevant = _to_int(_rating_for_rec(1, 'relevant'))
 
+        # Store ratings by article type (low-interest vs high-interest)
+        r.low_preference_fit = _to_int(ratings.get('low_preference_fit'))
+        r.low_constructive = _to_int(ratings.get('low_constructive'))
+        r.low_understandable = _to_int(ratings.get('low_understandable'))
+        r.low_trustworthy = _to_int(ratings.get('low_trustworthy'))
+        r.low_relevant = _to_int(ratings.get('low_relevant'))
+
+        r.high_preference_fit = _to_int(ratings.get('high_preference_fit'))
+        r.high_constructive = _to_int(ratings.get('high_constructive'))
+        r.high_understandable = _to_int(ratings.get('high_understandable'))
+        r.high_trustworthy = _to_int(ratings.get('high_trustworthy'))
+        r.high_relevant = _to_int(ratings.get('high_relevant'))
+
         r.label_understandable = _to_int(ratings.get('label_understandable'))
         r.label_useful = _to_int(ratings.get('label_useful'))
         r.label_influenced = _to_int(ratings.get('label_influenced'))
@@ -1024,6 +1061,19 @@ def update_participant_data(section, data):
                 existing_round.rec1_understandable = _to_int(_rating_for_rec(1, 'understandable'))
                 existing_round.rec1_trustworthy = _to_int(_rating_for_rec(1, 'trustworthy'))
                 existing_round.rec1_relevant = _to_int(_rating_for_rec(1, 'relevant'))
+
+                # Store ratings by article type (low-interest vs high-interest)
+                existing_round.low_preference_fit = _to_int(ratings.get('low_preference_fit'))
+                existing_round.low_constructive = _to_int(ratings.get('low_constructive'))
+                existing_round.low_understandable = _to_int(ratings.get('low_understandable'))
+                existing_round.low_trustworthy = _to_int(ratings.get('low_trustworthy'))
+                existing_round.low_relevant = _to_int(ratings.get('low_relevant'))
+
+                existing_round.high_preference_fit = _to_int(ratings.get('high_preference_fit'))
+                existing_round.high_constructive = _to_int(ratings.get('high_constructive'))
+                existing_round.high_understandable = _to_int(ratings.get('high_understandable'))
+                existing_round.high_trustworthy = _to_int(ratings.get('high_trustworthy'))
+                existing_round.high_relevant = _to_int(ratings.get('high_relevant'))
 
                 # Label items (shared)
                 existing_round.label_understandable = _to_int(ratings.get('label_understandable'))
@@ -1529,6 +1579,11 @@ def article(article_id):
 
         # Rating-box attention check (only asked in round 3; empty otherwise)
         ratings['rb_attention_check'] = _pick_rating_value('rb_attention_check', 'rb_attention_check_hidden')
+
+        # Collect article-type-based ratings (low_* and high_*)
+        for stmt in ['preference_fit', 'constructive', 'understandable', 'trustworthy', 'relevant']:
+            ratings[f'low_{stmt}'] = _pick_rating_value(f'low_{stmt}')
+            ratings[f'high_{stmt}'] = _pick_rating_value(f'high_{stmt}')
 
         # update_participant_data('round', {
         #     'round': round_number,

@@ -84,7 +84,7 @@
     }
 
     .rec-explanation-title {
-      font-size: 1rem;
+      font-size: 1.2rem;
       font-weight: 700;
       color: #0d6efd;
     }
@@ -405,6 +405,17 @@
     <input type="hidden" name="trustworthy_{{ rec['index'] }}" id="trustworthy_{{ rec['index'] }}" value="">
     <input type="hidden" name="relevant_{{ rec['index'] }}" id="relevant_{{ rec['index'] }}" value="">
     {% endfor %}
+    <!-- New low_/high_ inputs for article-type-based storage -->
+    <input type="hidden" name="low_preference_fit" id="low_preference_fit" value="">
+    <input type="hidden" name="low_constructive" id="low_constructive" value="">
+    <input type="hidden" name="low_understandable" id="low_understandable" value="">
+    <input type="hidden" name="low_trustworthy" id="low_trustworthy" value="">
+    <input type="hidden" name="low_relevant" id="low_relevant" value="">
+    <input type="hidden" name="high_preference_fit" id="high_preference_fit" value="">
+    <input type="hidden" name="high_constructive" id="high_constructive" value="">
+    <input type="hidden" name="high_understandable" id="high_understandable" value="">
+    <input type="hidden" name="high_trustworthy" id="high_trustworthy" value="">
+    <input type="hidden" name="high_relevant" id="high_relevant" value="">
     <input type="hidden" name="label_understandable" id="label_understandable" value="">
     <input type="hidden" name="label_useful" id="label_useful" value="">
     <input type="hidden" name="label_influenced" id="label_influenced" value="">
@@ -617,13 +628,36 @@
     const submittedHidden = document.getElementById(radio.name);
     if (submittedHidden) {
       submittedHidden.value = radio.value;
-      return;
     }
 
     // Fallback: if a hidden input exists (e.g. dynamically created), update it too.
     const hiddenName = radio.name + '_hidden';
     const hidden = document.querySelector(`input[name="${hiddenName}"]`);
     if (hidden) hidden.value = radio.value;
+
+    // Also update low_/high_ fields based on the field name pattern
+    // E.g., preference_fit_12345 -> low_preference_fit or high_preference_fit
+    const fieldPatterns = ['preference_fit', 'constructive', 'understandable', 'trustworthy', 'relevant'];
+    for (const fieldBase of fieldPatterns) {
+      if (radio.name.startsWith(fieldBase + '_')) {
+        // Extract the rec ID by removing the field base and underscore
+        const recId = radio.name.substring((fieldBase + '_').length);
+        if (recId) {
+          // Check if this rec is low or high interest by checking REC_KINDS
+          const recKind = String(REC_KINDS[recId] || REC_KINDS[String(recId)] || '').trim();
+          const prefix = recKind === 'least' ? 'low' : 'high';
+          const lowHighFieldName = `${prefix}_${fieldBase}`;
+          const lowHighField = document.getElementById(lowHighFieldName);
+          if (lowHighField) {
+            lowHighField.value = radio.value;
+            console.log(`[updateHidden] Set ${lowHighFieldName} = ${radio.value} (recId=${recId}, recKind=${recKind})`);
+          } else {
+            console.log(`[updateHidden] Field ${lowHighFieldName} not found`);
+          }
+          break; // Found the matching field pattern
+        }
+      }
+    }
   }
 
   function showStep(stepIndex) {
@@ -758,23 +792,24 @@
     // All items that share the same header and target the same article are shown together.
     recommendations.forEach((rec, index) => {
       const recKind = String(REC_KINDS[String(rec.index)] || '').trim();
+      const isLowInterest = recKind === 'least';
+      const fieldPrefix = isLowInterest ? 'low' : 'high';
       const items = [];
 
-      // Always asked for both recommended articles
+      // Asked for all recommended articles - use old format with rec.index for backward compatibility
       items.push({
         name: `preference_fit_${rec.index}`,
+        lowHighName: `${fieldPrefix}_preference_fit`,
         text: 'The article fits my preferences.',
       });
 
-      // Extra statements only for the least-favourite-topic recommendation
-      if (recKind === 'least') {
-        items.push(
-          { name: `constructive_${rec.index}`, text: 'The article seems constructive.' },
-          { name: `understandable_${rec.index}`, text: 'The article seems easy to understand.' },
-          { name: `trustworthy_${rec.index}`, text: 'The article seems trustworthy.' },
-          { name: `relevant_${rec.index}`, text: 'The article seems relevant.' },
-        );
-      }
+      // These statements are asked for all articles
+      items.push(
+        { name: `constructive_${rec.index}`, lowHighName: `${fieldPrefix}_constructive`, text: 'The article seems constructive.' },
+        { name: `understandable_${rec.index}`, lowHighName: `${fieldPrefix}_understandable`, text: 'The article seems easy to understand.' },
+        { name: `trustworthy_${rec.index}`, lowHighName: `${fieldPrefix}_trustworthy`, text: 'The article seems trustworthy.' },
+        { name: `relevant_${rec.index}`, lowHighName: `${fieldPrefix}_relevant`, text: 'The article seems relevant.' },
+      );
 
       let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">this article</span>?</h6>`;
       // Use the grid layout for these steps even if only one statement is present,
@@ -786,7 +821,7 @@
 
     // Attention check (ONLY in round 2)
     if (Number(ROUND_NUMBER) === 2) {
-      let html = `<h6>This is an attention check. Please select "1" - Strongly disagree below.</h6>`;
+      let html = `<h6>This is an attention check. Please select "Strongly disagree" below.</h6>`;
       html += _statementGroupLikertHtml([
         { name: 'rb_attention_check', text: 'The sky is green.' },
       ], true);
