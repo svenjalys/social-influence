@@ -789,15 +789,19 @@
     });
 
     // Label questions - asked before article rating questions
-    const labelStatements = [
-      {key: 'label_understandable', text: 'The explanation is easy to understand.'},
-      {key: 'label_useful', text: 'The explanation is useful.'},
-      {key: 'label_influenced', text: 'The explanation influenced my choice.'},
-      {key: 'label_attention', text: 'The explanation grabbed my attention.'},
-      {key: 'label_more', text: 'I would like to see more explanations like this for recommended news articles.'}
-    ];
-    // Group all explanation items together under a single header.
-    {
+    // Only show if the least-interest article has a non-empty explanation
+    const leastRecId = leastRecIndex >= 0 ? recommendations[leastRecIndex]['index'] : null;
+    const leastRecLabel = leastRecId ? String(REC_LABELS[String(leastRecId)] || '').trim() : '';
+    
+    if (leastRecLabel) {
+      const labelStatements = [
+        {key: 'label_understandable', text: 'The explanation is easy to understand.'},
+        {key: 'label_useful', text: 'The explanation is useful.'},
+        {key: 'label_influenced', text: 'The explanation influenced my choice.'},
+        {key: 'label_attention', text: 'The explanation grabbed my attention.'},
+        {key: 'label_more', text: 'I would like to see more explanations like this for recommended news articles.'}
+      ];
+      // Group all explanation items together under a single header.
       let html = `<h6>To what extent do you agree or disagree with the following statement about <span class="label-accent">the article explanation</span>?</h6>`;
       html += _statementGroupLikertHtml(labelStatements.map((s) => ({ name: s.key, text: s.text })), true, true);
       steps.push({ html: html, recIndex: (leastRecIndex >= 0 ? leastRecIndex : 0), isLabelQuestion: true });
