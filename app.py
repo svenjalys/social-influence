@@ -465,7 +465,8 @@ LEAST_REC_LABELS = [
     "Recommended by 82% of readers your age in your region",
     "Breaks topic into key points without unnecessary details",
     "Focuses on solutions and constructive ways forward",
-    "Trending right now"
+    "Trending right now",
+    ""
 ]
 # LEAST_REC_LABELS = [
 #     "The information in this article has been fact-checked for accuracy:",
