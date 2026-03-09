@@ -551,9 +551,25 @@ def _ensure_least_rec_label_order(total_rounds: int = STUDY_TOTAL_ROUNDS):
     - After 15 participants, each explanation has appeared 5 times
     - Then the cycle repeats for the next set of 15
     """
-    # Always regenerate for this participant based on current count
-    # (Don't use cached session value, as it may persist across test participants)
+    # First, check if this participant already has a pair assigned
+    pid = get_participant_id()
+    if pid:
+        try:
+            participant = Participant.query.filter_by(prolific_id=pid).first()
+            if participant and participant.explanation_pair:
+                # Use the already-assigned pair from the database
+                pair_str = participant.explanation_pair
+                labels = pair_str.split(' | ')
+                if len(labels) == 2:
+                    order = [labels[0].strip(), labels[1].strip()]
+                    session['least_rec_label_order'] = order
+                    session['explanation_pair'] = pair_str
+                    print(f"[DEBUG] Retrieved explanation_pair from DB: {pair_str}", flush=True)
+                    return
+        except Exception as e:
+            print(f"[DEBUG] Error retrieving participant pair: {e}", flush=True)
     
+    # If no participant pair exists yet, calculate and assign a new one
     from itertools import combinations
     
     labels = LEAST_REC_LABELS[:]
@@ -585,6 +601,7 @@ def _ensure_least_rec_label_order(total_rounds: int = STUDY_TOTAL_ROUNDS):
     pair_description = f"{labels[label_idx_i]} | {labels[label_idx_j]}"
     session['explanation_pair'] = pair_description
     print(f"[DEBUG] Set explanation_pair: {pair_description} (participant_num={participant_num}, pair_idx={pair_idx})", flush=True)
+
 
 
 
