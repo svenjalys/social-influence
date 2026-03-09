@@ -914,7 +914,7 @@
 
       // Position the rating box above the active recommendation card.
       const VIEWPORT_GAP = 8;
-      const V_GAP = 21; // vertical gap between card and box (aligns arrow point with card top)
+      const V_GAP = 25; // gap to align arrow tip with card top (arrow extends ~20px below box)
 
       // Shrink-wrap the box to its content, but cap it at the recommendation card width
       // (and also cap to viewport on small screens). If content exceeds the cap,
@@ -957,16 +957,19 @@
       let left = cardCenterX - (boxWidth / 2);
       left = Math.max(VIEWPORT_GAP, Math.min(left, window.innerWidth - boxWidth - VIEWPORT_GAP));
 
+      // For position-fixed, use viewport coordinates (not document)
       let top = rect.top - boxHeight - V_GAP;
       
       // For label questions, position box to point at the top border of the explanation box
       if (step.isLabelQuestion && targetElement !== activeCard) {
         // Position box so arrow points at the top of the explanation box
         const arrowHeight = 30; // approximate arrow/pointer height
-        top = targetRect.top - boxHeight - arrowHeight + 5; // Small offset for better alignment
+        top = targetRect.top - boxHeight - arrowHeight - 10; // Extra offset for label questions
       }
       
-      top = Math.max(VIEWPORT_GAP, top);
+      // Allow box to position above viewport if needed (can go off-screen)
+      // Use V_GAP as the minimum boundary, not hardcoded 8
+      top = Math.max(top, rect.top - boxHeight - V_GAP);
 
       box.style.right = 'auto';
       box.style.left = `${left}px`;
